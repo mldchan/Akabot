@@ -12,7 +12,7 @@ import {
 import { AllCommands, Module } from "./type";
 import { getSetting, setSetting } from "../data/settings";
 
-async function verifyLoggingChannelValidity(
+async function verifyTextableTextChannel(
   ch: Channel,
   int: ChatInputCommandInteraction<CacheType>,
   s: string
@@ -30,7 +30,7 @@ async function verifyLoggingChannelValidity(
   }
   if (!newChannelChannel.isTextBased()) {
     await int.reply({
-      content: "The text channel has to be a text channel.",
+      content: "The channel has to be a text channel.",
       ephemeral: true,
     });
     return false;
@@ -89,7 +89,7 @@ async function handleLoggingSubcommands(
       }
     } else {
       if (
-        !(await verifyLoggingChannelValidity(
+        !(await verifyTextableTextChannel(
           newChannel as Channel,
           interaction,
           selfMemberId
@@ -102,6 +102,97 @@ async function handleLoggingSubcommands(
         ephemeral: true,
       });
       setSetting(interaction.guild.id, "loggingChannel", newChannel.id);
+    }
+  }
+}
+
+async function handleWelcomeSubcommands(
+  interaction: ChatInputCommandInteraction<CacheType>,
+  selfMemberId: string
+) {
+  if (!interaction.guild) return;
+  if (!interaction.member) return;
+  if (!interaction.options) return;
+  const group = interaction.options.getSubcommand();
+  if (group === "channel") {
+    const newChannel = interaction.options.getChannel("channel");
+    const currentChannel = getSetting(
+      interaction.guild.id,
+      "welcomeChannel",
+      ""
+    );
+    if (!newChannel) {
+      if (currentChannel != "") {
+        await interaction.reply({
+          content: `The current welcome channel is <#${currentChannel}>`,
+          ephemeral: true,
+        });
+      } else {
+        await interaction.reply({
+          content: `There is no welcome channel set`,
+          ephemeral: true,
+        });
+      }
+    } else {
+      if (
+        !(await verifyTextableTextChannel(
+          newChannel as Channel,
+          interaction,
+          selfMemberId
+        ))
+      ) {
+        return;
+      }
+      await interaction.reply({
+        content: `The welcome channel has been set to <#${newChannel.id}>`,
+        ephemeral: true,
+      });
+      setSetting(interaction.guild.id, "welcomeChannel", newChannel.id);
+    }
+  }
+}
+async function handleGoodbyeSubcommands(
+  interaction: ChatInputCommandInteraction<CacheType>,
+  selfMemberId: string
+) {
+  if (!interaction.guild) return;
+  if (!interaction.member) return;
+  if (!interaction.options) return;
+  const group = interaction.options.getSubcommand();
+  if (group === "channel") {
+    const newChannel = interaction.options.getChannel("channel");
+    const currentChannel = getSetting(
+      interaction.guild.id,
+      "goodbyeChannel",
+      ""
+    );
+    if (!newChannel) {
+      if (currentChannel != "") {
+        await interaction.reply({
+          content: `The current goodbye channel is <#${currentChannel}>`,
+          ephemeral: true,
+        });
+      } else {
+        await interaction.reply({
+          content: `There is no goodbye channel set`,
+          ephemeral: true,
+        });
+      }
+    } else {
+      if (
+        !(await verifyTextableTextChannel(
+          newChannel as Channel,
+          interaction,
+          selfMemberId
+        ))
+      ) {
+        return;
+      }
+      await interaction.reply({
+        content: `The goodbye channel has been set to <#${newChannel.id}>`,
+        ephemeral: true,
+      });
+      setSetting(interaction.guild.id, "goodbyeChannel", newChannel.id);
     }
   }
 }
@@ -128,6 +219,38 @@ export class SettingsModule implements Module {
                   .setRequired(false)
               )
           )
+      )
+      .addSubcommandGroup((welcomeGroup) =>
+        welcomeGroup
+          .setName("welcome")
+          .setDescription("Welcome new members")
+          .addSubcommand((channel) =>
+            channel
+              .setName("channel")
+              .setDescription("See what channel is set or change it")
+              .addChannelOption((newChannelOption) =>
+                newChannelOption
+                  .setName("channel")
+                  .setDescription("Set the channel to this")
+                  .setRequired(false)
+              )
+          )
+      )
+      .addSubcommandGroup((goodbyeGroup) =>
+        goodbyeGroup
+          .setName("goodbye")
+          .setDescription("Say goodbye to leaving members")
+          .addSubcommand((channel) =>
+            channel
+              .setName("channel")
+              .setDescription("See what channel is set or change it")
+              .addChannelOption((newChannelOption) =>
+                newChannelOption
+                  .setName("channel")
+                  .setDescription("Set the channel to this")
+                  .setRequired(false)
+              )
+          )
       ),
   ];
   selfMemberId: string = "";
@@ -149,9 +272,16 @@ export class SettingsModule implements Module {
       });
       return;
     }
+
     const subcommand = interaction.options.getSubcommandGroup();
     if (subcommand === "logging") {
       await handleLoggingSubcommands(interaction, this.selfMemberId);
+    }
+    if (subcommand === "welcome") {
+      await handleWelcomeSubcommands(interaction, this.selfMemberId);
+    }
+    if (subcommand === "goodbye") {
+      await handleGoodbyeSubcommands(interaction, this.selfMemberId);
     }
   }
   async onButtonClick(

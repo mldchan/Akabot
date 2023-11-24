@@ -5,6 +5,8 @@ import * as dotenv from "dotenv";
 import { Logging } from "./modules/logging";
 import { SettingsModule } from "./modules/settings";
 import { LevelingModule } from "./modules/leveling";
+import { WelcomeModule } from "./modules/welcome";
+import { GoodbyeModule } from "./modules/goodbye";
 
 dotenv.config();
 
@@ -31,6 +33,8 @@ modules.push(new Suggestions());
 modules.push(new Logging());
 modules.push(new SettingsModule());
 modules.push(new LevelingModule());
+modules.push(new WelcomeModule());
+modules.push(new GoodbyeModule());
 
 client.on("ready", () => {
   console.log("I am ready!");
