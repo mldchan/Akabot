@@ -13,36 +13,18 @@ import { Module } from "./type";
 import { addBugReport, addSuggestion } from "../data/feedback";
 
 export class Suggestions implements Module {
-  onRoleEdit(before: Role, after: Role): Promise<void> {
-    throw new Error("Method not implemented.");
-  }
-  onChannelCreate(role: Channel): Promise<void> {
-    throw new Error("Method not implemented.");
-  }
-  onChannelEdit(before: Channel, after: Channel): Promise<void> {
-    throw new Error("Method not implemented.");
-  }
-  onChannelDelete(role: Channel): Promise<void> {
-    throw new Error("Method not implemented.");
-  }
-  onMessageDelete(msg: Message<boolean>): Promise<void> {
-    throw new Error("Method not implemented.");
-  }
-  onMessageEdit(
+  async onRoleEdit(before: Role, after: Role): Promise<void> {}
+  async onChannelCreate(role: Channel): Promise<void> {}
+  async onChannelEdit(before: Channel, after: Channel): Promise<void> {}
+  async onChannelDelete(role: Channel): Promise<void> {}
+  async onMessageDelete(msg: Message<boolean>): Promise<void> {}
+  async onMessageEdit(
     before: Message<boolean>,
     after: Message<boolean>
-  ): Promise<void> {
-    throw new Error("Method not implemented.");
-  }
-  onMemberJoin(member: GuildMember): Promise<void> {
-    throw new Error("Method not implemented.");
-  }
-  onMemberEdit(before: GuildMember, after: GuildMember): Promise<void> {
-    throw new Error("Method not implemented.");
-  }
-  onMemberLeave(member: GuildMember): Promise<void> {
-    throw new Error("Method not implemented.");
-  }
+  ): Promise<void> {}
+  async onMemberJoin(member: GuildMember): Promise<void> {}
+  async onMemberEdit(before: GuildMember, after: GuildMember): Promise<void> {}
+  async onMemberLeave(member: GuildMember): Promise<void> {}
   commands: SlashCommandBuilder[] | SlashCommandSubcommandsOnlyBuilder[] = [
     new SlashCommandBuilder()
       .setName("feedback")
@@ -70,6 +52,7 @@ export class Suggestions implements Module {
           )
       ),
   ];
+  selfMemberId: string = "";
   async onMessage(msg: Message): Promise<void> {}
   async onSlashCommand(
     interaction: ChatInputCommandInteraction<CacheType>
