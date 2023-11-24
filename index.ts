@@ -4,6 +4,7 @@ import { Suggestions } from "./modules/suggestions";
 import * as dotenv from "dotenv";
 import { Logging } from "./modules/logging";
 import { SettingsModule } from "./modules/settings";
+import { LevelingModule } from "./modules/leveling";
 
 dotenv.config();
 
@@ -29,6 +30,7 @@ const modules: Module[] = [];
 modules.push(new Suggestions());
 modules.push(new Logging());
 modules.push(new SettingsModule());
+modules.push(new LevelingModule());
 
 client.on("ready", () => {
   console.log("I am ready!");

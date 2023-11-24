@@ -15,6 +15,7 @@ import {
   PermissionFlagsBits,
   ChannelFlagsBitField,
   GuildChannel,
+  ChannelType,
 } from "discord.js";
 import { AllCommands, Module } from "./type";
 import { getGlobalSetting, getSetting } from "../data/settings";
@@ -36,7 +37,10 @@ export class Logging implements Module {
       );
     let creator = "No Audit Log Permission";
     await selfMember.fetch(true);
-    if (selfMember.permissions.has("ViewAuditLog")) {
+    if (
+      selfMember.permissions.has("ViewAuditLog") ||
+      selfMember.permissions.has("Administrator")
+    ) {
       const auditLog = await role.guild.fetchAuditLogs({
         type: AuditLogEvent.RoleCreate,
         limit: 1,
@@ -77,7 +81,10 @@ export class Logging implements Module {
       );
     let editor = "No Audit Log Permission";
     await selfMember.fetch(true);
-    if (selfMember.permissions.has("ViewAuditLog")) {
+    if (
+      selfMember.permissions.has("ViewAuditLog") ||
+      selfMember.permissions.has("Administrator")
+    ) {
       const auditLog = await after.guild.fetchAuditLogs({
         type: AuditLogEvent.RoleUpdate,
         limit: 1,
@@ -170,7 +177,10 @@ export class Logging implements Module {
       );
     let deleter = "No Audit Log Permission";
     await selfMember.fetch(true);
-    if (selfMember.permissions.has("ViewAuditLog")) {
+    if (
+      selfMember.permissions.has("ViewAuditLog") ||
+      selfMember.permissions.has("Administrator")
+    ) {
       const auditLog = await role.guild.fetchAuditLogs({
         type: AuditLogEvent.RoleDelete,
         limit: 1,
@@ -211,7 +221,10 @@ export class Logging implements Module {
       );
     let creator = "No Audit Log Permission";
     await selfMember.fetch(true);
-    if (selfMember.permissions.has("ViewAuditLog")) {
+    if (
+      selfMember.permissions.has("ViewAuditLog") ||
+      selfMember.permissions.has("Administrator")
+    ) {
       const auditLog = await channel1.guild.fetchAuditLogs({
         type: AuditLogEvent.ChannelCreate,
         limit: 1,
@@ -256,7 +269,10 @@ export class Logging implements Module {
       );
     let editor = "No Audit Log Permission";
     await selfMember.fetch(true);
-    if (selfMember.permissions.has("ViewAuditLog")) {
+    if (
+      selfMember.permissions.has("ViewAuditLog") ||
+      selfMember.permissions.has("Administrator")
+    ) {
       const auditLog = await after.guild.fetchAuditLogs({
         type: AuditLogEvent.ChannelUpdate,
         limit: 1,
@@ -280,6 +296,59 @@ export class Logging implements Module {
         name: "Channel name",
         value: `${before.name} -> ${after.name}`,
       });
+    }
+
+    if (
+      (before.type === ChannelType.GuildText &&
+        after.type === ChannelType.GuildText) ||
+      (before.type === ChannelType.GuildForum &&
+        after.type === ChannelType.GuildForum)
+    ) {
+      if (before.topic !== after.topic) {
+        fields.push({
+          name: "Channel Topic",
+          value: `${before.topic ?? "*nothing*"} -> ${
+            after.topic ?? "*nothing*"
+          }`,
+        });
+      }
+
+      if (before.rateLimitPerUser !== after.rateLimitPerUser) {
+        fields.push({
+          name: "Channel Cooldown",
+          value: `${before.rateLimitPerUser} seconds -> ${after.rateLimitPerUser} seconds`,
+        });
+      }
+
+      if (before.nsfw !== after.nsfw) {
+        fields.push({
+          name: "Channel NSFW",
+          value: `${before.nsfw ? "enabled" : "disabled"} -> ${
+            after.nsfw ? "enabled" : "disabled"
+          }`,
+        });
+      }
+    }
+
+    if (
+      before.type === ChannelType.GuildVoice &&
+      after.type === ChannelType.GuildVoice
+    ) {
+      if (before.bitrate !== after.bitrate) {
+        fields.push({
+          name: "Channel Bitrate",
+          value: `${before.bitrate} kbps -> ${after.bitrate} kbps`,
+        });
+      }
+
+      if (before.nsfw !== after.nsfw) {
+        fields.push({
+          name: "Channel NSFW",
+          value: `${before.nsfw ? "enabled" : "disabled"} -> ${
+            after.nsfw ? "enabled" : "disabled"
+          }`,
+        });
+      }
     }
 
     const beforeGuild = before as GuildChannel;
@@ -388,16 +457,19 @@ export class Logging implements Module {
       throw new Error(
         "SelfMember not found, please make sure the bot is in the server"
       );
-    let creator = "No Audit Log Permission";
+    let deleter = "No Audit Log Permission";
     await selfMember.fetch(true);
-    if (selfMember.permissions.has("ViewAuditLog")) {
+    if (
+      selfMember.permissions.has("ViewAuditLog") ||
+      selfMember.permissions.has("Administrator")
+    ) {
       const auditLog = await channel.guild.fetchAuditLogs({
         type: AuditLogEvent.ChannelDelete,
         limit: 1,
       });
       const entry = auditLog.entries.first();
       if (entry) {
-        creator = entry.executor?.username ?? "Unknown";
+        deleter = entry.executor?.username ?? "Unknown";
       }
     }
 
@@ -414,7 +486,7 @@ export class Logging implements Module {
         { name: "Channel name", value: channel.name },
         { name: "Channel ID", value: channel.id.toString() },
         { name: "Channel type", value: channel.type.toString() },
-        { name: "Creator", value: creator }
+        { name: "Deleter", value: deleter }
       )
       .setColor("Red");
 

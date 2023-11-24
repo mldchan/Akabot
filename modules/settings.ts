@@ -138,6 +138,17 @@ export class SettingsModule implements Module {
     if (!interaction.guild) return;
     if (!interaction.member) return;
     if (!interaction.options) return;
+    const member = interaction.member as GuildMember;
+    if (
+      !member.permissions.has(PermissionsBitField.Flags.ManageGuild) &&
+      !member.permissions.has(PermissionsBitField.Flags.Administrator)
+    ) {
+      await interaction.reply({
+        content: "You do not have permissions",
+        ephemeral: true,
+      });
+      return;
+    }
     const subcommand = interaction.options.getSubcommandGroup();
     if (subcommand === "logging") {
       await handleLoggingSubcommands(interaction, this.selfMemberId);
