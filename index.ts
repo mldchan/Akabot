@@ -1,4 +1,4 @@
-import { Client, ClientOptions, REST, Routes } from "discord.js";
+import { ActivityType, Client, ClientOptions, REST, Routes } from "discord.js";
 import { AllCommands, Module } from "./modules/type";
 import { Suggestions } from "./modules/suggestions";
 import * as dotenv from "dotenv";
@@ -7,8 +7,17 @@ import { SettingsModule } from "./modules/settings";
 import { LevelingModule } from "./modules/leveling";
 import { WelcomeModule } from "./modules/welcome";
 import { GoodbyeModule } from "./modules/goodbye";
+import * as Sentry from "@sentry/node";
+import { ProfilingIntegration } from "@sentry/profiling-node";
 
 dotenv.config();
+
+Sentry.init({
+  dsn: process.env.SENTRY,
+  integrations: [new ProfilingIntegration()],
+  tracesSampleRate: 1.0,
+  profilesSampleRate: 1.0,
+});
 
 if (!process.env.TOKEN) {
   throw new Error("No token provided");
@@ -58,6 +67,11 @@ client.on("ready", () => {
   } catch (error) {
     console.error(error);
   }
+
+  client.user?.setActivity({
+    name: "b1",
+    type: ActivityType.Playing,
+  });
 });
 
 client.on("messageCreate", async (message) => {

@@ -1,3 +1,6 @@
 node_modules
 dist
 .env
+
+# the file below is used by mldkyt to sync the files exactly between his devices
+sync.ffs_db
