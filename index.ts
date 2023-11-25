@@ -55,15 +55,9 @@ client.on("ready", () => {
     modules.forEach((module) => {
       commands = [...commands, ...module.commands];
     });
-    restClient.put(
-      Routes.applicationGuildCommands(
-        "1172922944033411243",
-        "1144262375281799179"
-      ),
-      {
-        body: commands,
-      }
-    );
+    restClient.put(Routes.applicationCommands("1172922944033411243"), {
+      body: commands,
+    });
   } catch (error) {
     console.error(error);
   }
