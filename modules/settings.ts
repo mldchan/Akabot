@@ -251,6 +251,33 @@ export class SettingsModule implements Module {
                   .setRequired(false)
               )
           )
+          .addSubcommand((messageType) =>
+            messageType
+              .setName("type")
+              .setDescription(
+                "If you want to use an embed, or a normal message."
+              )
+              .addStringOption((newValue) =>
+                newValue
+                  .setName("type")
+                  .setDescription("Change the message type")
+                  .setChoices(
+                    { name: "Embed", value: "embed" },
+                    { name: "Normal message", value: "normal" }
+                  )
+              )
+          )
+          .addSubcommand((messageFormat) =>
+            messageFormat
+              .setName("format")
+              .setDescription("Set the format")
+              .addStringOption((newFormat) =>
+                newFormat
+                  .setName("format")
+                  .setDescription("The new format to use")
+                  .setMinLength(2)
+              )
+          )
       ),
   ];
   selfMemberId: string = "";
