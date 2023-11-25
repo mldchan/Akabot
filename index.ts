@@ -12,15 +12,20 @@ import { ProfilingIntegration } from "@sentry/profiling-node";
 
 dotenv.config();
 
-Sentry.init({
-  dsn: process.env.SENTRY,
-  integrations: [new ProfilingIntegration()],
-  tracesSampleRate: 1.0,
-  profilesSampleRate: 1.0,
-});
+if (process.env.DEV === "true" && process.env.SENTRY) {
+  Sentry.init({
+    dsn: process.env.SENTRY,
+    integrations: [new ProfilingIntegration()],
+    tracesSampleRate: 1.0,
+    profilesSampleRate: 1.0,
+  });
+}
 
 if (!process.env.TOKEN) {
   throw new Error("No token provided");
+}
+if (!process.env.CLIENT_ID) {
+  throw new Error("No client id provided");
 }
 
 const options: ClientOptions = {
@@ -35,7 +40,7 @@ const options: ClientOptions = {
 };
 
 const client = new Client(options);
-const restClient = new REST({ version: "9" }).setToken(process.env.TOKEN);
+const restClient = new REST().setToken(process.env.TOKEN);
 const modules: Module[] = [];
 
 modules.push(new Suggestions());
@@ -48,16 +53,31 @@ modules.push(new GoodbyeModule());
 client.on("ready", () => {
   console.log("I am ready!");
   modules.forEach((module) => {
-    module.selfMemberId = client.user?.id || "";
+    module.selfMemberId = client.user?.id ?? "";
   });
   try {
     let commands: AllCommands = [];
     modules.forEach((module) => {
       commands = [...commands, ...module.commands];
     });
-    restClient.put(Routes.applicationCommands("1172922944033411243"), {
-      body: commands,
-    });
+
+    if (process.env.DEV === "true" && process.env.DEV_GUILD_ID) {
+      console.log("Registering commands in dev guild...");
+      restClient.put(
+        Routes.applicationGuildCommands(
+          process.env.CLIENT_ID!,
+          process.env.DEV_GUILD_ID
+        ),
+        {
+          body: commands,
+        }
+      );
+    } else {
+      console.log("Registering commands globally...");
+      restClient.put(Routes.applicationCommands(process.env.CLIENT_ID!), {
+        body: commands,
+      });
+    }
   } catch (error) {
     console.error(error);
   }
@@ -71,88 +91,88 @@ client.on("ready", () => {
 client.on("messageCreate", async (message) => {
   if (!message.guild) return;
 
-  modules.forEach(async (module) => {
-    await module.onMessage(message);
+  modules.forEach((module) => {
+    module.onMessage(message);
   });
 });
 
 client.on("interactionCreate", async (interaction) => {
   if (interaction.isButton()) {
-    modules.forEach(async (module) => {
-      await module.onButtonClick(interaction);
+    modules.forEach((module) => {
+      module.onButtonClick(interaction);
     });
   }
 
   if (interaction.isChatInputCommand()) {
-    modules.forEach(async (module) => {
-      await module.onSlashCommand(interaction);
+    modules.forEach((module) => {
+      module.onSlashCommand(interaction);
     });
   }
 });
 
 client.on("guildMemberAdd", async (member) => {
-  modules.forEach(async (module) => {
-    await module.onMemberJoin(member);
+  modules.forEach((module) => {
+    module.onMemberJoin(member);
   });
 });
 
 client.on("guildMemberRemove", async (member) => {
-  modules.forEach(async (module) => {
-    await module.onMemberLeave(member);
+  modules.forEach((module) => {
+    module.onMemberLeave(member);
   });
 });
 
 client.on("guildMemberUpdate", async (before, after) => {
-  modules.forEach(async (module) => {
-    await module.onMemberEdit(before, after);
+  modules.forEach((module) => {
+    module.onMemberEdit(before, after);
   });
 });
 
 client.on("messageDelete", async (message) => {
-  modules.forEach(async (module) => {
-    await module.onMessageDelete(message);
+  modules.forEach((module) => {
+    module.onMessageDelete(message);
   });
 });
 
 client.on("messageUpdate", async (before, after) => {
-  modules.forEach(async (module) => {
-    await module.onMessageEdit(before, after);
+  modules.forEach((module) => {
+    module.onMessageEdit(before, after);
   });
 });
 
 client.on("channelCreate", async (channel) => {
-  modules.forEach(async (module) => {
-    await module.onChannelCreate(channel);
+  modules.forEach((module) => {
+    module.onChannelCreate(channel);
   });
 });
 
 client.on("channelDelete", async (channel) => {
-  modules.forEach(async (module) => {
-    await module.onChannelDelete(channel);
+  modules.forEach((module) => {
+    module.onChannelDelete(channel);
   });
 });
 
 client.on("channelUpdate", async (before, after) => {
-  modules.forEach(async (module) => {
-    await module.onChannelEdit(before, after);
+  modules.forEach((module) => {
+    module.onChannelEdit(before, after);
   });
 });
 
 client.on("roleCreate", async (role) => {
-  modules.forEach(async (module) => {
-    await module.onRoleCreate(role);
+  modules.forEach((module) => {
+    module.onRoleCreate(role);
   });
 });
 
 client.on("roleDelete", async (role) => {
-  modules.forEach(async (module) => {
-    await module.onRoleDelete(role);
+  modules.forEach((module) => {
+    module.onRoleDelete(role);
   });
 });
 
 client.on("roleUpdate", async (before, after) => {
-  modules.forEach(async (module) => {
-    await module.onRoleEdit(before, after);
+  modules.forEach((module) => {
+    module.onRoleEdit(before, after);
   });
 });
 

@@ -59,7 +59,7 @@ export class Suggestions implements Module {
   ): Promise<void> {
     if (interaction.commandName !== "feedback") return;
     switch (interaction.options.getSubcommand(true)) {
-      case "suggest":
+      case "suggest": {
         const a = interaction.options.getString("suggestion", true);
         addSuggestion(interaction.user.username, a);
         await interaction.reply({
@@ -67,7 +67,8 @@ export class Suggestions implements Module {
           ephemeral: true,
         });
         break;
-      case "bug":
+      }
+      case "bug": {
         const b = interaction.options.getString("bug", true);
         addBugReport(interaction.user.username, b);
         await interaction.reply({
@@ -75,6 +76,7 @@ export class Suggestions implements Module {
           ephemeral: true,
         });
         break;
+      }
     }
   }
   async onButtonClick(
