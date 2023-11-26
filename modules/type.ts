@@ -9,12 +9,11 @@ import {
   PartialMessage,
   Role,
   SlashCommandBuilder,
+  SlashCommandOptionsOnlyBuilder,
   SlashCommandSubcommandsOnlyBuilder,
 } from "discord.js";
 
-export type AllCommands =
-  | SlashCommandBuilder[]
-  | SlashCommandSubcommandsOnlyBuilder[];
+export type AllCommands = any[];
 
 export interface Module {
   commands: AllCommands;
