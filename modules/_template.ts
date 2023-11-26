@@ -1,7 +1,24 @@
-import { ChatInputCommandInteraction, CacheType, ButtonInteraction, Role, Channel, Message, GuildMember } from "discord.js";
+import {
+    ChatInputCommandInteraction,
+    CacheType,
+    ButtonInteraction,
+    Role,
+    Channel,
+    Message,
+    GuildMember,
+    Guild,
+    Emoji,
+    Sticker
+} from "discord.js";
 import { AllCommands, Module } from "./type";
 
 export class TemplateModule implements Module {
+    async onEmojiCreate(emoji: Emoji): Promise<void> {}
+    async onEmojiDelete(emoji: Emoji): Promise<void> {}
+    async onEmojiEdit(before: Emoji, after: Emoji): Promise<void> {}
+    async onStickerCreate(sticker: Sticker): Promise<void> {}
+    async onStickerDelete(sticker: Sticker): Promise<void> {}
+    async onStickerEdit(before: Sticker, after: Sticker): Promise<void> {}
     commands: AllCommands = [];
     selfMemberId: string = "";
     async onSlashCommand(interaction: ChatInputCommandInteraction<CacheType>): Promise<void> {}
@@ -18,4 +35,7 @@ export class TemplateModule implements Module {
     async onMemberJoin(member: GuildMember): Promise<void> {}
     async onMemberEdit(before: GuildMember, after: GuildMember): Promise<void> {}
     async onMemberLeave(member: GuildMember): Promise<void> {}
+    async onGuildAdd(guild: Guild): Promise<void> {}
+    async onGuildRemove(guild: Guild): Promise<void> {}
+    async onGuildEdit(before: Guild, after: Guild): Promise<void> {}
 }

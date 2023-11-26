@@ -1,4 +1,4 @@
-import { ActivityType, Client, ClientOptions, REST, Routes } from "discord.js";
+import { ActivityType, BitField, Client, ClientOptions, REST, Routes } from "discord.js";
 import { AllCommands, Module } from "./modules/type";
 import { Suggestions } from "./modules/suggestions";
 import * as dotenv from "dotenv";
@@ -13,7 +13,8 @@ import { ReactionRolesModule } from "./modules/reactionRoles";
 
 dotenv.config();
 
-if (process.env.DEV === "true" && process.env.SENTRY) {
+if (process.env.DEV !== "true" && process.env.SENTRY) {
+    console.log("Initializing Sentry...");
     Sentry.init({
         dsn: process.env.SENTRY,
         integrations: [new ProfilingIntegration()],
@@ -30,7 +31,25 @@ if (!process.env.CLIENT_ID) {
 }
 
 const options: ClientOptions = {
-    intents: ["Guilds", "GuildMessages", "GuildMembers", "MessageContent", "GuildBans", "GuildModeration"]
+    intents: [
+        "AutoModerationConfiguration",
+        "AutoModerationExecution",
+        "GuildBans",
+        "GuildEmojisAndStickers",
+        "GuildIntegrations",
+        "GuildInvites",
+        "GuildMembers",
+        "GuildMessageTyping",
+        "GuildMessageReactions",
+        "GuildMessages",
+        "GuildModeration",
+        "GuildPresences",
+        "GuildScheduledEvents",
+        "GuildVoiceStates",
+        "GuildWebhooks",
+        "Guilds",
+        "MessageContent"
+    ]
 };
 
 const client = new Client(options);
@@ -45,7 +64,7 @@ modules.push(new WelcomeModule());
 modules.push(new GoodbyeModule());
 modules.push(new ReactionRolesModule());
 
-client.on("ready", () => {
+client.on("ready", async () => {
     console.log("I am ready!");
     modules.forEach((module) => {
         module.selfMemberId = client.user?.id ?? "";
@@ -75,6 +94,19 @@ client.on("ready", () => {
         name: "b2",
         type: ActivityType.Playing
     });
+
+    console.log(`Loaded with ${client.guilds.cache.size} guilds...`);
+    for (const guild of client.guilds.cache.values()) {
+        console.log(`\tGuild ${guild.name} (${guild.id})`);
+        const channels = guild.channels.cache;
+        console.log(
+            `\t\t${channels.size} channels (${channels.filter((channel) => channel.isTextBased()).size} text, ${
+                channels.filter((channel) => channel.isVoiceBased()).size
+            } voice)`
+        );
+
+        console.log(`\t\t${guild.members.cache.size} members...`);
+    }
 });
 
 client.on("messageCreate", async (message) => {
@@ -162,6 +194,60 @@ client.on("roleDelete", async (role) => {
 client.on("roleUpdate", async (before, after) => {
     modules.forEach((module) => {
         module.onRoleEdit(before, after);
+    });
+});
+
+client.on("guildCreate", async (guild) => {
+    modules.forEach((module) => {
+        module.onGuildAdd(guild);
+    });
+});
+
+client.on("guildDelete", async (guild) => {
+    modules.forEach((module) => {
+        module.onGuildRemove(guild);
+    });
+});
+
+client.on("guildUpdate", async (before, after) => {
+    modules.forEach((module) => {
+        module.onGuildEdit(before, after);
+    });
+});
+
+client.on("emojiCreate", async (emoji) => {
+    modules.forEach((module) => {
+        module.onEmojiCreate(emoji);
+    });
+});
+
+client.on("emojiDelete", async (emoji) => {
+    modules.forEach((module) => {
+        module.onEmojiDelete(emoji);
+    });
+});
+
+client.on("emojiUpdate", async (before, after) => {
+    modules.forEach((module) => {
+        module.onEmojiEdit(before, after);
+    });
+});
+
+client.on("stickerCreate", async (sticker) => {
+    modules.forEach((module) => {
+        module.onStickerCreate(sticker);
+    });
+});
+
+client.on("stickerDelete", async (sticker) => {
+    modules.forEach((module) => {
+        module.onStickerDelete(sticker);
+    });
+});
+
+client.on("stickerUpdate", async (before, after) => {
+    modules.forEach((module) => {
+        module.onStickerEdit(before, after);
     });
 });
 

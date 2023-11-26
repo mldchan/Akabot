@@ -1,4 +1,17 @@
-import { ButtonInteraction, CacheType, Channel, ChatInputCommandInteraction, GuildMember, Message, Role, SlashCommandBuilder, SlashCommandSubcommandsOnlyBuilder } from "discord.js";
+import {
+    ButtonInteraction,
+    CacheType,
+    Channel,
+    ChatInputCommandInteraction,
+    Emoji,
+    Guild,
+    GuildMember,
+    Message,
+    Role,
+    SlashCommandBuilder,
+    SlashCommandSubcommandsOnlyBuilder,
+    Sticker
+} from "discord.js";
 import { Module } from "./type";
 import { addBugReport, addSuggestion } from "../data/feedback";
 
@@ -20,7 +33,9 @@ export class Suggestions implements Module {
                 subcommand
                     .setName("suggest")
                     .setDescription("Suggest a feature to be added to the bot")
-                    .addStringOption((option) => option.setName("suggestion").setDescription("The suggestion you want to send").setRequired(true))
+                    .addStringOption((option) =>
+                        option.setName("suggestion").setDescription("The suggestion you want to send").setRequired(true)
+                    )
             )
             .addSubcommand((subcommand) =>
                 subcommand
@@ -58,4 +73,13 @@ export class Suggestions implements Module {
 
     async onRoleCreate(role: Role): Promise<void> {}
     async onRoleDelete(role: Role): Promise<void> {}
+    async onGuildAdd(guild: Guild): Promise<void> {}
+    async onGuildRemove(guild: Guild): Promise<void> {}
+    async onGuildEdit(before: Guild, after: Guild): Promise<void> {}
+    async onEmojiCreate(emoji: Emoji): Promise<void> {}
+    async onEmojiDelete(emoji: Emoji): Promise<void> {}
+    async onEmojiEdit(before: Emoji, after: Emoji): Promise<void> {}
+    async onStickerCreate(sticker: Sticker): Promise<void> {}
+    async onStickerDelete(sticker: Sticker): Promise<void> {}
+    async onStickerEdit(before: Sticker, after: Sticker): Promise<void> {}
 }

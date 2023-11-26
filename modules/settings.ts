@@ -1,4 +1,17 @@
-import { ChatInputCommandInteraction, CacheType, ButtonInteraction, Role, Channel, Message, GuildMember, PermissionsBitField, SlashCommandSubcommandBuilder } from "discord.js";
+import {
+    ChatInputCommandInteraction,
+    CacheType,
+    ButtonInteraction,
+    Role,
+    Channel,
+    Message,
+    GuildMember,
+    PermissionsBitField,
+    SlashCommandSubcommandBuilder,
+    Guild,
+    Emoji,
+    Sticker
+} from "discord.js";
 import { AllCommands, Module } from "./type";
 import { ChannelSetting, SettingsCommandBuilder, SettingsGroupBuilder, setChannel } from "../types/settings";
 
@@ -31,12 +44,23 @@ async function handleGoodbyeSubcommands(interaction: ChatInputCommandInteraction
     }
 }
 
+async function handleLevelingSubcommands(interaction: ChatInputCommandInteraction<CacheType>, selfMemberId: string) {
+    if (!interaction.guild) return;
+    if (!interaction.member) return;
+    if (!interaction.options) return;
+    const group = interaction.options.getSubcommand();
+    if (group === "channel") {
+        setChannel("leveling", "levelingChannel", interaction, selfMemberId);
+    }
+}
+
 export class SettingsModule implements Module {
     commands: AllCommands = [
         new SettingsCommandBuilder()
             .addSettingsGroup(new SettingsGroupBuilder("logging").addChannelSetting(new ChannelSetting("channel")))
             .addSettingsGroup(new SettingsGroupBuilder("welcome").addChannelSetting(new ChannelSetting("channel")))
             .addSettingsGroup(new SettingsGroupBuilder("goodbye").addChannelSetting(new ChannelSetting("channel")))
+            .addSettingsGroup(new SettingsGroupBuilder("leveling").addChannelSetting(new ChannelSetting("channel")))
             .addSettingsGroup(
                 new SettingsGroupBuilder("reactionroles").addSubcommand(
                     new SlashCommandSubcommandBuilder()
@@ -80,7 +104,10 @@ export class SettingsModule implements Module {
         if (!interaction.member) return;
         if (!interaction.options) return;
         const member = interaction.member as GuildMember;
-        if (!member.permissions.has(PermissionsBitField.Flags.ManageGuild) && !member.permissions.has(PermissionsBitField.Flags.Administrator)) {
+        if (
+            !member.permissions.has(PermissionsBitField.Flags.ManageGuild) &&
+            !member.permissions.has(PermissionsBitField.Flags.Administrator)
+        ) {
             await interaction.reply({
                 content: "You do not have permissions",
                 ephemeral: true
@@ -98,6 +125,9 @@ export class SettingsModule implements Module {
         if (subcommand === "goodbye") {
             await handleGoodbyeSubcommands(interaction, this.selfMemberId);
         }
+        if (subcommand === "leveling") {
+            await handleLevelingSubcommands(interaction, this.selfMemberId);
+        }
     }
     async onButtonClick(interaction: ButtonInteraction<CacheType>): Promise<void> {}
     async onRoleCreate(role: Role): Promise<void> {}
@@ -112,4 +142,13 @@ export class SettingsModule implements Module {
     async onMemberJoin(member: GuildMember): Promise<void> {}
     async onMemberEdit(before: GuildMember, after: GuildMember): Promise<void> {}
     async onMemberLeave(member: GuildMember): Promise<void> {}
+    async onGuildAdd(guild: Guild): Promise<void> {}
+    async onGuildRemove(guild: Guild): Promise<void> {}
+    async onGuildEdit(before: Guild, after: Guild): Promise<void> {}
+    async onEmojiCreate(emoji: Emoji): Promise<void> {}
+    async onEmojiDelete(emoji: Emoji): Promise<void> {}
+    async onEmojiEdit(before: Emoji, after: Emoji): Promise<void> {}
+    async onStickerCreate(sticker: Sticker): Promise<void> {}
+    async onStickerDelete(sticker: Sticker): Promise<void> {}
+    async onStickerEdit(before: Sticker, after: Sticker): Promise<void> {}
 }

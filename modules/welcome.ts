@@ -1,4 +1,16 @@
-import { ChatInputCommandInteraction, CacheType, ButtonInteraction, Role, Channel, Message, GuildMember, EmbedBuilder } from "discord.js";
+import {
+    ChatInputCommandInteraction,
+    CacheType,
+    ButtonInteraction,
+    Role,
+    Channel,
+    Message,
+    GuildMember,
+    EmbedBuilder,
+    Guild,
+    Emoji,
+    Sticker
+} from "discord.js";
 import { AllCommands, Module } from "./type";
 import { getSetting } from "../data/settings";
 
@@ -22,11 +34,23 @@ export class WelcomeModule implements Module {
         const channelRes = member.guild.channels.cache.get(channel);
         if (!channelRes) return;
         if (!channelRes.isTextBased()) return;
-        const embed = new EmbedBuilder().setTitle(`Welcome ${member.displayName}`).setDescription(`Welcome to ${member.guild.name}, ${member.displayName}! Enjoy your stay.`).setColor("Green");
+        const embed = new EmbedBuilder()
+            .setTitle(`Welcome ${member.displayName}`)
+            .setDescription(`Welcome to ${member.guild.name}, ${member.displayName}! Enjoy your stay.`)
+            .setColor("Green");
         if (!channelRes.permissionsFor(this.selfMemberId)) return;
         if (!channelRes.permissionsFor(this.selfMemberId)!.has("SendMessages")) return;
         await channelRes.send({ embeds: [embed] });
     }
     async onMemberEdit(before: GuildMember, after: GuildMember): Promise<void> {}
     async onMemberLeave(member: GuildMember): Promise<void> {}
+    async onGuildAdd(guild: Guild): Promise<void> {}
+    async onGuildRemove(guild: Guild): Promise<void> {}
+    async onGuildEdit(before: Guild, after: Guild): Promise<void> {}
+    async onEmojiCreate(emoji: Emoji): Promise<void> {}
+    async onEmojiDelete(emoji: Emoji): Promise<void> {}
+    async onEmojiEdit(before: Emoji, after: Emoji): Promise<void> {}
+    async onStickerCreate(sticker: Sticker): Promise<void> {}
+    async onStickerDelete(sticker: Sticker): Promise<void> {}
+    async onStickerEdit(before: Sticker, after: Sticker): Promise<void> {}
 }

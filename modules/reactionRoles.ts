@@ -1,8 +1,29 @@
-import { ChatInputCommandInteraction, CacheType, ButtonInteraction, Role, Channel, Message, GuildMember, ActionRowBuilder, ButtonBuilder, ButtonStyle, APIRole, ButtonComponent } from "discord.js";
+import {
+    ChatInputCommandInteraction,
+    CacheType,
+    ButtonInteraction,
+    Role,
+    Channel,
+    Message,
+    GuildMember,
+    ActionRowBuilder,
+    ButtonBuilder,
+    ButtonStyle,
+    APIRole,
+    ButtonComponent,
+    Guild,
+    Emoji,
+    Sticker
+} from "discord.js";
 import { AllCommands, Module } from "./type";
 
-async function createReactionRoleMessage(msg: string, roles: (Role | APIRole)[], interaction: ChatInputCommandInteraction<CacheType>, modeCode: string) {
-    let rows = [];
+async function createReactionRoleMessage(
+    msg: string,
+    roles: (Role | APIRole)[],
+    interaction: ChatInputCommandInteraction<CacheType>,
+    modeCode: string
+) {
+    let rows: ActionRowBuilder<ButtonBuilder>[] = [];
     let currentRow = new ActionRowBuilder<ButtonBuilder>();
     for (const i of roles) {
         if (currentRow.components.length === 5) {
@@ -19,7 +40,12 @@ async function createReactionRoleMessage(msg: string, roles: (Role | APIRole)[],
 }
 
 async function handleCreationOfReactionRoles(interaction: ChatInputCommandInteraction<CacheType>) {
-    if (interaction.commandName !== "settings" && interaction.options.getSubcommandGroup() !== "reactionroles" && interaction.options.getSubcommand() !== "new") return;
+    if (
+        interaction.commandName !== "settings" &&
+        interaction.options.getSubcommandGroup(false) !== "reactionroles" &&
+        interaction.options.getSubcommand(false) !== "new"
+    )
+        return;
     if (!interaction.channel) return;
     const msg = interaction.options.getString("message")!;
     const mode = interaction.options.getString("mode")!;
@@ -263,4 +289,13 @@ export class ReactionRolesModule implements Module {
     async onMemberJoin(member: GuildMember): Promise<void> {}
     async onMemberEdit(before: GuildMember, after: GuildMember): Promise<void> {}
     async onMemberLeave(member: GuildMember): Promise<void> {}
+    async onGuildAdd(guild: Guild): Promise<void> {}
+    async onGuildRemove(guild: Guild): Promise<void> {}
+    async onGuildEdit(before: Guild, after: Guild): Promise<void> {}
+    async onEmojiCreate(emoji: Emoji): Promise<void> {}
+    async onEmojiDelete(emoji: Emoji): Promise<void> {}
+    async onEmojiEdit(before: Emoji, after: Emoji): Promise<void> {}
+    async onStickerCreate(sticker: Sticker): Promise<void> {}
+    async onStickerDelete(sticker: Sticker): Promise<void> {}
+    async onStickerEdit(before: Sticker, after: Sticker): Promise<void> {}
 }

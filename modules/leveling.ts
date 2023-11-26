@@ -1,6 +1,20 @@
-import { ChatInputCommandInteraction, CacheType, ButtonInteraction, Role, Channel, Message, GuildMember, SlashCommandBuilder, EmbedBuilder } from "discord.js";
+import {
+    ChatInputCommandInteraction,
+    CacheType,
+    ButtonInteraction,
+    Role,
+    Channel,
+    Message,
+    GuildMember,
+    SlashCommandBuilder,
+    EmbedBuilder,
+    Guild,
+    Emoji,
+    Sticker
+} from "discord.js";
 import { AllCommands, Module } from "./type";
 import { addPointsToUser, getUserLevel, getUserPoints, getUserRequirementForNextLevel } from "../data/leveling";
+import { getSetting } from "../data/settings";
 
 function getFormattedDate() {
     const date = new Date();
@@ -8,7 +22,10 @@ function getFormattedDate() {
 }
 
 export class LevelingModule implements Module {
-    commands: AllCommands = [new SlashCommandBuilder().setName("level").setDescription("Get your current level").setDMPermission(false), new SlashCommandBuilder().setName("rank").setDescription("Get your current level").setDMPermission(false)];
+    commands: AllCommands = [
+        new SlashCommandBuilder().setName("level").setDescription("Get your current level").setDMPermission(false),
+        new SlashCommandBuilder().setName("rank").setDescription("Get your current level").setDMPermission(false)
+    ];
     selfMemberId: string = "";
     async onSlashCommand(interaction: ChatInputCommandInteraction<CacheType>): Promise<void> {
         if (interaction.commandName !== "level" && interaction.commandName !== "rank") return;
@@ -36,11 +53,47 @@ export class LevelingModule implements Module {
     async onMessage(msg: Message<boolean>): Promise<void> {
         if (!msg.guild) return;
         if (msg.author.bot) return;
+        const xpBefore = getUserPoints(msg.guild.id, msg.author.id);
+        const levelBefore = getUserLevel(xpBefore);
         addPointsToUser(msg.guild.id, msg.author.id, msg.content.length);
+        const xpAfter = getUserPoints(msg.guild.id, msg.author.id);
+        const levelAfter = getUserLevel(xpAfter);
+        if (levelBefore !== levelAfter) {
+            const levelingChannelId = getSetting(msg.guild.id, "levelingChannel", "");
+            const levelingChannel = msg.guild.channels.cache.get(levelingChannelId);
+            if (!levelingChannel) return;
+            if (!levelingChannel.isTextBased()) return;
+            const embed = new EmbedBuilder()
+                .setTitle(`Level Up - ${msg.author.username}`)
+                .setDescription(
+                    `${msg.author.username} has leveled up from level ${levelBefore} (${xpBefore} XP) to level ${levelAfter} (${xpAfter} XP)`
+                )
+                .setColor("Green")
+                .setFooter({
+                    text: getFormattedDate()
+                });
+            try {
+                await levelingChannel.send({
+                    content: `<@${msg.author.id}>`,
+                    embeds: [embed]
+                });
+            } catch (err) {
+                console.error(err);
+            }
+        }
     }
     async onMessageDelete(msg: Message<boolean>): Promise<void> {}
     async onMessageEdit(before: Message<boolean>, after: Message<boolean>): Promise<void> {}
     async onMemberJoin(member: GuildMember): Promise<void> {}
     async onMemberEdit(before: GuildMember, after: GuildMember): Promise<void> {}
     async onMemberLeave(member: GuildMember): Promise<void> {}
+    async onGuildAdd(guild: Guild): Promise<void> {}
+    async onGuildRemove(guild: Guild): Promise<void> {}
+    async onGuildEdit(before: Guild, after: Guild): Promise<void> {}
+    async onEmojiCreate(emoji: Emoji): Promise<void> {}
+    async onEmojiDelete(emoji: Emoji): Promise<void> {}
+    async onEmojiEdit(before: Emoji, after: Emoji): Promise<void> {}
+    async onStickerCreate(sticker: Sticker): Promise<void> {}
+    async onStickerDelete(sticker: Sticker): Promise<void> {}
+    async onStickerEdit(before: Sticker, after: Sticker): Promise<void> {}
 }

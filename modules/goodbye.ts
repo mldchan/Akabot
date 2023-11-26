@@ -1,8 +1,24 @@
-import { ChatInputCommandInteraction, CacheType, ButtonInteraction, Role, Channel, Message, GuildMember, EmbedBuilder, AuditLogEvent } from "discord.js";
+import {
+    ChatInputCommandInteraction,
+    CacheType,
+    ButtonInteraction,
+    Role,
+    Channel,
+    Message,
+    GuildMember,
+    EmbedBuilder,
+    AuditLogEvent,
+    Guild,
+    Emoji,
+    Sticker
+} from "discord.js";
 import { AllCommands, Module } from "./type";
 import { getSetting } from "../data/settings";
 
 export class GoodbyeModule implements Module {
+    async onGuildAdd(guild: Guild): Promise<void> {}
+    async onGuildRemove(guild: Guild): Promise<void> {}
+    async onGuildEdit(before: Guild, after: Guild): Promise<void> {}
     commands: AllCommands = [];
     selfMemberId: string = "";
     async onSlashCommand(interaction: ChatInputCommandInteraction<CacheType>): Promise<void> {}
@@ -33,7 +49,10 @@ export class GoodbyeModule implements Module {
         const embed = new EmbedBuilder();
         switch (reason) {
             case "leave":
-                embed.setTitle(`Goodbye ${member.displayName}`).setDescription(`We hope to see you later ${member.displayName}.`).setColor("Red");
+                embed
+                    .setTitle(`Goodbye ${member.displayName}`)
+                    .setDescription(`We hope to see you later ${member.displayName}.`)
+                    .setColor("Red");
                 break;
             case "kick":
                 embed.setTitle(`Goodbye ${member.displayName}`).setDescription(`${member.displayName} was kicked.`).setColor("Red");
@@ -46,4 +65,10 @@ export class GoodbyeModule implements Module {
             await channelRes.send({ embeds: [embed] });
         } catch (_) {}
     }
+    async onEmojiCreate(emoji: Emoji): Promise<void> {}
+    async onEmojiDelete(emoji: Emoji): Promise<void> {}
+    async onEmojiEdit(before: Emoji, after: Emoji): Promise<void> {}
+    async onStickerCreate(sticker: Sticker): Promise<void> {}
+    async onStickerDelete(sticker: Sticker): Promise<void> {}
+    async onStickerEdit(before: Sticker, after: Sticker): Promise<void> {}
 }
