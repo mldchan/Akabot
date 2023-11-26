@@ -94,25 +94,25 @@ export async function setChannel(channelName: string, key: string, interaction: 
     const newChannel = interaction.options.getChannel("channel");
     const currentChannel = getSetting(interaction.guild.id, key, "");
     if (!newChannel) {
-        if (currentChannel != "") {
-            await interaction.reply({
-                content: `The current ${channelName} channel is <#${currentChannel}>`,
-                ephemeral: true
-            });
-        } else {
+        if (currentChannel === "") {
             await interaction.reply({
                 content: `There is no ${channelName} channel set`,
                 ephemeral: true
             });
-        }
-    } else {
-        if (!(await verifyTextableTextChannel(newChannel as Channel, interaction, selfMemberId))) {
             return;
         }
         await interaction.reply({
-            content: `The ${channelName} channel has been set to <#${newChannel.id}>`,
+            content: `The current ${channelName} channel is <#${currentChannel}>`,
             ephemeral: true
         });
-        setSetting(interaction.guild.id, key, newChannel.id);
+        return;
     }
+    if (!(await verifyTextableTextChannel(newChannel as Channel, interaction, selfMemberId))) {
+        return;
+    }
+    setSetting(interaction.guild.id, key, newChannel.id);
+    await interaction.reply({
+        content: `The ${channelName} channel has been set to <#${newChannel.id}>`,
+        ephemeral: true
+    });
 }

@@ -55,11 +55,6 @@ async function handleCreationOfReactionRoles(interaction: ChatInputCommandIntera
             await createReactionRoleMessage(msg, roles, interaction, "s");
             break;
     }
-
-    await interaction.reply({
-        content: "Done!",
-        ephemeral: true
-    });
 }
 
 async function handleNormalReactionRole(interaction: ButtonInteraction<CacheType>) {
