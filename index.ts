@@ -72,7 +72,7 @@ client.on("ready", () => {
     }
 
     client.user?.setActivity({
-        name: "b1",
+        name: "b2",
         type: ActivityType.Playing
     });
 });
