@@ -405,21 +405,37 @@ export class AntiRaidModule implements Module {
     async onMessage(msg: Message<boolean>): Promise<void> {
         if (!msg.guild) return;
         if (msg.author.bot) return;
-        const vl = this.vlNew(msg.guild.id, "message", 3000);
-        let extraData = this.vlGetExtraData<ViolationCountersMessageData>(msg.guild.id, "message") ?? { messageIDs: [] };
+        const vl = this.vlNew(msg.guild.id, `message${msg.author.id}`, 3000);
+        let extraData = this.vlGetExtraData<ViolationCountersMessageData>(msg.guild.id, `message${msg.author.id}`) ?? { messageIDs: [] };
         extraData.messageIDs.push(msg.id);
-        this.vlSetExtraData(msg.guild.id, "message", extraData);
+        this.vlSetExtraData(msg.guild.id, `message${msg.author.id}`, extraData);
 
         if (vl > 4) {
-            await msg.channel.send(`<@${msg.author.id}>, You are sending messages too fast!`);
-            if (msg.channel.isTextBased() && !msg.channel.isDMBased()) {
-                msg.channel.bulkDelete(extraData.messageIDs);
+            const spamSendAlert = getSetting(msg.guild.id, "AntiRaidSpamSendAlert", "no");
+            if (spamSendAlert === "yes") {
+                await msg.channel.send(`<@${msg.author.id}>, You are sending messages too fast!`);
+            }
+            const fields: { name: string; value: string }[] = [];
+            const spamDeleteSetting = getSetting(msg.guild.id, "AntiRaidSpamDelete", "no");
+            if (spamDeleteSetting === "yes" && msg.channel.isTextBased() && !msg.channel.isDMBased()) {
+                try {
+                    await msg.channel.bulkDelete(extraData.messageIDs);
+                } catch (_) {
+                    fields.push({ name: "Bulk delete", value: "Failed to bulk delete messages" });
+                }
+            } else {
+                fields.push({ name: "Bulk delete", value: "Disabled" });
             }
             let timeoutStatus = { name: "Timeout", value: "10 seconds" };
-            try {
-                await msg.member?.timeout(10000, "Sending messages too fast!");
-            } catch (_) {
-                timeoutStatus = { name: "Timeout", value: "Failed to timeout" };
+            const spamTimeoutSetting = getSetting(msg.guild.id, "AntiRaidSpamTimeout", "no");
+            if (spamTimeoutSetting === "yes") {
+                try {
+                    await msg.member?.timeout(10000, "Sending messages too fast!");
+                } catch (_) {
+                    timeoutStatus = { name: "Timeout", value: "Failed to timeout" };
+                }
+            } else {
+                timeoutStatus = { name: "Timeout", value: "Disabled" };
             }
             const logChannelID = getSetting(msg.guild.id, "loggingChannel", "");
             const logChannel = msg.guild.channels.cache.get(logChannelID);
@@ -429,7 +445,8 @@ export class AntiRaidModule implements Module {
                     .addFields(
                         { name: "Member", value: msg.author.username },
                         { name: "Jump to latest message", value: `[Click here](${msg.url})` },
-                        timeoutStatus
+                        timeoutStatus,
+                        ...fields
                     )
                     .setColor("Red")
                     .setTimestamp(new Date());

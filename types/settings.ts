@@ -82,11 +82,11 @@ export class StringChoiceSetting extends SlashCommandSubcommandBuilder {
 }
 
 export class ToggleSetting extends SlashCommandSubcommandBuilder {
-    constructor(name: string) {
+    constructor(name: string, desc: string) {
         super();
         this.setName(name)
-            .setDescription(`Toggle ${name}`)
-            .addBooleanOption((newValue) => newValue.setName(name).setDescription(`Toggle ${name}`));
+            .setDescription(desc)
+            .addBooleanOption((newValue) => newValue.setName(name).setDescription(desc));
     }
 }
 

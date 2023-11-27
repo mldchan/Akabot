@@ -21,7 +21,7 @@ import {
     ToggleSetting,
     setChannel
 } from "../types/settings";
-import { setSetting } from "../data/settings";
+import { getSetting, setSetting } from "../data/settings";
 
 async function handleLoggingSubcommands(interaction: ChatInputCommandInteraction<CacheType>, selfMemberId: string) {
     if (!interaction.guild) return;
@@ -90,6 +90,70 @@ async function handleAntiRaidSubcommands(interaction: ChatInputCommandInteractio
             ephemeral: true
         });
     }
+    if (group === "spamdetection") {
+        const value = interaction.options.getBoolean("spamdetection");
+        if (value === null || value === undefined) {
+            const current = getSetting(interaction.guild.id, "AntiRaidSpamDetection", "no");
+            await interaction.reply({
+                content: `\`spam detection\` is currently set to \`${current}\``,
+                ephemeral: true
+            });
+            return;
+        }
+        setSetting(interaction.guild.id, "AntiRaidSpamDetection", value ? "yes" : "no");
+        await interaction.reply({
+            content: `Set \`spam detection\` to \`${value ? "yes" : "no"}\``,
+            ephemeral: true
+        });
+    }
+    if (group === "spamdelete") {
+        const value = interaction.options.getBoolean("spamdelete");
+        if (value === null || value === undefined) {
+            const current = getSetting(interaction.guild.id, "AntiRaidSpamDelete", "no");
+            await interaction.reply({
+                content: `\`delete spam messages\` is currently set to \`${current}\``,
+                ephemeral: true
+            });
+            return;
+        }
+        setSetting(interaction.guild.id, "AntiRaidSpamDelete", value ? "yes" : "no");
+        await interaction.reply({
+            content: `Set \`delete spam messages\` to \`${value ? "yes" : "no"}\``,
+            ephemeral: true
+        });
+    }
+    if (group === "spamtimeout") {
+        const value = interaction.options.getBoolean("spamtimeout");
+        if (value === null || value === undefined) {
+            const current = getSetting(interaction.guild.id, "AntiRaidSpamTimeout", "no");
+            await interaction.reply({
+                content: `\`timeout spammers\` is currently set to \`${current}\``,
+                ephemeral: true
+            });
+            return;
+        }
+        setSetting(interaction.guild.id, "AntiRaidSpamTimeout", value ? "yes" : "no");
+        await interaction.reply({
+            content: `Set \`timeout spammers\` to \`${value ? "yes" : "no"}\``,
+            ephemeral: true
+        });
+    }
+    if (group === "spamalert") {
+        const value = interaction.options.getBoolean("spamalert");
+        if (value === null || value === undefined) {
+            const current = getSetting(interaction.guild.id, "AntiRaidSpamSendAlert", "no");
+            await interaction.reply({
+                content: `\`tell spammers to stop spamming\` is currently set to \`${current}\``,
+                ephemeral: true
+            });
+            return;
+        }
+        setSetting(interaction.guild.id, "AntiRaidSpamSendAlert", value ? "yes" : "no");
+        await interaction.reply({
+            content: `Set \`tell spammers to stop spamming\` to \`${value ? "yes" : "no"}\``,
+            ephemeral: true
+        });
+    }
 }
 
 export class SettingsModule implements Module {
@@ -146,7 +210,11 @@ export class SettingsModule implements Module {
                             { display: "Auto-kick members younger than 30 days", value: "30" }
                         ])
                     )
-                    .addToggleSetting(new ToggleSetting("nopfp"))
+                    .addToggleSetting(new ToggleSetting("nopfp", "Kick members with no profile picture."))
+                    .addToggleSetting(new ToggleSetting("spamdetection", "Kick members that spam."))
+                    .addToggleSetting(new ToggleSetting("spamdelete", "Delete messages from spammers."))
+                    .addToggleSetting(new ToggleSetting("spamtimeout", "Timeout spammers for a short period."))
+                    .addToggleSetting(new ToggleSetting("spamalert", "Tell the spammer to stop spamming."))
             )
     ];
     selfMemberId: string = "";

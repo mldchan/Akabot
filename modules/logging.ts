@@ -16,7 +16,6 @@ import {
     GuildChannel,
     ChannelType,
     Guild,
-    Emoji,
     Sticker,
     GuildEmoji
 } from "discord.js";
