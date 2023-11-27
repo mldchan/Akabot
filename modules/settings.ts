@@ -13,7 +13,15 @@ import {
     Sticker
 } from "discord.js";
 import { AllCommands, Module } from "./type";
-import { ChannelSetting, SettingsCommandBuilder, SettingsGroupBuilder, setChannel } from "../types/settings";
+import {
+    ChannelSetting,
+    SettingsCommandBuilder,
+    SettingsGroupBuilder,
+    StringChoiceSetting,
+    ToggleSetting,
+    setChannel
+} from "../types/settings";
+import { setSetting } from "../data/settings";
 
 async function handleLoggingSubcommands(interaction: ChatInputCommandInteraction<CacheType>, selfMemberId: string) {
     if (!interaction.guild) return;
@@ -51,6 +59,36 @@ async function handleLevelingSubcommands(interaction: ChatInputCommandInteractio
     const group = interaction.options.getSubcommand();
     if (group === "channel") {
         setChannel("leveling", "levelingChannel", interaction, selfMemberId);
+    }
+}
+
+async function handleAntiRaidSubcommands(interaction: ChatInputCommandInteraction<CacheType>, selfMemberId: string) {
+    if (!interaction.guild) return;
+    if (!interaction.member) return;
+    if (!interaction.options) return;
+    const group = interaction.options.getSubcommand();
+    if (group === "newmembers") {
+        const value = interaction.options.getString("value", true);
+        setSetting(interaction.guild.id, "AntiRaidNewMembers", value);
+        if (value === "0") {
+            await interaction.reply({
+                content: "Disabled anti-raid",
+                ephemeral: true
+            });
+            return;
+        }
+        await interaction.reply({
+            content: `Set anti-raid to ${value} days`,
+            ephemeral: true
+        });
+    }
+    if (group === "nopfp") {
+        const value = interaction.options.getBoolean("value", true);
+        setSetting(interaction.guild.id, "AntiRaidKickNoPFP", value ? "yes" : "no");
+        await interaction.reply({
+            content: `Set \`kick members without a profile picture\` to \`${value ? "yes" : "no"}\``,
+            ephemeral: true
+        });
     }
 }
 
@@ -96,6 +134,20 @@ export class SettingsModule implements Module {
                         .addRoleOption((role) => role.setName("role-9").setDescription("The role"))
                 )
             )
+            .addSettingsGroup(
+                new SettingsGroupBuilder("antiraid")
+                    .addStringChoiceSetting(
+                        new StringChoiceSetting("newmembers", [
+                            { display: "Disable auto-kick", value: "0" },
+                            { display: "Auto-kick members younger than 1 day", value: "1" },
+                            { display: "Auto-kick members younger than 3 days", value: "3" },
+                            { display: "Auto-kick members younger than 7 days", value: "7" },
+                            { display: "Auto-kick members younger than 14 days", value: "14" },
+                            { display: "Auto-kick members younger than 30 days", value: "30" }
+                        ])
+                    )
+                    .addToggleSetting(new ToggleSetting("nopfp"))
+            )
     ];
     selfMemberId: string = "";
     async onSlashCommand(interaction: ChatInputCommandInteraction<CacheType>): Promise<void> {
@@ -127,6 +179,9 @@ export class SettingsModule implements Module {
         }
         if (subcommand === "leveling") {
             await handleLevelingSubcommands(interaction, this.selfMemberId);
+        }
+        if (subcommand === "antiraid") {
+            await handleAntiRaidSubcommands(interaction, this.selfMemberId);
         }
     }
     async onButtonClick(interaction: ButtonInteraction<CacheType>): Promise<void> {}

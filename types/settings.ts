@@ -1,10 +1,23 @@
-import { CacheType, Channel, ChatInputCommandInteraction, PermissionFlagsBits, PermissionsBitField, SlashCommandBuilder, SlashCommandSubcommandBuilder, SlashCommandSubcommandGroupBuilder } from "discord.js";
+import {
+    APIApplicationCommandOptionChoice,
+    CacheType,
+    Channel,
+    ChatInputCommandInteraction,
+    PermissionFlagsBits,
+    PermissionsBitField,
+    SlashCommandBuilder,
+    SlashCommandSubcommandBuilder,
+    SlashCommandSubcommandGroupBuilder
+} from "discord.js";
 import { getSetting, setSetting } from "../data/settings";
 
 export class SettingsCommandBuilder extends SlashCommandBuilder {
     constructor() {
         super();
-        this.setName("settings").setDescription("Bot settings").setDMPermission(false).setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild);
+        this.setName("settings")
+            .setDescription("Bot settings")
+            .setDMPermission(false)
+            .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild);
     }
 
     addSettingsGroup(x: SettingsGroupBuilder): this {
@@ -24,8 +37,18 @@ export class SettingsGroupBuilder extends SlashCommandSubcommandGroupBuilder {
         return this;
     }
 
+    addStringChoiceSetting(string: StringChoiceSetting): this {
+        this.addSubcommand(string);
+        return this;
+    }
+
     addChannelSetting(channel: ChannelSetting): this {
         this.addSubcommand(channel);
+        return this;
+    }
+
+    addToggleSetting(toggle: ToggleSetting): this {
+        this.addSubcommand(toggle);
         return this;
     }
 }
@@ -36,6 +59,34 @@ export class StringSetting extends SlashCommandSubcommandBuilder {
         this.setName(name)
             .setDescription(`See what is ${name} set to or change it`)
             .addStringOption((newValue) => newValue.setName(name).setDescription(`Change ${name} to something different`));
+    }
+}
+export class StringChoiceSetting extends SlashCommandSubcommandBuilder {
+    constructor(name: string, choices: { display: string; value: string }[]) {
+        super();
+        let newChoices = choices.map((x) => {
+            return {
+                name: x.display,
+                value: x.value
+            };
+        });
+        this.setName(name)
+            .setDescription(`See what is ${name} set to or change it`)
+            .addStringOption((newValue) =>
+                newValue
+                    .setName(name)
+                    .setDescription(`Change ${name} to something different`)
+                    .setChoices(...newChoices)
+            );
+    }
+}
+
+export class ToggleSetting extends SlashCommandSubcommandBuilder {
+    constructor(name: string) {
+        super();
+        this.setName(name)
+            .setDescription(`Toggle ${name}`)
+            .addBooleanOption((newValue) => newValue.setName(name).setDescription(`Toggle ${name}`));
     }
 }
 
@@ -86,7 +137,12 @@ async function verifyTextableTextChannel(ch: Channel, int: ChatInputCommandInter
     return true;
 }
 
-export async function setChannel(channelName: string, key: string, interaction: ChatInputCommandInteraction<CacheType>, selfMemberId: string) {
+export async function setChannel(
+    channelName: string,
+    key: string,
+    interaction: ChatInputCommandInteraction<CacheType>,
+    selfMemberId: string
+) {
     if (!interaction.guild) return;
     if (!interaction.member) return;
     if (!interaction.options) return;

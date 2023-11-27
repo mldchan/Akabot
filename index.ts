@@ -1,4 +1,4 @@
-import { ActivityType, BitField, Client, ClientOptions, REST, Routes } from "discord.js";
+import { ActivityType, Client, ClientOptions, REST, Routes } from "discord.js";
 import { AllCommands, Module } from "./modules/type";
 import { Suggestions } from "./modules/suggestions";
 import * as dotenv from "dotenv";
@@ -10,6 +10,7 @@ import { GoodbyeModule } from "./modules/goodbye";
 import * as Sentry from "@sentry/node";
 import { ProfilingIntegration } from "@sentry/profiling-node";
 import { ReactionRolesModule } from "./modules/reactionRoles";
+import { AntiRaidModule } from "./modules/antiRaid";
 
 dotenv.config();
 
@@ -63,6 +64,7 @@ modules.push(new LevelingModule());
 modules.push(new WelcomeModule());
 modules.push(new GoodbyeModule());
 modules.push(new ReactionRolesModule());
+modules.push(new AntiRaidModule());
 
 client.on("ready", async () => {
     console.log("I am ready!");
