@@ -13,7 +13,8 @@ import {
     ButtonComponent,
     Guild,
     Emoji,
-    Sticker
+    Sticker,
+    PermissionsBitField
 } from "discord.js";
 import { AllCommands, Module } from "./type";
 
@@ -34,7 +35,7 @@ async function createReactionRoleMessage(
     }
 
     await interaction.channel!.send({
-        content: interaction.options.getString("message")!,
+        content: msg,
         components: [...rows, currentRow]
     });
 }
@@ -47,6 +48,20 @@ async function handleCreationOfReactionRoles(interaction: ChatInputCommandIntera
     )
         return;
     if (!interaction.channel) return;
+    if (!interaction.member) return;
+    if (!interaction.guild) return;
+    const member = interaction.guild.members.cache.get(interaction.user.id);
+    if (!member) return;
+    if (
+        !member.permissions.has(PermissionsBitField.Flags.ManageRoles) &&
+        !member.permissions.has(PermissionsBitField.Flags.Administrator)
+    ) {
+        await interaction.reply({
+            content: "You do not have permission to create reaction roles",
+            ephemeral: true
+        });
+    }
+
     const msg = interaction.options.getString("message")!;
     const mode = interaction.options.getString("mode")!;
     let roles = [interaction.options.getRole("role")!];
@@ -81,6 +96,11 @@ async function handleCreationOfReactionRoles(interaction: ChatInputCommandIntera
             await createReactionRoleMessage(msg, roles, interaction, "s");
             break;
     }
+
+    await interaction.reply({
+        content: "Created reaction role message",
+        ephemeral: true
+    });
 }
 
 async function handleNormalReactionRole(interaction: ButtonInteraction<CacheType>) {

@@ -20,7 +20,7 @@ type ViolationCountersMessageData = { messageIDs: string[] };
 type ViolationCounters<T> = { serverId: string; eventId: string; violationsCount: number; expiryDate: Date; data?: T }[];
 
 async function handleNoPfp(member: GuildMember) {
-    const kickNoPfp = getSetting(member.guild.id, "AntiRaidKickNoPFP", "no");
+    const kickNoPfp = getSetting(member.guild.id, "AntiRaidNoPFP", "no");
     if (kickNoPfp !== "yes") return;
     if (member.user.avatar) return;
 

@@ -12,6 +12,7 @@ import {
 import { getSetting, setSetting } from "../data/settings";
 
 export class SettingsCommandBuilder extends SlashCommandBuilder {
+    groups: SettingsGroupBuilder[] = [];
     constructor() {
         super();
         this.setName("settings")
@@ -20,50 +21,89 @@ export class SettingsCommandBuilder extends SlashCommandBuilder {
             .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild);
     }
 
+    findSettingsKeyForCommand(group: string, command: string): string | undefined {
+        for (const group of this.groups) {
+            for (const subcommand of group.subcommands) {
+                if (subcommand.name === command) {
+                    return subcommand.settingsKey;
+                }
+            }
+        }
+        return undefined;
+    }
+
+    findSettingTypeForCommand(group: string, command: string): "string" | "channel" | "toggle" | undefined {
+        for (const group of this.groups) {
+            for (const subcommand of group.subcommands) {
+                if (subcommand.name === command) {
+                    if (subcommand instanceof StringSetting || subcommand instanceof StringChoiceSetting) return "string";
+                    if (subcommand instanceof ChannelSetting) return "channel";
+                    if (subcommand instanceof ToggleSetting) return "toggle";
+                }
+            }
+        }
+        return undefined;
+    }
+
+    findDescriptionForCommand(group: string, command: string): string | undefined {
+        for (const group of this.groups) {
+            for (const subcommand of group.subcommands) {
+                if (subcommand.name === command) {
+                    return subcommand.description;
+                }
+            }
+        }
+        return undefined;
+    }
+
     addSettingsGroup(x: SettingsGroupBuilder): this {
         this.addSubcommandGroup(x);
+        this.groups.push(x);
         return this;
     }
 }
 
 export class SettingsGroupBuilder extends SlashCommandSubcommandGroupBuilder {
+    subcommands: (StringSetting | StringChoiceSetting | ChannelSetting | ToggleSetting)[] = [];
     constructor(group: string) {
         super();
         this.setName(group).setDescription(`Manage settings for ${group}`);
     }
 
-    addStringSetting(string: StringSetting): this {
+    addStringSetting(string: StringSetting | StringChoiceSetting): this {
         this.addSubcommand(string);
-        return this;
-    }
-
-    addStringChoiceSetting(string: StringChoiceSetting): this {
-        this.addSubcommand(string);
+        this.subcommands.push(string);
         return this;
     }
 
     addChannelSetting(channel: ChannelSetting): this {
         this.addSubcommand(channel);
+        this.subcommands.push(channel);
         return this;
     }
 
     addToggleSetting(toggle: ToggleSetting): this {
         this.addSubcommand(toggle);
+        this.subcommands.push(toggle);
         return this;
     }
 }
 
 export class StringSetting extends SlashCommandSubcommandBuilder {
-    constructor(name: string) {
+    settingsKey: string;
+    constructor(name: string, settingsKey: string, description: string) {
         super();
+        this.settingsKey = settingsKey;
         this.setName(name)
-            .setDescription(`See what is ${name} set to or change it`)
-            .addStringOption((newValue) => newValue.setName(name).setDescription(`Change ${name} to something different`));
+            .setDescription(description)
+            .addStringOption((newValue) => newValue.setName("newvalue").setDescription(description));
     }
 }
 export class StringChoiceSetting extends SlashCommandSubcommandBuilder {
-    constructor(name: string, choices: { display: string; value: string }[]) {
+    settingsKey: string;
+    constructor(name: string, settingsKey: string, description: string, choices: { display: string; value: string }[]) {
         super();
+        this.settingsKey = settingsKey;
         let newChoices = choices.map((x) => {
             return {
                 name: x.display,
@@ -71,31 +111,40 @@ export class StringChoiceSetting extends SlashCommandSubcommandBuilder {
             };
         });
         this.setName(name)
-            .setDescription(`See what is ${name} set to or change it`)
+            .setDescription(description)
             .addStringOption((newValue) =>
                 newValue
-                    .setName(name)
-                    .setDescription(`Change ${name} to something different`)
+                    .setName("newvalue")
+                    .setDescription(description)
                     .setChoices(...newChoices)
             );
     }
 }
 
 export class ToggleSetting extends SlashCommandSubcommandBuilder {
-    constructor(name: string, desc: string) {
+    settingsKey: string;
+    constructor(name: string, settingsKey: string, desc: string) {
         super();
+        this.settingsKey = settingsKey;
         this.setName(name)
             .setDescription(desc)
-            .addBooleanOption((newValue) => newValue.setName(name).setDescription(desc));
+            .addBooleanOption((newValue) => newValue.setName("newvalue").setDescription(desc));
     }
 }
 
 export class ChannelSetting extends SlashCommandSubcommandBuilder {
-    constructor(name: string) {
+    /**
+     * Add a channel setting
+     * @param name The name displayed in the command description
+     * @param settingsKey The settings key, with `Channel` appended to the end
+     */
+    settingsKey: string;
+    constructor(name: string, settingsKey: string) {
         super();
+        this.settingsKey = settingsKey;
         this.setName(name)
             .setDescription(`See what ${name} is set to or change it`)
-            .addChannelOption((newValue) => newValue.setName(name).setDescription(`Change ${name} to something different`));
+            .addChannelOption((newValue) => newValue.setName("newvalue").setDescription(`Change ${name} to something different`));
     }
 }
 
