@@ -31,6 +31,9 @@ if (!process.env.TOKEN) {
 if (!process.env.CLIENT_ID) {
     throw new Error("No client id provided");
 }
+if (!process.env.SUGGESTION_WEBHOOK_URL) {
+    console.warn("No suggestion webhook url provided, suggestions will be discarded");
+}
 
 const options: ClientOptions = {
     intents: [
@@ -95,7 +98,7 @@ client.on("ready", async () => {
     }
 
     client.user?.setActivity({
-        name: "b3",
+        name: "b4",
         type: ActivityType.Playing
     });
 

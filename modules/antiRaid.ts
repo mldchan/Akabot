@@ -7,7 +7,6 @@ import {
     Message,
     GuildMember,
     Guild,
-    Emoji,
     Sticker,
     EmbedBuilder,
     GuildEmoji,
