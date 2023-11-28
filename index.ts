@@ -12,6 +12,7 @@ import { ProfilingIntegration } from "@sentry/profiling-node";
 import { ReactionRolesModule } from "./modules/reactionRoles";
 import { AntiRaidModule } from "./modules/antiRaid";
 import { ModerationModule } from "./modules/moderation";
+import { AnalyticsModule } from "./modules/analytics";
 
 dotenv.config();
 
@@ -70,6 +71,7 @@ modules.push(new GoodbyeModule());
 modules.push(new ReactionRolesModule());
 modules.push(new AntiRaidModule());
 modules.push(new ModerationModule());
+modules.push(new AnalyticsModule());
 
 client.on("ready", async () => {
     console.log("I am ready!");

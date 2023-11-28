@@ -85,13 +85,31 @@ export class ModerationModule implements Module {
     async onGuildRemove(guild: Guild): Promise<void> {}
     async onGuildEdit(before: Guild, after: Guild): Promise<void> {}
 }
+
+async function attemptToSendDM(member: GuildMember, type: "banned" | "muted" | "kicked", reason: string | undefined) {
+    if (reason === undefined) reason = "N/A";
+    try {
+        await member.send(`You have been ${type} for ${reason}`);
+    } catch (_) {}
+}
+
 async function handleBanMember(interaction: ChatInputCommandInteraction<CacheType>) {
     if (!interaction.guild) return;
+    const selfMember = interaction.guild.members.cache.get(interaction.client.user.id);
+    if (!selfMember) return;
+    if (selfMember.permissions.has(PermissionFlagsBits.BanMembers) || selfMember.permissions.has(PermissionFlagsBits.Administrator)) {
+        await interaction.reply({
+            content: "I do not have the permission to ban members",
+            ephemeral: true
+        });
+        return;
+    }
     const member = interaction.guild.members.cache.find((x) => x.user.id === interaction.user.id);
     if (!member) return;
     if (!member.permissions.has(PermissionFlagsBits.BanMembers) && !member.permissions.has(PermissionFlagsBits.Administrator)) return;
     const user = interaction.options.getUser("user", true);
     const reason = interaction.options.getString("reason", false);
+    await attemptToSendDM(member, "banned", reason ?? undefined);
     try {
         await interaction.guild.members.ban(user, { reason: reason ?? undefined });
     } catch (_) {
@@ -110,11 +128,21 @@ async function handleBanMember(interaction: ChatInputCommandInteraction<CacheTyp
 
 async function handleKickMember(interaction: ChatInputCommandInteraction<CacheType>) {
     if (!interaction.guild) return;
+    const selfMember = interaction.guild.members.cache.get(interaction.client.user.id);
+    if (!selfMember) return;
+    if (selfMember.permissions.has(PermissionFlagsBits.KickMembers) || selfMember.permissions.has(PermissionFlagsBits.Administrator)) {
+        await interaction.reply({
+            content: "I do not have the permission to kick members",
+            ephemeral: true
+        });
+        return;
+    }
     const member = interaction.guild.members.cache.find((x) => x.user.id === interaction.user.id);
     if (!member) return;
     if (!member.permissions.has(PermissionFlagsBits.KickMembers) && !member.permissions.has(PermissionFlagsBits.Administrator)) return;
     const user = interaction.options.getUser("user", true);
     const reason = interaction.options.getString("reason", false);
+    await attemptToSendDM(member, "kicked", reason ?? undefined);
     try {
         await interaction.guild.members.kick(user, reason ?? undefined);
     } catch (_) {
@@ -133,6 +161,15 @@ async function handleKickMember(interaction: ChatInputCommandInteraction<CacheTy
 
 async function handleMuteMember(interaction: ChatInputCommandInteraction<CacheType>) {
     if (!interaction.guild) return;
+    const selfMember = interaction.guild.members.cache.get(interaction.client.user.id);
+    if (!selfMember) return;
+    if (selfMember.permissions.has(PermissionFlagsBits.MuteMembers) || selfMember.permissions.has(PermissionFlagsBits.Administrator)) {
+        await interaction.reply({
+            content: "I do not have the permission to mute members",
+            ephemeral: true
+        });
+        return;
+    }
 
     const member = interaction.guild.members.cache.find((x) => x.user.id === interaction.user.id);
     if (!member) return;
@@ -151,6 +188,7 @@ async function handleMuteMember(interaction: ChatInputCommandInteraction<CacheTy
     }
     const target = interaction.guild.members.cache.find((x) => x.user.id === user.id);
     if (!target) return;
+    await attemptToSendDM(member, "muted", reason ?? undefined);
     try {
         await target.timeout(time * 1000, reason ?? undefined);
     } catch (_) {

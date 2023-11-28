@@ -1,5 +1,4 @@
 import {
-    APIApplicationCommandOptionChoice,
     CacheType,
     Channel,
     ChatInputCommandInteraction,
