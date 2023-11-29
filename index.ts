@@ -100,7 +100,7 @@ client.on("ready", async () => {
     }
 
     client.user?.setActivity({
-        name: "b4",
+        name: "b5",
         type: ActivityType.Playing
     });
 
