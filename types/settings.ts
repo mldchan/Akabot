@@ -1,16 +1,29 @@
-import { CacheType, Channel, ChatInputCommandInteraction, PermissionFlagsBits, PermissionsBitField, SlashCommandBuilder, SlashCommandSubcommandBuilder, SlashCommandSubcommandGroupBuilder } from "discord.js";
+import {
+    CacheType,
+    Channel,
+    ChatInputCommandInteraction,
+    PermissionFlagsBits,
+    PermissionsBitField,
+    SlashCommandBuilder,
+    SlashCommandSubcommandBuilder,
+    SlashCommandSubcommandGroupBuilder
+} from "discord.js";
 import { getSetting, setSetting } from "../data/settings";
 
 export class SettingsCommandBuilder extends SlashCommandBuilder {
     groups: SettingsGroupBuilder[] = [];
     constructor() {
         super();
-        this.setName("settings").setDescription("Bot settings").setDMPermission(false).setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild);
+        this.setName("settings")
+            .setDescription("Bot settings")
+            .setDMPermission(false)
+            .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild);
     }
 
     findSettingsKeyForCommand(group: string, command: string): string | undefined {
-        for (const group of this.groups) {
-            for (const subcommand of group.subcommands) {
+        for (const _group of this.groups) {
+            if (_group.name !== group) continue;
+            for (const subcommand of _group.subcommands) {
                 if (subcommand.name === command) {
                     return subcommand.settingsKey;
                 }
@@ -20,10 +33,12 @@ export class SettingsCommandBuilder extends SlashCommandBuilder {
     }
 
     findSettingTypeForCommand(group: string, command: string): "string" | "channel" | "toggle" | undefined {
-        for (const group of this.groups) {
-            for (const subcommand of group.subcommands) {
+        for (const _group of this.groups) {
+            if (_group.name !== group) continue;
+            for (const subcommand of _group.subcommands) {
                 if (subcommand.name === command) {
-                    if (subcommand instanceof StringSetting || subcommand instanceof StringChoiceSetting) return "string";
+                    if (subcommand instanceof StringSetting || subcommand instanceof StringChoiceSetting)
+                        return "string";
                     if (subcommand instanceof ChannelSetting) return "channel";
                     if (subcommand instanceof ToggleSetting) return "toggle";
                 }
@@ -33,8 +48,9 @@ export class SettingsCommandBuilder extends SlashCommandBuilder {
     }
 
     findDescriptionForCommand(group: string, command: string): string | undefined {
-        for (const group of this.groups) {
-            for (const subcommand of group.subcommands) {
+        for (const _group of this.groups) {
+            if (_group.name !== group) continue;
+            for (const subcommand of _group.subcommands) {
                 if (subcommand.name === command) {
                     return subcommand.description;
                 }
@@ -131,12 +147,18 @@ export class ChannelSetting extends SlashCommandSubcommandBuilder {
         this.settingsKey = settingsKey;
         this.setName(name)
             .setDescription(`See what ${name} is set to or change it`)
-            .addChannelOption((newValue) => newValue.setName("newvalue").setDescription(`Change ${name} to something different`));
+            .addChannelOption((newValue) =>
+                newValue.setName("newvalue").setDescription(`Change ${name} to something different`)
+            );
     }
 }
 
 // METHODS FOR QUICK SETTINGS MANAGEMENT
-async function verifyTextableTextChannel(ch: Channel, int: ChatInputCommandInteraction<CacheType>, s: string): Promise<boolean> {
+async function verifyTextableTextChannel(
+    ch: Channel,
+    int: ChatInputCommandInteraction<CacheType>,
+    s: string
+): Promise<boolean> {
     if (!int.guild) return false;
     if (!int.member) return false;
     if (!int.options) return false;
@@ -173,7 +195,12 @@ async function verifyTextableTextChannel(ch: Channel, int: ChatInputCommandInter
     return true;
 }
 
-export async function setChannel(channelName: string, key: string, interaction: ChatInputCommandInteraction<CacheType>, selfMemberId: string) {
+export async function setChannel(
+    channelName: string,
+    key: string,
+    interaction: ChatInputCommandInteraction<CacheType>,
+    selfMemberId: string
+) {
     if (!interaction.guild) return;
     if (!interaction.member) return;
     if (!interaction.options) return;

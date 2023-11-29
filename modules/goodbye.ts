@@ -47,18 +47,21 @@ export class GoodbyeModule implements Module {
             if (thing1?.action === AuditLogEvent.MemberBanAdd) reason = "ban";
         } catch (_) {}
         const embed = new EmbedBuilder();
+
+        const memberNameType = getSetting(member.guild.id, "goodbyeNameType", "nickname");
+        const memberName = memberNameType === "nickname" ? member.user.displayName : member.user.username;
         switch (reason) {
             case "leave":
                 embed
-                    .setTitle(`Goodbye ${member.displayName}`)
-                    .setDescription(`We hope to see you later ${member.displayName}.`)
+                    .setTitle(`Goodbye ${memberName}`)
+                    .setDescription(`We hope to see you later ${memberName}.`)
                     .setColor("Red");
                 break;
             case "kick":
-                embed.setTitle(`Goodbye ${member.displayName}`).setDescription(`${member.displayName} was kicked.`).setColor("Red");
+                embed.setTitle(`Goodbye ${memberName}`).setDescription(`${memberName} was kicked.`).setColor("Red");
                 break;
             case "ban":
-                embed.setTitle(`Goodbye ${member.displayName}`).setDescription(`${member.displayName} was banned.`).setColor("Red");
+                embed.setTitle(`Goodbye ${memberName}`).setDescription(`${memberName} was banned.`).setColor("Red");
                 break;
         }
         try {

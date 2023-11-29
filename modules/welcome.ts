@@ -34,9 +34,12 @@ export class WelcomeModule implements Module {
         const channelRes = member.guild.channels.cache.get(channel);
         if (!channelRes) return;
         if (!channelRes.isTextBased()) return;
+
+        const memberNameType = getSetting(member.guild.id, "welcomeNameType", "nickname");
+        const memberName = memberNameType === "nickname" ? member.user.displayName : member.user.username;
         const embed = new EmbedBuilder()
-            .setTitle(`Welcome ${member.displayName}`)
-            .setDescription(`Welcome to ${member.guild.name}, ${member.displayName}! Enjoy your stay.`)
+            .setTitle(`Welcome ${memberName}`)
+            .setDescription(`Welcome to ${member.guild.name}, ${memberName}! Enjoy your stay.`)
             .setColor("Green");
         if (!channelRes.permissionsFor(this.selfMemberId)) return;
         if (!channelRes.permissionsFor(this.selfMemberId)!.has("SendMessages")) return;

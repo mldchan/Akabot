@@ -1,21 +1,75 @@
-import { ChatInputCommandInteraction, CacheType, ButtonInteraction, Role, Channel, Message, GuildMember, PermissionsBitField, SlashCommandSubcommandBuilder, Guild, Emoji, Sticker } from "discord.js";
+import {
+    ChatInputCommandInteraction,
+    CacheType,
+    ButtonInteraction,
+    Role,
+    Channel,
+    Message,
+    GuildMember,
+    PermissionsBitField,
+    SlashCommandSubcommandBuilder,
+    Guild,
+    Emoji,
+    Sticker
+} from "discord.js";
 import { AllCommands, Module } from "./type";
-import { ChannelSetting, SettingsCommandBuilder, SettingsGroupBuilder, StringChoiceSetting, ToggleSetting, setChannel } from "../types/settings";
+import {
+    ChannelSetting,
+    SettingsCommandBuilder,
+    SettingsGroupBuilder,
+    StringChoiceSetting,
+    ToggleSetting,
+    setChannel
+} from "../types/settings";
 import { getSetting, setSetting } from "../data/settings";
 
 export class SettingsModule implements Module {
     commands: AllCommands = [
         new SettingsCommandBuilder()
-            .addSettingsGroup(new SettingsGroupBuilder("logging").addChannelSetting(new ChannelSetting("channel", "loggingChannel")))
-            .addSettingsGroup(new SettingsGroupBuilder("welcome").addChannelSetting(new ChannelSetting("channel", "welcomeChannel")))
-            .addSettingsGroup(new SettingsGroupBuilder("goodbye").addChannelSetting(new ChannelSetting("channel", "goodbyeChannel")))
-            .addSettingsGroup(new SettingsGroupBuilder("leveling").addChannelSetting(new ChannelSetting("channel", "levelingChannel")))
+            .addSettingsGroup(
+                new SettingsGroupBuilder("logging").addChannelSetting(new ChannelSetting("channel", "loggingChannel"))
+            )
+            .addSettingsGroup(
+                new SettingsGroupBuilder("welcome")
+                    .addChannelSetting(new ChannelSetting("channel", "welcomeChannel"))
+                    .addStringSetting(
+                        new StringChoiceSetting(
+                            "name",
+                            "welcomeNameType",
+                            "Whether to use the username or the global nickname of the user.",
+                            [
+                                { display: "Username", value: "username" },
+                                { display: "Nickname", value: "nickname" }
+                            ]
+                        )
+                    )
+            )
+            .addSettingsGroup(
+                new SettingsGroupBuilder("goodbye")
+                    .addChannelSetting(new ChannelSetting("channel", "goodbyeChannel"))
+                    .addStringSetting(
+                        new StringChoiceSetting(
+                            "name",
+                            "goodbyeNameType",
+                            "Whether to use the username or the global nickname of the user.",
+                            [
+                                { display: "Username", value: "username" },
+                                { display: "Nickname", value: "nickname" }
+                            ]
+                        )
+                    )
+            )
+            .addSettingsGroup(
+                new SettingsGroupBuilder("leveling").addChannelSetting(new ChannelSetting("channel", "levelingChannel"))
+            )
             .addSettingsGroup(
                 new SettingsGroupBuilder("reactionroles").addSubcommand(
                     new SlashCommandSubcommandBuilder()
                         .setName("new")
                         .setDescription("Create a reaction role")
-                        .addStringOption((msg) => msg.setName("message").setDescription("The message").setRequired(true))
+                        .addStringOption((msg) =>
+                            msg.setName("message").setDescription("The message").setRequired(true)
+                        )
                         .addStringOption((mode) =>
                             mode
                                 .setName("mode")
@@ -48,19 +102,32 @@ export class SettingsModule implements Module {
             .addSettingsGroup(
                 new SettingsGroupBuilder("antiraid")
                     .addStringSetting(
-                        new StringChoiceSetting("newmembers", "AntiRaidNewMembers", "How old does a member have to be to be on this server", [
-                            { display: "Disable auto-kick", value: "0" },
-                            { display: "Auto-kick members younger than 1 day", value: "1" },
-                            { display: "Auto-kick members younger than 3 days", value: "3" },
-                            { display: "Auto-kick members younger than 7 days", value: "7" },
-                            { display: "Auto-kick members younger than 14 days", value: "14" },
-                            { display: "Auto-kick members younger than 30 days", value: "30" }
-                        ])
+                        new StringChoiceSetting(
+                            "newmembers",
+                            "AntiRaidNewMembers",
+                            "How old does a member have to be to be on this server",
+                            [
+                                { display: "Disable auto-kick", value: "0" },
+                                { display: "Auto-kick members younger than 1 day", value: "1" },
+                                { display: "Auto-kick members younger than 3 days", value: "3" },
+                                { display: "Auto-kick members younger than 7 days", value: "7" },
+                                { display: "Auto-kick members younger than 14 days", value: "14" },
+                                { display: "Auto-kick members younger than 30 days", value: "30" }
+                            ]
+                        )
                     )
-                    .addToggleSetting(new ToggleSetting("nopfp", "AntiRaidNoPFP", "Kick members with no profile picture"))
-                    .addToggleSetting(new ToggleSetting("spamdelete", "AntiRaidSpamDelete", "Delete messages from spammers"))
-                    .addToggleSetting(new ToggleSetting("spamtimeout", "AntiRaidSpamTimeout", "Timeout spammers for a short period"))
-                    .addToggleSetting(new ToggleSetting("spamalert", "AntiRaidSpamSendAlert", "Tell the spammer to stop spamming"))
+                    .addToggleSetting(
+                        new ToggleSetting("nopfp", "AntiRaidNoPFP", "Kick members with no profile picture")
+                    )
+                    .addToggleSetting(
+                        new ToggleSetting("spamdelete", "AntiRaidSpamDelete", "Delete messages from spammers")
+                    )
+                    .addToggleSetting(
+                        new ToggleSetting("spamtimeout", "AntiRaidSpamTimeout", "Timeout spammers for a short period")
+                    )
+                    .addToggleSetting(
+                        new ToggleSetting("spamalert", "AntiRaidSpamSendAlert", "Tell the spammer to stop spamming")
+                    )
             )
     ];
     settingsMaps = [];
@@ -71,7 +138,10 @@ export class SettingsModule implements Module {
         if (!interaction.member) return;
         if (!interaction.options) return;
         const member = interaction.member as GuildMember;
-        if (!member.permissions.has(PermissionsBitField.Flags.ManageGuild) && !member.permissions.has(PermissionsBitField.Flags.Administrator)) {
+        if (
+            !member.permissions.has(PermissionsBitField.Flags.ManageGuild) &&
+            !member.permissions.has(PermissionsBitField.Flags.Administrator)
+        ) {
             await interaction.reply({
                 content: "You do not have permissions",
                 ephemeral: true
@@ -104,6 +174,8 @@ export class SettingsModule implements Module {
                     console.log("current", current);
                     break;
                 }
+                console.log("setChannel", subcommandGroup, subcommand);
+                console.log("setChannel", settingsKey, newValue.name);
                 setChannel(subcommandGroup, settingsKey, interaction, this.selfMemberId);
                 break;
             }
@@ -111,7 +183,11 @@ export class SettingsModule implements Module {
                 const value = interaction.options.getString("newvalue");
                 if (value === null || value === undefined) {
                     await interaction.reply({
-                        content: `\`${settingDesc}\` is currently set to \`${getSetting(interaction.guild.id, settingsKey, "")}\``,
+                        content: `\`${settingDesc}\` is currently set to \`${getSetting(
+                            interaction.guild.id,
+                            settingsKey,
+                            ""
+                        )}\``,
                         ephemeral: true
                     });
                     break;
