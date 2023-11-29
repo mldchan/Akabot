@@ -1,26 +1,6 @@
-import {
-    ChatInputCommandInteraction,
-    CacheType,
-    ButtonInteraction,
-    Role,
-    Channel,
-    Message,
-    GuildMember,
-    PermissionsBitField,
-    SlashCommandSubcommandBuilder,
-    Guild,
-    Emoji,
-    Sticker
-} from "discord.js";
+import { ChatInputCommandInteraction, CacheType, ButtonInteraction, Role, Channel, Message, GuildMember, PermissionsBitField, SlashCommandSubcommandBuilder, Guild, Emoji, Sticker } from "discord.js";
 import { AllCommands, Module } from "./type";
-import {
-    ChannelSetting,
-    SettingsCommandBuilder,
-    SettingsGroupBuilder,
-    StringChoiceSetting,
-    ToggleSetting,
-    setChannel
-} from "../types/settings";
+import { ChannelSetting, SettingsCommandBuilder, SettingsGroupBuilder, StringChoiceSetting, ToggleSetting, setChannel } from "../types/settings";
 import { getSetting, setSetting } from "../data/settings";
 
 export class SettingsModule implements Module {
@@ -68,19 +48,14 @@ export class SettingsModule implements Module {
             .addSettingsGroup(
                 new SettingsGroupBuilder("antiraid")
                     .addStringSetting(
-                        new StringChoiceSetting(
-                            "newmembers",
-                            "AntiRaidNewMembers",
-                            "How old does a member have to be to be on this server",
-                            [
-                                { display: "Disable auto-kick", value: "0" },
-                                { display: "Auto-kick members younger than 1 day", value: "1" },
-                                { display: "Auto-kick members younger than 3 days", value: "3" },
-                                { display: "Auto-kick members younger than 7 days", value: "7" },
-                                { display: "Auto-kick members younger than 14 days", value: "14" },
-                                { display: "Auto-kick members younger than 30 days", value: "30" }
-                            ]
-                        )
+                        new StringChoiceSetting("newmembers", "AntiRaidNewMembers", "How old does a member have to be to be on this server", [
+                            { display: "Disable auto-kick", value: "0" },
+                            { display: "Auto-kick members younger than 1 day", value: "1" },
+                            { display: "Auto-kick members younger than 3 days", value: "3" },
+                            { display: "Auto-kick members younger than 7 days", value: "7" },
+                            { display: "Auto-kick members younger than 14 days", value: "14" },
+                            { display: "Auto-kick members younger than 30 days", value: "30" }
+                        ])
                     )
                     .addToggleSetting(new ToggleSetting("nopfp", "AntiRaidNoPFP", "Kick members with no profile picture"))
                     .addToggleSetting(new ToggleSetting("spamdelete", "AntiRaidSpamDelete", "Delete messages from spammers"))
@@ -96,10 +71,7 @@ export class SettingsModule implements Module {
         if (!interaction.member) return;
         if (!interaction.options) return;
         const member = interaction.member as GuildMember;
-        if (
-            !member.permissions.has(PermissionsBitField.Flags.ManageGuild) &&
-            !member.permissions.has(PermissionsBitField.Flags.Administrator)
-        ) {
+        if (!member.permissions.has(PermissionsBitField.Flags.ManageGuild) && !member.permissions.has(PermissionsBitField.Flags.Administrator)) {
             await interaction.reply({
                 content: "You do not have permissions",
                 ephemeral: true
@@ -129,6 +101,7 @@ export class SettingsModule implements Module {
                         content: `\`${settingDesc}\` is currently set to \`${currentChannel?.name ?? current}\``,
                         ephemeral: true
                     });
+                    console.log("current", current);
                     break;
                 }
                 setChannel(subcommandGroup, settingsKey, interaction, this.selfMemberId);

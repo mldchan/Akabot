@@ -1,23 +1,11 @@
-import {
-    CacheType,
-    Channel,
-    ChatInputCommandInteraction,
-    PermissionFlagsBits,
-    PermissionsBitField,
-    SlashCommandBuilder,
-    SlashCommandSubcommandBuilder,
-    SlashCommandSubcommandGroupBuilder
-} from "discord.js";
+import { CacheType, Channel, ChatInputCommandInteraction, PermissionFlagsBits, PermissionsBitField, SlashCommandBuilder, SlashCommandSubcommandBuilder, SlashCommandSubcommandGroupBuilder } from "discord.js";
 import { getSetting, setSetting } from "../data/settings";
 
 export class SettingsCommandBuilder extends SlashCommandBuilder {
     groups: SettingsGroupBuilder[] = [];
     constructor() {
         super();
-        this.setName("settings")
-            .setDescription("Bot settings")
-            .setDMPermission(false)
-            .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild);
+        this.setName("settings").setDescription("Bot settings").setDMPermission(false).setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild);
     }
 
     findSettingsKeyForCommand(group: string, command: string): string | undefined {
@@ -185,17 +173,12 @@ async function verifyTextableTextChannel(ch: Channel, int: ChatInputCommandInter
     return true;
 }
 
-export async function setChannel(
-    channelName: string,
-    key: string,
-    interaction: ChatInputCommandInteraction<CacheType>,
-    selfMemberId: string
-) {
+export async function setChannel(channelName: string, key: string, interaction: ChatInputCommandInteraction<CacheType>, selfMemberId: string) {
     if (!interaction.guild) return;
     if (!interaction.member) return;
     if (!interaction.options) return;
 
-    const newChannel = interaction.options.getChannel("channel");
+    const newChannel = interaction.options.getChannel("newvalue");
     const currentChannel = getSetting(interaction.guild.id, key, "");
     if (!newChannel) {
         if (currentChannel === "") {

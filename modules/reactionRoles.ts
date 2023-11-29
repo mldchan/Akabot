@@ -1,29 +1,7 @@
-import {
-    ChatInputCommandInteraction,
-    CacheType,
-    ButtonInteraction,
-    Role,
-    Channel,
-    Message,
-    GuildMember,
-    ActionRowBuilder,
-    ButtonBuilder,
-    ButtonStyle,
-    APIRole,
-    ButtonComponent,
-    Guild,
-    Emoji,
-    Sticker,
-    PermissionsBitField
-} from "discord.js";
+import { ChatInputCommandInteraction, CacheType, ButtonInteraction, Role, Channel, Message, GuildMember, ActionRowBuilder, ButtonBuilder, ButtonStyle, APIRole, ButtonComponent, Guild, Emoji, Sticker, PermissionsBitField } from "discord.js";
 import { AllCommands, Module } from "./type";
 
-async function createReactionRoleMessage(
-    msg: string,
-    roles: (Role | APIRole)[],
-    interaction: ChatInputCommandInteraction<CacheType>,
-    modeCode: string
-) {
+async function createReactionRoleMessage(msg: string, roles: (Role | APIRole)[], interaction: ChatInputCommandInteraction<CacheType>, modeCode: string) {
     let rows: ActionRowBuilder<ButtonBuilder>[] = [];
     let currentRow = new ActionRowBuilder<ButtonBuilder>();
     for (const i of roles) {
@@ -41,21 +19,13 @@ async function createReactionRoleMessage(
 }
 
 async function handleCreationOfReactionRoles(interaction: ChatInputCommandInteraction<CacheType>) {
-    if (
-        interaction.commandName !== "settings" &&
-        interaction.options.getSubcommandGroup(false) !== "reactionroles" &&
-        interaction.options.getSubcommand(false) !== "new"
-    )
-        return;
+    if (interaction.commandName !== "settings" || interaction.options.getSubcommandGroup(false) !== "reactionroles" || interaction.options.getSubcommand(false) !== "new") return;
     if (!interaction.channel) return;
     if (!interaction.member) return;
     if (!interaction.guild) return;
     const member = interaction.guild.members.cache.get(interaction.user.id);
     if (!member) return;
-    if (
-        !member.permissions.has(PermissionsBitField.Flags.ManageRoles) &&
-        !member.permissions.has(PermissionsBitField.Flags.Administrator)
-    ) {
+    if (!member.permissions.has(PermissionsBitField.Flags.ManageRoles) && !member.permissions.has(PermissionsBitField.Flags.Administrator)) {
         await interaction.reply({
             content: "You do not have permission to create reaction roles",
             ephemeral: true

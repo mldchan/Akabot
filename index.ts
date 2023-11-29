@@ -13,6 +13,8 @@ import { ReactionRolesModule } from "./modules/reactionRoles";
 import { AntiRaidModule } from "./modules/antiRaid";
 import { ModerationModule } from "./modules/moderation";
 import { AnalyticsModule } from "./modules/analytics";
+import { AntiSpamModule } from "./modules/antiSpam";
+import { isServerBlocked, isUserBlocked } from "./utilities/blockList";
 
 dotenv.config();
 
@@ -24,6 +26,8 @@ if (process.env.DEV !== "true" && process.env.SENTRY) {
         tracesSampleRate: 1.0,
         profilesSampleRate: 1.0
     });
+} else {
+    console.log("Sentry logging is disabled, please use this in development only.");
 }
 
 if (!process.env.TOKEN) {
@@ -37,25 +41,7 @@ if (!process.env.SUGGESTION_WEBHOOK_URL) {
 }
 
 const options: ClientOptions = {
-    intents: [
-        "AutoModerationConfiguration",
-        "AutoModerationExecution",
-        "GuildBans",
-        "GuildEmojisAndStickers",
-        "GuildIntegrations",
-        "GuildInvites",
-        "GuildMembers",
-        "GuildMessageTyping",
-        "GuildMessageReactions",
-        "GuildMessages",
-        "GuildModeration",
-        "GuildPresences",
-        "GuildScheduledEvents",
-        "GuildVoiceStates",
-        "GuildWebhooks",
-        "Guilds",
-        "MessageContent"
-    ]
+    intents: ["AutoModerationConfiguration", "AutoModerationExecution", "GuildBans", "GuildEmojisAndStickers", "GuildIntegrations", "GuildInvites", "GuildMembers", "GuildMessageTyping", "GuildMessageReactions", "GuildMessages", "GuildModeration", "GuildPresences", "GuildScheduledEvents", "GuildVoiceStates", "GuildWebhooks", "Guilds", "MessageContent"]
 };
 
 const client = new Client(options);
@@ -72,6 +58,7 @@ modules.push(new ReactionRolesModule());
 modules.push(new AntiRaidModule());
 modules.push(new ModerationModule());
 modules.push(new AnalyticsModule());
+modules.push(new AntiSpamModule());
 
 client.on("ready", async () => {
     console.log("I am ready!");
@@ -108,11 +95,7 @@ client.on("ready", async () => {
     for (const guild of client.guilds.cache.values()) {
         console.log(`\tGuild ${guild.name} (${guild.id})`);
         const channels = guild.channels.cache;
-        console.log(
-            `\t\t${channels.size} channels (${channels.filter((channel) => channel.isTextBased()).size} text, ${
-                channels.filter((channel) => channel.isVoiceBased()).size
-            } voice)`
-        );
+        console.log(`\t\t${channels.size} channels (${channels.filter((channel) => channel.isTextBased()).size} text, ${channels.filter((channel) => channel.isVoiceBased()).size} voice)`);
 
         console.log(`\t\t${guild.members.cache.size} members...`);
     }
@@ -121,6 +104,8 @@ client.on("ready", async () => {
 client.on("messageCreate", async (message) => {
     if (!message.guild) return;
 
+    if (isServerBlocked(message.guild.id) || isUserBlocked(message.author.id)) return;
+
     modules.forEach((module) => {
         module.onMessage(message);
     });
@@ -128,12 +113,22 @@ client.on("messageCreate", async (message) => {
 
 client.on("interactionCreate", async (interaction) => {
     if (interaction.isButton()) {
+        if (!interaction.guild) return;
+        if (isServerBlocked(interaction.guild.id) || isUserBlocked(interaction.user.id)) {
+            await interaction.reply({ content: "Internal Server Error: Database reported server or user is blocked from using this bot. No further information...", ephemeral: true });
+            return;
+        }
         modules.forEach((module) => {
             module.onButtonClick(interaction);
         });
     }
 
     if (interaction.isChatInputCommand()) {
+        if (!interaction.guild) return;
+        if (isServerBlocked(interaction.guild.id) || isUserBlocked(interaction.user.id)) {
+            await interaction.reply({ content: "Internal Server Error: Database reported server or user is blocked from using this bot. No further information...", ephemeral: true });
+            return;
+        }
         modules.forEach((module) => {
             module.onSlashCommand(interaction);
         });
@@ -141,120 +136,159 @@ client.on("interactionCreate", async (interaction) => {
 });
 
 client.on("guildMemberAdd", async (member) => {
+    if (!member.guild) return;
+    if (isServerBlocked(member.guild.id) || isUserBlocked(member.user.id)) return;
     modules.forEach((module) => {
         module.onMemberJoin(member);
     });
 });
 
 client.on("guildMemberRemove", async (member) => {
+    if (!member.guild) return;
+    if (isServerBlocked(member.guild.id) || isUserBlocked(member.user.id)) return;
     modules.forEach((module) => {
         module.onMemberLeave(member);
     });
 });
 
 client.on("guildMemberUpdate", async (before, after) => {
+    if (!after.guild) return;
+    if (isServerBlocked(after.guild.id) || isUserBlocked(after.user.id)) return;
     modules.forEach((module) => {
         module.onMemberEdit(before, after);
     });
 });
 
 client.on("messageDelete", async (message) => {
+    if (!message.guild) return;
+    if (isServerBlocked(message.guild.id)) return;
     modules.forEach((module) => {
         module.onMessageDelete(message);
     });
 });
 
 client.on("messageUpdate", async (before, after) => {
+    if (!after.guild) return;
+    if (isServerBlocked(after.guild.id)) return;
     modules.forEach((module) => {
         module.onMessageEdit(before, after);
     });
 });
 
 client.on("channelCreate", async (channel) => {
+    if (!channel.guild) return;
+    if (isServerBlocked(channel.guild.id)) return;
     modules.forEach((module) => {
         module.onChannelCreate(channel);
     });
 });
 
 client.on("channelDelete", async (channel) => {
+    if (channel.isDMBased()) return;
+    if (!channel.guild) return;
+    if (isServerBlocked(channel.guild.id)) return;
     modules.forEach((module) => {
         module.onChannelDelete(channel);
     });
 });
 
 client.on("channelUpdate", async (before, after) => {
+    if (after.isDMBased()) return;
+    if (!after.guild) return;
+    if (isServerBlocked(after.guild.id)) return;
     modules.forEach((module) => {
         module.onChannelEdit(before, after);
     });
 });
 
 client.on("roleCreate", async (role) => {
+    if (!role.guild) return;
+    if (isServerBlocked(role.guild.id)) return;
     modules.forEach((module) => {
         module.onRoleCreate(role);
     });
 });
 
 client.on("roleDelete", async (role) => {
+    if (!role.guild) return;
+    if (isServerBlocked(role.guild.id)) return;
     modules.forEach((module) => {
         module.onRoleDelete(role);
     });
 });
 
 client.on("roleUpdate", async (before, after) => {
+    if (!after.guild) return;
+    if (isServerBlocked(after.guild.id)) return;
     modules.forEach((module) => {
         module.onRoleEdit(before, after);
     });
 });
 
 client.on("guildCreate", async (guild) => {
+    if (isServerBlocked(guild.id)) return;
     modules.forEach((module) => {
         module.onGuildAdd(guild);
     });
 });
 
 client.on("guildDelete", async (guild) => {
+    if (isServerBlocked(guild.id)) return;
     modules.forEach((module) => {
         module.onGuildRemove(guild);
     });
 });
 
 client.on("guildUpdate", async (before, after) => {
+    if (isServerBlocked(after.id)) return;
     modules.forEach((module) => {
         module.onGuildEdit(before, after);
     });
 });
 
 client.on("emojiCreate", async (emoji) => {
+    if (!emoji.guild) return;
+    if (isServerBlocked(emoji.guild.id)) return;
     modules.forEach((module) => {
         module.onEmojiCreate(emoji);
     });
 });
 
 client.on("emojiDelete", async (emoji) => {
+    if (!emoji.guild) return;
+    if (isServerBlocked(emoji.guild.id)) return;
     modules.forEach((module) => {
         module.onEmojiDelete(emoji);
     });
 });
 
 client.on("emojiUpdate", async (before, after) => {
+    if (!after.guild) return;
+    if (isServerBlocked(after.guild.id)) return;
     modules.forEach((module) => {
         module.onEmojiEdit(before, after);
     });
 });
 
 client.on("stickerCreate", async (sticker) => {
+    if (!sticker.guild) return;
+    if (isServerBlocked(sticker.guild.id)) return;
     modules.forEach((module) => {
         module.onStickerCreate(sticker);
     });
 });
 
 client.on("stickerDelete", async (sticker) => {
+    if (!sticker.guild) return;
+    if (isServerBlocked(sticker.guild.id)) return;
     modules.forEach((module) => {
         module.onStickerDelete(sticker);
     });
 });
 
 client.on("stickerUpdate", async (before, after) => {
+    if (!after.guild) return;
+    if (isServerBlocked(after.guild.id)) return;
     modules.forEach((module) => {
         module.onStickerEdit(before, after);
     });

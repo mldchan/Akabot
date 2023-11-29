@@ -24,6 +24,9 @@ export class AntiSpamModule implements Module {
     async onMessage(msg: Message<boolean>): Promise<void> {
         if (!msg.guild) return;
         if (msg.author.bot) return;
+
+        await checkRepeatingWords(msg);
+
         const vl = this.violationCounters.vlNew(msg.guild.id, `message${msg.author.id}`, 3000);
         let extraData = this.violationCounters.vlGetExtraData<ViolationCountersMessageData>(msg.guild.id, `message${msg.author.id}`) ?? { messageIDs: [] };
         extraData.messageIDs.push(msg.id);
@@ -114,4 +117,32 @@ async function handleSendLogMessage(msg: Message<boolean>, fields: { name: strin
             .setTimestamp(new Date());
         await logChannel.send({ embeds: [embed] });
     }
+}
+async function checkRepeatingWords(msg: Message<boolean>) {
+    const words = msg.content
+        .replaceAll(/[.,\-_\\/]/g, "")
+        .replaceAll("\n", "")
+        .split(/\s/g)
+        .flat();
+    if (words.length < 3) return;
+    const wordCount: { [key: string]: number } = {};
+    for (const word of words) {
+        if (wordCount[word]) {
+            wordCount[word]++;
+        } else {
+            wordCount[word] = 1;
+        }
+    }
+
+    console.log("checkRepeatingWords", Object.keys(wordCount).length, words.length);
+    const threshold = Math.max(1 / (words.length / 2), 0.1);
+    console.log("checkRepeatingWords", threshold);
+    const percentage = Object.keys(wordCount).length / words.length;
+    if (percentage < threshold) {
+        console.log("checkRepeatingWords", "spam detected");
+        try {
+            await msg.delete();
+        } catch (_) {}
+    }
+    console.log("checkRepeatWords", "percentage", percentage);
 }

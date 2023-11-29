@@ -1,24 +1,4 @@
-import {
-    ChatInputCommandInteraction,
-    CacheType,
-    ButtonInteraction,
-    Role,
-    Channel,
-    Message,
-    GuildMember,
-    EmbedBuilder,
-    AuditLogEvent,
-    APIEmbedField,
-    PartialMessage,
-    PartialGuildMember,
-    PermissionsString,
-    PermissionFlagsBits,
-    GuildChannel,
-    ChannelType,
-    Guild,
-    Sticker,
-    GuildEmoji
-} from "discord.js";
+import { ChatInputCommandInteraction, CacheType, ButtonInteraction, Role, Channel, Message, GuildMember, EmbedBuilder, AuditLogEvent, APIEmbedField, PartialMessage, PartialGuildMember, PermissionsString, PermissionFlagsBits, GuildChannel, ChannelType, Guild, Sticker, GuildEmoji, AttachmentBuilder } from "discord.js";
 import { AllCommands, Module } from "./type";
 import { getSetting } from "../data/settings";
 
@@ -49,16 +29,7 @@ export class Logging implements Module {
         if (!channel) return;
         if (!channel.isTextBased()) return;
 
-        const embed = new EmbedBuilder()
-            .setTitle("Role created")
-            .setDescription("A new role was created")
-            .addFields(
-                { name: "Role name", value: role.name },
-                { name: "Role ID", value: role.id },
-                { name: "Role color", value: role.hexColor },
-                { name: "Creator", value: creator }
-            )
-            .setColor("Green");
+        const embed = new EmbedBuilder().setTitle("Role created").setDescription("A new role was created").addFields({ name: "Role name", value: role.name }, { name: "Role ID", value: role.id }, { name: "Role color", value: role.hexColor }, { name: "Creator", value: creator }).setColor("Green");
 
         try {
             await channel.send({ embeds: [embed] });
@@ -168,16 +139,7 @@ export class Logging implements Module {
         if (!channel) return;
         if (!channel.isTextBased()) return;
 
-        const embed = new EmbedBuilder()
-            .setTitle("Role deleted")
-            .setDescription("A role was deleted")
-            .addFields(
-                { name: "Role name", value: role.name },
-                { name: "Role ID", value: role.id },
-                { name: "Role color", value: role.hexColor },
-                { name: "Deleter", value: deleter }
-            )
-            .setColor("Red");
+        const embed = new EmbedBuilder().setTitle("Role deleted").setDescription("A role was deleted").addFields({ name: "Role name", value: role.name }, { name: "Role ID", value: role.id }, { name: "Role color", value: role.hexColor }, { name: "Deleter", value: deleter }).setColor("Red");
         try {
             await channel.send({ embeds: [embed] });
         } catch (_) {}
@@ -205,16 +167,7 @@ export class Logging implements Module {
         if (!channel) return;
         if (!channel.isTextBased()) return;
 
-        const embed = new EmbedBuilder()
-            .setTitle("Channel created")
-            .setDescription("A new channel was created")
-            .addFields(
-                { name: "Channel name", value: channel1.name },
-                { name: "Channel ID", value: channel1.id.toString() },
-                { name: "Channel type", value: channel1.type.toString() },
-                { name: "Creator", value: creator }
-            )
-            .setColor("Green");
+        const embed = new EmbedBuilder().setTitle("Channel created").setDescription("A new channel was created").addFields({ name: "Channel name", value: channel1.name }, { name: "Channel ID", value: channel1.id.toString() }, { name: "Channel type", value: channel1.type.toString() }, { name: "Creator", value: creator }).setColor("Green");
 
         try {
             await channel.send({ embeds: [embed] });
@@ -255,10 +208,7 @@ export class Logging implements Module {
             });
         }
 
-        if (
-            (before.type === ChannelType.GuildText && after.type === ChannelType.GuildText) ||
-            (before.type === ChannelType.GuildForum && after.type === ChannelType.GuildForum)
-        ) {
+        if ((before.type === ChannelType.GuildText && after.type === ChannelType.GuildText) || (before.type === ChannelType.GuildForum && after.type === ChannelType.GuildForum)) {
             if (before.topic !== after.topic) {
                 fields.push({
                     name: "Channel Topic",
@@ -386,11 +336,7 @@ export class Logging implements Module {
             value: editor
         });
 
-        const embed = new EmbedBuilder()
-            .setTitle("Channel edited")
-            .setDescription("A channel was edited")
-            .addFields(fields)
-            .setColor("Yellow");
+        const embed = new EmbedBuilder().setTitle("Channel edited").setDescription("A channel was edited").addFields(fields).setColor("Yellow");
         try {
             await channel.send({ embeds: [embed] });
         } catch (_) {}
@@ -418,16 +364,7 @@ export class Logging implements Module {
         if (!logChannel1) return;
         if (!logChannel1.isTextBased()) return;
 
-        const embed = new EmbedBuilder()
-            .setTitle("Channel deleted")
-            .setDescription("A channel was deleted")
-            .addFields(
-                { name: "Channel name", value: channel.name },
-                { name: "Channel ID", value: channel.id.toString() },
-                { name: "Channel type", value: channel.type.toString() },
-                { name: "Deleter", value: deleter }
-            )
-            .setColor("Red");
+        const embed = new EmbedBuilder().setTitle("Channel deleted").setDescription("A channel was deleted").addFields({ name: "Channel name", value: channel.name }, { name: "Channel ID", value: channel.id.toString() }, { name: "Channel type", value: channel.type.toString() }, { name: "Deleter", value: deleter }).setColor("Red");
 
         try {
             await logChannel1.send({ embeds: [embed] });
@@ -452,11 +389,7 @@ export class Logging implements Module {
             fields.push({ name: "Original message", value: msg.content });
         }
 
-        const embed = new EmbedBuilder()
-            .setTitle("Message deleted")
-            .setDescription("A message was deleted")
-            .addFields(fields)
-            .setColor("Red");
+        const embed = new EmbedBuilder().setTitle("Message deleted").setDescription("A message was deleted").addFields(fields).setColor("Red");
 
         const selfMember = msg.guild.members.cache.get(this.selfMemberId);
         if (!selfMember) return;
@@ -475,24 +408,26 @@ export class Logging implements Module {
         if (!channel.isTextBased()) return;
 
         let fields: APIEmbedField[] = [];
+        let files: AttachmentBuilder[] = [];
 
         fields.push({ name: "Author", value: after.author?.username ?? "Unknown" });
 
         if (before.content !== after.content) {
-            fields.push({
-                name: "Message content",
-                value: `${before.content} -> ${after.content}`
-            });
+            if ((before.content?.length ?? 0) > 1000 || (after.content?.length ?? 0) > 1000) {
+                files.push(new AttachmentBuilder(Buffer.from(before.content ?? "")).setName("before.txt"));
+                files.push(new AttachmentBuilder(Buffer.from(after.content ?? "")).setName("after.txt"));
+            } else {
+                fields.push({
+                    name: "Message content",
+                    value: `${before.content} -> ${after.content}`
+                });
+            }
         }
         if (fields.length === 0) return;
-        const embed = new EmbedBuilder()
-            .setTitle("Message edited")
-            .setDescription("A message was edited")
-            .addFields(fields)
-            .setColor("Yellow");
+        const embed = new EmbedBuilder().setTitle("Message edited").setDescription("A message was edited").addFields(fields).setColor("Yellow");
         const selfMember = after.guild.members.cache.get(this.selfMemberId);
         if (!selfMember) return;
-        if (channel.permissionsFor(selfMember).has(PermissionFlagsBits.SendMessages)) await channel.send({ embeds: [embed] });
+        if (channel.permissionsFor(selfMember).has(PermissionFlagsBits.SendMessages)) await channel.send({ embeds: [embed], files });
     }
     async onMemberJoin(member: GuildMember): Promise<void> {
         const logChannel = getSetting(member.guild.id, "loggingChannel", "");
@@ -501,11 +436,7 @@ export class Logging implements Module {
         if (!channel) return;
         if (!channel.isTextBased()) return;
 
-        const embed = new EmbedBuilder()
-            .setTitle("Member joined")
-            .setDescription("A member joined the server")
-            .addFields({ name: "Member name", value: member.user.username }, { name: "Member ID", value: member.id })
-            .setColor("Green");
+        const embed = new EmbedBuilder().setTitle("Member joined").setDescription("A member joined the server").addFields({ name: "Member name", value: member.user.username }, { name: "Member ID", value: member.id }).setColor("Green");
         const selfMember = member.guild.members.cache.get(this.selfMemberId);
         if (!selfMember) return;
         try {
@@ -566,11 +497,7 @@ export class Logging implements Module {
         }
 
         if (fields.length <= 2) return;
-        const embed = new EmbedBuilder()
-            .setTitle("Member edited")
-            .setDescription("A member was edited")
-            .addFields(fields)
-            .setColor("Yellow");
+        const embed = new EmbedBuilder().setTitle("Member edited").setDescription("A member was edited").addFields(fields).setColor("Yellow");
 
         const selfMember = after.guild.members.cache.get(this.selfMemberId);
         if (!selfMember) return;
@@ -585,11 +512,7 @@ export class Logging implements Module {
         if (!channel) return;
         if (!channel.isTextBased()) return;
 
-        const embed = new EmbedBuilder()
-            .setTitle("Member left")
-            .setDescription("A member left the server")
-            .addFields({ name: "Member name", value: member.user.username }, { name: "Member ID", value: member.id })
-            .setColor("Red");
+        const embed = new EmbedBuilder().setTitle("Member left").setDescription("A member left the server").addFields({ name: "Member name", value: member.user.username }, { name: "Member ID", value: member.id }).setColor("Red");
         const selfMember = member.guild.members.cache.get(this.selfMemberId);
         if (!selfMember) return;
         try {
@@ -623,9 +546,7 @@ export class Logging implements Module {
         if (before.afkChannelId !== after.afkChannelId) {
             fields.push({
                 name: "AFK channel",
-                value: `${before.afkChannelId ? before.afkChannelId : "*nothing*"} -> ${
-                    after.afkChannelId ? after.afkChannelId : "*nothing*"
-                }`
+                value: `${before.afkChannelId ? before.afkChannelId : "*nothing*"} -> ${after.afkChannelId ? after.afkChannelId : "*nothing*"}`
             });
         }
         if (before.afkTimeout !== after.afkTimeout) {
@@ -642,11 +563,7 @@ export class Logging implements Module {
         }
 
         if (fields.length === 0) return;
-        const embed = new EmbedBuilder()
-            .setTitle("Server edited")
-            .setDescription("The server was edited")
-            .addFields(fields)
-            .setColor("Yellow");
+        const embed = new EmbedBuilder().setTitle("Server edited").setDescription("The server was edited").addFields(fields).setColor("Yellow");
         const selfMember = after.members.cache.get(this.selfMemberId);
         if (!selfMember) return;
         try {
@@ -676,11 +593,7 @@ export class Logging implements Module {
         const embed = new EmbedBuilder()
             .setTitle("Emoji created")
             .setDescription("An emoji was created")
-            .addFields(
-                { name: "Emoji name", value: emoji.name ?? "unknown" },
-                { name: "Emoji ID", value: emoji.id },
-                { name: "Creator", value: moderator }
-            )
+            .addFields({ name: "Emoji name", value: emoji.name ?? "unknown" }, { name: "Emoji ID", value: emoji.id }, { name: "Creator", value: moderator })
             .setColor("Green");
         const selfMember = emoji.guild.members.cache.get(this.selfMemberId);
         if (!selfMember) return;
@@ -711,11 +624,7 @@ export class Logging implements Module {
         const embed = new EmbedBuilder()
             .setTitle("Emoji deleted")
             .setDescription("An emoji was deleted")
-            .addFields(
-                { name: "Emoji name", value: emoji.name ?? "unknown" },
-                { name: "Emoji ID", value: emoji.id },
-                { name: "Deleter", value: moderator }
-            )
+            .addFields({ name: "Emoji name", value: emoji.name ?? "unknown" }, { name: "Emoji ID", value: emoji.id }, { name: "Deleter", value: moderator })
             .setColor("Red");
         const selfMember = emoji.guild.members.cache.get(this.selfMemberId);
         if (!selfMember) return;
@@ -759,11 +668,7 @@ export class Logging implements Module {
             value: moderator
         });
 
-        const embed = new EmbedBuilder()
-            .setTitle("Emoji edited")
-            .setDescription("An emoji was edited")
-            .addFields(fields)
-            .setColor("Yellow");
+        const embed = new EmbedBuilder().setTitle("Emoji edited").setDescription("An emoji was edited").addFields(fields).setColor("Yellow");
         const selfMember = after.guild.members.cache.get(this.selfMemberId);
         if (!selfMember) return;
         try {
@@ -793,12 +698,7 @@ export class Logging implements Module {
         const embed = new EmbedBuilder()
             .setTitle("Sticker created")
             .setDescription("A sticker was created")
-            .addFields(
-                { name: "Sticker name", value: sticker.name ?? "unknown" },
-                { name: "Sticker description", value: sticker.description ?? "unknown" },
-                { name: "Sticker ID", value: sticker.id },
-                { name: "Creator", value: moderator }
-            )
+            .addFields({ name: "Sticker name", value: sticker.name ?? "unknown" }, { name: "Sticker description", value: sticker.description ?? "unknown" }, { name: "Sticker ID", value: sticker.id }, { name: "Creator", value: moderator })
             .setColor("Green");
         const selfMember = sticker.guild.members.cache.get(this.selfMemberId);
         if (!selfMember) return;
@@ -829,12 +729,7 @@ export class Logging implements Module {
         const embed = new EmbedBuilder()
             .setTitle("Sticker deleted")
             .setDescription("A sticker was deleted")
-            .addFields(
-                { name: "Sticker name", value: sticker.name ?? "unknown" },
-                { name: "Sticker description", value: sticker.description ?? "unknown" },
-                { name: "Sticker ID", value: sticker.id },
-                { name: "Deleter", value: moderator }
-            )
+            .addFields({ name: "Sticker name", value: sticker.name ?? "unknown" }, { name: "Sticker description", value: sticker.description ?? "unknown" }, { name: "Sticker ID", value: sticker.id }, { name: "Deleter", value: moderator })
             .setColor("Red");
         const selfMember = sticker.guild.members.cache.get(this.selfMemberId);
         if (!selfMember) return;
@@ -885,11 +780,7 @@ export class Logging implements Module {
             value: moderator
         });
 
-        const embed = new EmbedBuilder()
-            .setTitle("Sticker edited")
-            .setDescription("A sticker was edited")
-            .addFields(fields)
-            .setColor("Yellow");
+        const embed = new EmbedBuilder().setTitle("Sticker edited").setDescription("A sticker was edited").addFields(fields).setColor("Yellow");
         const selfMember = after.guild.members.cache.get(this.selfMemberId);
         if (!selfMember) return;
         try {
