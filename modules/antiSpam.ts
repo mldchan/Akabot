@@ -38,7 +38,7 @@ export class AntiSpamModule implements Module {
             fields.push({ name: "Bulk delete", value: await handleDeletion(msg, extraData) });
             fields.push({ name: "Timeout", value: await handleTimeout(msg) });
             await handleSendLogMessage(msg, fields);
-            this.vlDelete(msg.guild.id, "message");
+            this.violationCounters.vlDelete(msg.guild.id, "message");
         }
     }
     vlNew(id: string, arg1: string, arg2: number) {
