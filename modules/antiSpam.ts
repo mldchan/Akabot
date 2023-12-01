@@ -1,4 +1,16 @@
-import { ChatInputCommandInteraction, CacheType, ButtonInteraction, Role, Channel, Message, GuildMember, Guild, Emoji, Sticker, EmbedBuilder } from "discord.js";
+import {
+    ChatInputCommandInteraction,
+    CacheType,
+    ButtonInteraction,
+    Role,
+    Channel,
+    Message,
+    GuildMember,
+    Guild,
+    Emoji,
+    Sticker,
+    EmbedBuilder
+} from "discord.js";
 import { AllCommands, Module } from "./type";
 import { ViolationCounters, ViolationCountersMessageData } from "../utilities/violationCounters";
 import { getSetting } from "../data/settings";
@@ -28,7 +40,10 @@ export class AntiSpamModule implements Module {
         await checkRepeatingWords(msg);
 
         const vl = this.violationCounters.vlNew(msg.guild.id, `message${msg.author.id}`, 3000);
-        let extraData = this.violationCounters.vlGetExtraData<ViolationCountersMessageData>(msg.guild.id, `message${msg.author.id}`) ?? { messageIDs: [] };
+        let extraData = this.violationCounters.vlGetExtraData<ViolationCountersMessageData>(
+            msg.guild.id,
+            `message${msg.author.id}`
+        ) ?? { messageIDs: [] };
         extraData.messageIDs.push(msg.id);
         this.violationCounters.vlSetExtraData(msg.guild.id, `message${msg.author.id}`, extraData);
 
@@ -38,20 +53,8 @@ export class AntiSpamModule implements Module {
             fields.push({ name: "Bulk delete", value: await handleDeletion(msg, extraData) });
             fields.push({ name: "Timeout", value: await handleTimeout(msg) });
             await handleSendLogMessage(msg, fields);
-            this.vlDelete(msg.guild.id, "message");
+            this.violationCounters.vlDelete(msg.guild.id, "message");
         }
-    }
-    vlNew(id: string, arg1: string, arg2: number) {
-        throw new Error("Method not implemented.");
-    }
-    vlGetExtraData<T>(id: string, arg1: string) {
-        throw new Error("Method not implemented.");
-    }
-    vlSetExtraData(id: string, arg1: string, extraData: any) {
-        throw new Error("Method not implemented.");
-    }
-    vlDelete(id: string, arg1: string) {
-        throw new Error("Method not implemented.");
     }
     async onMessageDelete(msg: Message<boolean>): Promise<void> {}
     async onMessageEdit(before: Message<boolean>, after: Message<boolean>): Promise<void> {}
@@ -74,7 +77,10 @@ async function handleMemberAlert(msg: Message<boolean>) {
  * @param extraData The extra data that is gotten from the ViolationCounters class
  * @returns The status of the deletion
  */
-async function handleDeletion(msg: Message<boolean>, extraData: ViolationCountersMessageData): Promise<"Deleted" | "Failed; Probably missing permissions" | "Disabled"> {
+async function handleDeletion(
+    msg: Message<boolean>,
+    extraData: ViolationCountersMessageData
+): Promise<"Deleted" | "Failed; Probably missing permissions" | "Disabled"> {
     const spamDeleteSetting = getSetting(msg.guild!.id, "AntiRaidSpamDelete", "no");
     if (spamDeleteSetting === "yes" && msg.channel.isTextBased() && !msg.channel.isDMBased()) {
         try {
@@ -93,7 +99,9 @@ async function handleDeletion(msg: Message<boolean>, extraData: ViolationCounter
  * @param msg Message object
  * @returns The status of the timeout
  */
-async function handleTimeout(msg: Message<boolean>): Promise<"10 seconds" | "Failed; Probably missing permissions" | "Disabled"> {
+async function handleTimeout(
+    msg: Message<boolean>
+): Promise<"10 seconds" | "Failed; Probably missing permissions" | "Disabled"> {
     const spamTimeoutSetting = getSetting(msg.guild!.id, "AntiRaidSpamTimeout", "no");
     if (spamTimeoutSetting === "yes") {
         try {
@@ -112,7 +120,11 @@ async function handleSendLogMessage(msg: Message<boolean>, fields: { name: strin
     if (logChannel?.isTextBased()) {
         const embed = new EmbedBuilder()
             .setTitle("A member is spamming in this Discord server")
-            .addFields({ name: "Member", value: msg.author.username }, { name: "Jump to latest message", value: `[Click here](${msg.url})` }, ...fields)
+            .addFields(
+                { name: "Member", value: msg.author.username },
+                { name: "Jump to latest message", value: `[Click here](${msg.url})` },
+                ...fields
+            )
             .setColor("Red")
             .setTimestamp(new Date());
         await logChannel.send({ embeds: [embed] });
