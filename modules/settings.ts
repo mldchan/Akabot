@@ -129,6 +129,39 @@ export class SettingsModule implements Module {
                         new ToggleSetting("spamalert", "AntiRaidSpamSendAlert", "Tell the spammer to stop spamming")
                     )
             )
+            .addSettingsGroup(
+                new SettingsGroupBuilder("mediaonlychannels")
+                    .addSubcommand(
+                        new SlashCommandSubcommandBuilder()
+                            .setName("set")
+                            .setDescription("Mark a channel as image only")
+                            .addChannelOption((ch) =>
+                                ch.setName("channel").setDescription("The channel").setRequired(true)
+                            )
+                            .addStringOption((type) =>
+                                type
+                                    .setName("type")
+                                    .setDescription("Allow image, video or both")
+                                    .setChoices(
+                                        { name: "Image only", value: "image" },
+                                        { name: "Video only", value: "video" },
+                                        { name: "Image and video", value: "both" }
+                                    )
+                                    .setRequired(true)
+                            )
+                            .addBooleanOption((replies) =>
+                                replies.setName("allow-replies").setDescription("Allow replies").setRequired(false)
+                            )
+                    )
+                    .addSubcommand(
+                        new SlashCommandSubcommandBuilder()
+                            .setName("remove")
+                            .setDescription("Remove a channel from media only list")
+                            .addChannelOption((ch) =>
+                                ch.setName("channel").setDescription("The channel to remove").setRequired(true)
+                            )
+                    )
+            )
     ];
     settingsMaps = [];
     selfMemberId: string = "";

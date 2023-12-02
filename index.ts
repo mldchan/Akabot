@@ -15,6 +15,7 @@ import { ModerationModule } from "./modules/moderation";
 import { AnalyticsModule } from "./modules/analytics";
 import { AntiSpamModule } from "./modules/antiSpam";
 import { isServerBlocked, isUserBlocked } from "./utilities/blockList";
+import { MediaOnlyChannelModule } from "./modules/mediaOnlyChannels";
 
 dotenv.config();
 
@@ -41,7 +42,25 @@ if (!process.env.SUGGESTION_WEBHOOK_URL) {
 }
 
 const options: ClientOptions = {
-    intents: ["AutoModerationConfiguration", "AutoModerationExecution", "GuildBans", "GuildEmojisAndStickers", "GuildIntegrations", "GuildInvites", "GuildMembers", "GuildMessageTyping", "GuildMessageReactions", "GuildMessages", "GuildModeration", "GuildPresences", "GuildScheduledEvents", "GuildVoiceStates", "GuildWebhooks", "Guilds", "MessageContent"]
+    intents: [
+        "AutoModerationConfiguration",
+        "AutoModerationExecution",
+        "GuildBans",
+        "GuildEmojisAndStickers",
+        "GuildIntegrations",
+        "GuildInvites",
+        "GuildMembers",
+        "GuildMessageTyping",
+        "GuildMessageReactions",
+        "GuildMessages",
+        "GuildModeration",
+        "GuildPresences",
+        "GuildScheduledEvents",
+        "GuildVoiceStates",
+        "GuildWebhooks",
+        "Guilds",
+        "MessageContent"
+    ]
 };
 
 const client = new Client(options);
@@ -59,6 +78,7 @@ modules.push(new AntiRaidModule());
 modules.push(new ModerationModule());
 modules.push(new AnalyticsModule());
 modules.push(new AntiSpamModule());
+modules.push(new MediaOnlyChannelModule());
 
 client.on("ready", async () => {
     console.log("I am ready!");
@@ -95,7 +115,11 @@ client.on("ready", async () => {
     for (const guild of client.guilds.cache.values()) {
         console.log(`\tGuild ${guild.name} (${guild.id})`);
         const channels = guild.channels.cache;
-        console.log(`\t\t${channels.size} channels (${channels.filter((channel) => channel.isTextBased()).size} text, ${channels.filter((channel) => channel.isVoiceBased()).size} voice)`);
+        console.log(
+            `\t\t${channels.size} channels (${channels.filter((channel) => channel.isTextBased()).size} text, ${
+                channels.filter((channel) => channel.isVoiceBased()).size
+            } voice)`
+        );
 
         console.log(`\t\t${guild.members.cache.size} members...`);
     }
@@ -115,7 +139,11 @@ client.on("interactionCreate", async (interaction) => {
     if (interaction.isButton()) {
         if (!interaction.guild) return;
         if (isServerBlocked(interaction.guild.id) || isUserBlocked(interaction.user.id)) {
-            await interaction.reply({ content: "Internal Server Error: Database reported server or user is blocked from using this bot. No further information...", ephemeral: true });
+            await interaction.reply({
+                content:
+                    "Internal Server Error: Database reported server or user is blocked from using this bot. No further information...",
+                ephemeral: true
+            });
             return;
         }
         modules.forEach((module) => {
@@ -126,7 +154,11 @@ client.on("interactionCreate", async (interaction) => {
     if (interaction.isChatInputCommand()) {
         if (!interaction.guild) return;
         if (isServerBlocked(interaction.guild.id) || isUserBlocked(interaction.user.id)) {
-            await interaction.reply({ content: "Internal Server Error: Database reported server or user is blocked from using this bot. No further information...", ephemeral: true });
+            await interaction.reply({
+                content:
+                    "Internal Server Error: Database reported server or user is blocked from using this bot. No further information...",
+                ephemeral: true
+            });
             return;
         }
         modules.forEach((module) => {

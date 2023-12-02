@@ -1,4 +1,17 @@
-import { ChatInputCommandInteraction, CacheType, ButtonInteraction, Role, Channel, Message, GuildMember, Guild, Sticker, EmbedBuilder, GuildEmoji, AuditLogEvent } from "discord.js";
+import {
+    ChatInputCommandInteraction,
+    CacheType,
+    ButtonInteraction,
+    Role,
+    Channel,
+    Message,
+    GuildMember,
+    Guild,
+    Sticker,
+    EmbedBuilder,
+    GuildEmoji,
+    AuditLogEvent
+} from "discord.js";
 import { AllCommands, Module } from "./type";
 import { getSetting } from "../data/settings";
 import { ViolationCounters } from "../utilities/violationCounters";
@@ -9,7 +22,9 @@ async function handleNoPfp(member: GuildMember) {
     if (member.user.avatar) return;
 
     try {
-        await member.send("You have been kicked from a server for not having a profile picture. They have the bot set up like this.");
+        await member.send(
+            "You have been kicked from a server for not having a profile picture. They have the bot set up like this."
+        );
     } catch (_) {}
 
     let kickField = { name: "Action", value: "Kicked" };
@@ -23,7 +38,11 @@ async function handleNoPfp(member: GuildMember) {
     const logChannel = member.guild.channels.cache.get(logChannelID);
     if (!logChannel?.isTextBased()) return;
 
-    const embed = new EmbedBuilder().setTitle("A member is joining with no PFP in this Discord server").addFields({ name: "Member", value: member.user.username }, kickField).setColor("Red").setTimestamp(new Date());
+    const embed = new EmbedBuilder()
+        .setTitle("A member is joining with no PFP in this Discord server")
+        .addFields({ name: "Member", value: member.user.username }, kickField)
+        .setColor("Red")
+        .setTimestamp(new Date());
 
     await logChannel.send({ embeds: [embed] });
 }
@@ -36,7 +55,11 @@ async function handleNewAccount(member: GuildMember) {
     if (member.user.createdAt < daysAgo) return;
 
     try {
-        await member.send(`Your account needs to be at least ${days} days old to join this server. Your account is ${Math.floor((new Date().getTime() - member.user.createdAt.getTime()) / (24 * 60 * 60 * 1000))} days old.`);
+        await member.send(
+            `Your account needs to be at least ${days} days old to join this server. Your account is ${Math.floor(
+                (new Date().getTime() - member.user.createdAt.getTime()) / (24 * 60 * 60 * 1000)
+            )} days old.`
+        );
     } catch (_) {}
 
     let kickField = { name: "Action", value: "Kicked" };
@@ -57,7 +80,9 @@ async function handleNewAccount(member: GuildMember) {
             kickField,
             {
                 name: "Account age",
-                value: `${Math.floor((new Date().getTime() - member.user.createdAt.getTime()) / (24 * 60 * 60 * 1000))} days old`
+                value: `${Math.floor(
+                    (new Date().getTime() - member.user.createdAt.getTime()) / (24 * 60 * 60 * 1000)
+                )} days old`
             },
             { name: "Server setting", value: `${days} days old` }
         )
@@ -75,13 +100,19 @@ export class AntiRaidModule implements Module {
         if (vl > 2) {
             let auditLogs = "Unknown (No Audit Logs permission)";
             try {
-                auditLogs = (await emoji.guild.fetchAuditLogs({ limit: 1, type: AuditLogEvent.EmojiDelete })).entries.first()?.executor?.username ?? "Unknown";
+                auditLogs =
+                    (await emoji.guild.fetchAuditLogs({ limit: 1, type: AuditLogEvent.EmojiDelete })).entries.first()
+                        ?.executor?.username ?? "Unknown";
             } catch (_) {}
 
             const logChannelID = getSetting(emoji.guild.id, "loggingChannel", "");
             const logChannel = emoji.guild.channels.cache.get(logChannelID);
             if (logChannel?.isTextBased()) {
-                const embed = new EmbedBuilder().setTitle("A member is mass deleting emojis in this Discord server").addFields({ name: "Deleter", value: auditLogs }).setColor("Red").setTimestamp(new Date());
+                const embed = new EmbedBuilder()
+                    .setTitle("A member is mass deleting emojis in this Discord server")
+                    .addFields({ name: "Deleter", value: auditLogs })
+                    .setColor("Red")
+                    .setTimestamp(new Date());
                 await logChannel.send({ embeds: [embed] });
             }
             this.violationCounters.vlDelete(emoji.guild.id, "message");
@@ -91,13 +122,19 @@ export class AntiRaidModule implements Module {
         if (vl2 > 5) {
             let auditLogs = "Unknown (No Audit Logs permission)";
             try {
-                auditLogs = (await emoji.guild.fetchAuditLogs({ limit: 1, type: AuditLogEvent.EmojiDelete })).entries.first()?.executor?.username ?? "Unknown";
+                auditLogs =
+                    (await emoji.guild.fetchAuditLogs({ limit: 1, type: AuditLogEvent.EmojiDelete })).entries.first()
+                        ?.executor?.username ?? "Unknown";
             } catch (_) {}
 
             const logChannelID = getSetting(emoji.guild.id, "loggingChannel", "");
             const logChannel = emoji.guild.channels.cache.get(logChannelID);
             if (logChannel?.isTextBased()) {
-                const embed = new EmbedBuilder().setTitle("A member is mass deleting emojis over a longer period of time in this Discord server").addFields({ name: "Deleter", value: auditLogs }).setColor("Red").setTimestamp(new Date());
+                const embed = new EmbedBuilder()
+                    .setTitle("A member is mass deleting emojis over a longer period of time in this Discord server")
+                    .addFields({ name: "Deleter", value: auditLogs })
+                    .setColor("Red")
+                    .setTimestamp(new Date());
                 await logChannel.send({ embeds: [embed] });
             }
             this.violationCounters.vlDelete(emoji.guild.id, "message");
@@ -111,13 +148,20 @@ export class AntiRaidModule implements Module {
         if (vl > 2) {
             let auditLogs = "Unknown (No Audit Logs permission)";
             try {
-                auditLogs = (await sticker.guild.fetchAuditLogs({ limit: 1, type: AuditLogEvent.StickerDelete })).entries.first()?.executor?.username ?? "Unknown";
+                auditLogs =
+                    (
+                        await sticker.guild.fetchAuditLogs({ limit: 1, type: AuditLogEvent.StickerDelete })
+                    ).entries.first()?.executor?.username ?? "Unknown";
             } catch (_) {}
 
             const logChannelID = getSetting(sticker.guild.id, "loggingChannel", "");
             const logChannel = sticker.guild.channels.cache.get(logChannelID);
             if (logChannel?.isTextBased()) {
-                const embed = new EmbedBuilder().setTitle("A member is mass deleting stickers in this Discord server").addFields({ name: "Deleter", value: auditLogs }).setColor("Red").setTimestamp(new Date());
+                const embed = new EmbedBuilder()
+                    .setTitle("A member is mass deleting stickers in this Discord server")
+                    .addFields({ name: "Deleter", value: auditLogs })
+                    .setColor("Red")
+                    .setTimestamp(new Date());
                 await logChannel.send({ embeds: [embed] });
             }
             this.violationCounters.vlDelete(sticker.guild.id, "message");
@@ -126,13 +170,20 @@ export class AntiRaidModule implements Module {
         if (vl2 > 5) {
             let auditLogs = "Unknown (No Audit Logs permission)";
             try {
-                auditLogs = (await sticker.guild.fetchAuditLogs({ limit: 1, type: AuditLogEvent.StickerDelete })).entries.first()?.executor?.username ?? "Unknown";
+                auditLogs =
+                    (
+                        await sticker.guild.fetchAuditLogs({ limit: 1, type: AuditLogEvent.StickerDelete })
+                    ).entries.first()?.executor?.username ?? "Unknown";
             } catch (_) {}
 
             const logChannelID = getSetting(sticker.guild.id, "loggingChannel", "");
             const logChannel = sticker.guild.channels.cache.get(logChannelID);
             if (logChannel?.isTextBased()) {
-                const embed = new EmbedBuilder().setTitle("A member is mass deleting stickers over a longer period of time in this Discord server").addFields({ name: "Deleter", value: auditLogs }).setColor("Red").setTimestamp(new Date());
+                const embed = new EmbedBuilder()
+                    .setTitle("A member is mass deleting stickers over a longer period of time in this Discord server")
+                    .addFields({ name: "Deleter", value: auditLogs })
+                    .setColor("Red")
+                    .setTimestamp(new Date());
                 await logChannel.send({ embeds: [embed] });
             }
             this.violationCounters.vlDelete(sticker.guild.id, "message");
@@ -148,13 +199,19 @@ export class AntiRaidModule implements Module {
         if (vl > 2) {
             let auditLogs = "Unknown (No Audit Logs permission)";
             try {
-                auditLogs = (await role.guild.fetchAuditLogs({ limit: 1, type: AuditLogEvent.RoleCreate })).entries.first()?.executor?.username ?? "Unknown";
+                auditLogs =
+                    (await role.guild.fetchAuditLogs({ limit: 1, type: AuditLogEvent.RoleCreate })).entries.first()
+                        ?.executor?.username ?? "Unknown";
             } catch (_) {}
 
             const logChannelID = getSetting(role.guild.id, "loggingChannel", "");
             const logChannel = role.guild.channels.cache.get(logChannelID);
             if (logChannel?.isTextBased()) {
-                const embed = new EmbedBuilder().setTitle("A member is mass creating roles in this Discord server").addFields({ name: "Creator", value: auditLogs }).setColor("Red").setTimestamp(new Date());
+                const embed = new EmbedBuilder()
+                    .setTitle("A member is mass creating roles in this Discord server")
+                    .addFields({ name: "Creator", value: auditLogs })
+                    .setColor("Red")
+                    .setTimestamp(new Date());
                 await logChannel.send({ embeds: [embed] });
             }
             this.violationCounters.vlDelete(role.guild.id, "message");
@@ -163,13 +220,19 @@ export class AntiRaidModule implements Module {
         if (vl2 > 5) {
             let auditLogs = "Unknown (No Audit Logs permission)";
             try {
-                auditLogs = (await role.guild.fetchAuditLogs({ limit: 1, type: AuditLogEvent.RoleCreate })).entries.first()?.executor?.username ?? "Unknown";
+                auditLogs =
+                    (await role.guild.fetchAuditLogs({ limit: 1, type: AuditLogEvent.RoleCreate })).entries.first()
+                        ?.executor?.username ?? "Unknown";
             } catch (_) {}
 
             const logChannelID = getSetting(role.guild.id, "loggingChannel", "");
             const logChannel = role.guild.channels.cache.get(logChannelID);
             if (logChannel?.isTextBased()) {
-                const embed = new EmbedBuilder().setTitle("A member is mass creating roles over a longer period of time in this Discord server").addFields({ name: "Creator", value: auditLogs }).setColor("Red").setTimestamp(new Date());
+                const embed = new EmbedBuilder()
+                    .setTitle("A member is mass creating roles over a longer period of time in this Discord server")
+                    .addFields({ name: "Creator", value: auditLogs })
+                    .setColor("Red")
+                    .setTimestamp(new Date());
                 await logChannel.send({ embeds: [embed] });
             }
             this.violationCounters.vlDelete(role.guild.id, "message");
@@ -181,13 +244,19 @@ export class AntiRaidModule implements Module {
         if (vl > 2) {
             let auditLogs = "Unknown (No Audit Logs permission)";
             try {
-                auditLogs = (await role.guild.fetchAuditLogs({ limit: 1, type: AuditLogEvent.RoleDelete })).entries.first()?.executor?.username ?? "Unknown";
+                auditLogs =
+                    (await role.guild.fetchAuditLogs({ limit: 1, type: AuditLogEvent.RoleDelete })).entries.first()
+                        ?.executor?.username ?? "Unknown";
             } catch (_) {}
 
             const logChannelID = getSetting(role.guild.id, "loggingChannel", "");
             const logChannel = role.guild.channels.cache.get(logChannelID);
             if (logChannel?.isTextBased()) {
-                const embed = new EmbedBuilder().setTitle("A member is mass deleting roles in this Discord server").addFields({ name: "Deleter", value: auditLogs }).setColor("Red").setTimestamp(new Date());
+                const embed = new EmbedBuilder()
+                    .setTitle("A member is mass deleting roles in this Discord server")
+                    .addFields({ name: "Deleter", value: auditLogs })
+                    .setColor("Red")
+                    .setTimestamp(new Date());
                 await logChannel.send({ embeds: [embed] });
             }
             this.violationCounters.vlDelete(role.guild.id, "message");
@@ -196,13 +265,19 @@ export class AntiRaidModule implements Module {
         if (vl2 > 5) {
             let auditLogs = "Unknown (No Audit Logs permission)";
             try {
-                auditLogs = (await role.guild.fetchAuditLogs({ limit: 1, type: AuditLogEvent.RoleDelete })).entries.first()?.executor?.username ?? "Unknown";
+                auditLogs =
+                    (await role.guild.fetchAuditLogs({ limit: 1, type: AuditLogEvent.RoleDelete })).entries.first()
+                        ?.executor?.username ?? "Unknown";
             } catch (_) {}
 
             const logChannelID = getSetting(role.guild.id, "loggingChannel", "");
             const logChannel = role.guild.channels.cache.get(logChannelID);
             if (logChannel?.isTextBased()) {
-                const embed = new EmbedBuilder().setTitle("A member is mass deleting roles over a longer period of time in this Discord server").addFields({ name: "Deleter", value: auditLogs }).setColor("Red").setTimestamp(new Date());
+                const embed = new EmbedBuilder()
+                    .setTitle("A member is mass deleting roles over a longer period of time in this Discord server")
+                    .addFields({ name: "Deleter", value: auditLogs })
+                    .setColor("Red")
+                    .setTimestamp(new Date());
                 await logChannel.send({ embeds: [embed] });
             }
             this.violationCounters.vlDelete(role.guild.id, "message");
@@ -215,13 +290,20 @@ export class AntiRaidModule implements Module {
         if (vl > 2) {
             let auditLogs = "Unknown (No Audit Logs permission)";
             try {
-                auditLogs = (await channel.guild.fetchAuditLogs({ limit: 1, type: AuditLogEvent.ChannelCreate })).entries.first()?.executor?.username ?? "Unknown";
+                auditLogs =
+                    (
+                        await channel.guild.fetchAuditLogs({ limit: 1, type: AuditLogEvent.ChannelCreate })
+                    ).entries.first()?.executor?.username ?? "Unknown";
             } catch (_) {}
 
             const logChannelID = getSetting(channel.guild.id, "loggingChannel", "");
             const logChannel = channel.guild.channels.cache.get(logChannelID);
             if (logChannel?.isTextBased()) {
-                const embed = new EmbedBuilder().setTitle("A member is mass creating channels in this Discord server").addFields({ name: "Creator", value: auditLogs }).setColor("Red").setTimestamp(new Date());
+                const embed = new EmbedBuilder()
+                    .setTitle("A member is mass creating channels in this Discord server")
+                    .addFields({ name: "Creator", value: auditLogs })
+                    .setColor("Red")
+                    .setTimestamp(new Date());
                 await logChannel.send({ embeds: [embed] });
             }
             this.violationCounters.vlDelete(channel.guild.id, "message");
@@ -230,13 +312,20 @@ export class AntiRaidModule implements Module {
         if (vl2 > 5) {
             let auditLogs = "Unknown (No Audit Logs permission)";
             try {
-                auditLogs = (await channel.guild.fetchAuditLogs({ limit: 1, type: AuditLogEvent.ChannelCreate })).entries.first()?.executor?.username ?? "Unknown";
+                auditLogs =
+                    (
+                        await channel.guild.fetchAuditLogs({ limit: 1, type: AuditLogEvent.ChannelCreate })
+                    ).entries.first()?.executor?.username ?? "Unknown";
             } catch (_) {}
 
             const logChannelID = getSetting(channel.guild.id, "loggingChannel", "");
             const logChannel = channel.guild.channels.cache.get(logChannelID);
             if (logChannel?.isTextBased()) {
-                const embed = new EmbedBuilder().setTitle("A member is mass creating channels over a longer period of time in this Discord server").addFields({ name: "Creator", value: auditLogs }).setColor("Red").setTimestamp(new Date());
+                const embed = new EmbedBuilder()
+                    .setTitle("A member is mass creating channels over a longer period of time in this Discord server")
+                    .addFields({ name: "Creator", value: auditLogs })
+                    .setColor("Red")
+                    .setTimestamp(new Date());
                 await logChannel.send({ embeds: [embed] });
             }
             this.violationCounters.vlDelete(channel.guild.id, "message");
@@ -250,13 +339,20 @@ export class AntiRaidModule implements Module {
         if (vl > 2) {
             let auditLogs = "Unknown (No Audit Logs permission)";
             try {
-                auditLogs = (await channel.guild.fetchAuditLogs({ limit: 1, type: AuditLogEvent.ChannelDelete })).entries.first()?.executor?.username ?? "Unknown";
+                auditLogs =
+                    (
+                        await channel.guild.fetchAuditLogs({ limit: 1, type: AuditLogEvent.ChannelDelete })
+                    ).entries.first()?.executor?.username ?? "Unknown";
             } catch (_) {}
 
             const logChannelID = getSetting(channel.guild.id, "loggingChannel", "");
             const logChannel = channel.guild.channels.cache.get(logChannelID);
             if (logChannel?.isTextBased()) {
-                const embed = new EmbedBuilder().setTitle("A member is mass deleting channels in this Discord server").addFields({ name: "Deleter", value: auditLogs }).setColor("Red").setTimestamp(new Date());
+                const embed = new EmbedBuilder()
+                    .setTitle("A member is mass deleting channels in this Discord server")
+                    .addFields({ name: "Deleter", value: auditLogs })
+                    .setColor("Red")
+                    .setTimestamp(new Date());
                 await logChannel.send({ embeds: [embed] });
             }
             this.violationCounters.vlDelete(channel.guild.id, "message");
@@ -265,13 +361,20 @@ export class AntiRaidModule implements Module {
         if (vl2 > 5) {
             let auditLogs = "Unknown (No Audit Logs permission)";
             try {
-                auditLogs = (await channel.guild.fetchAuditLogs({ limit: 1, type: AuditLogEvent.ChannelDelete })).entries.first()?.executor?.username ?? "Unknown";
+                auditLogs =
+                    (
+                        await channel.guild.fetchAuditLogs({ limit: 1, type: AuditLogEvent.ChannelDelete })
+                    ).entries.first()?.executor?.username ?? "Unknown";
             } catch (_) {}
 
             const logChannelID = getSetting(channel.guild.id, "loggingChannel", "");
             const logChannel = channel.guild.channels.cache.get(logChannelID);
             if (logChannel?.isTextBased()) {
-                const embed = new EmbedBuilder().setTitle("A member is mass deleting channels over a longer period of time in this Discord server").addFields({ name: "Deleter", value: auditLogs }).setColor("Red").setTimestamp(new Date());
+                const embed = new EmbedBuilder()
+                    .setTitle("A member is mass deleting channels over a longer period of time in this Discord server")
+                    .addFields({ name: "Deleter", value: auditLogs })
+                    .setColor("Red")
+                    .setTimestamp(new Date());
                 await logChannel.send({ embeds: [embed] });
             }
             this.violationCounters.vlDelete(channel.guild.id, "message");
@@ -292,13 +395,19 @@ export class AntiRaidModule implements Module {
         if (vl > 4) {
             let auditLogs = "Unknown (No Audit Logs permission)";
             try {
-                auditLogs = (await after.guild.fetchAuditLogs({ limit: 1, type: AuditLogEvent.MemberUpdate })).entries.first()?.executor?.username ?? "Unknown";
+                auditLogs =
+                    (await after.guild.fetchAuditLogs({ limit: 1, type: AuditLogEvent.MemberUpdate })).entries.first()
+                        ?.executor?.username ?? "Unknown";
             } catch (_) {}
 
             const logChannelID = getSetting(after.guild.id, "loggingChannel", "");
             const logChannel = after.guild.channels.cache.get(logChannelID);
             if (logChannel?.isTextBased()) {
-                const embed = new EmbedBuilder().setTitle("A member is mass changing nicknames in this Discord server").addFields({ name: "Changer", value: auditLogs }).setColor("Red").setTimestamp(new Date());
+                const embed = new EmbedBuilder()
+                    .setTitle("A member is mass changing nicknames in this Discord server")
+                    .addFields({ name: "Changer", value: auditLogs })
+                    .setColor("Red")
+                    .setTimestamp(new Date());
                 await logChannel.send({ embeds: [embed] });
             }
             this.violationCounters.vlDelete(after.guild.id, "message");
@@ -307,13 +416,19 @@ export class AntiRaidModule implements Module {
         if (vl2 > 8) {
             let auditLogs = "Unknown (No Audit Logs permission)";
             try {
-                auditLogs = (await after.guild.fetchAuditLogs({ limit: 1, type: AuditLogEvent.MemberUpdate })).entries.first()?.executor?.username ?? "Unknown";
+                auditLogs =
+                    (await after.guild.fetchAuditLogs({ limit: 1, type: AuditLogEvent.MemberUpdate })).entries.first()
+                        ?.executor?.username ?? "Unknown";
             } catch (_) {}
 
             const logChannelID = getSetting(after.guild.id, "loggingChannel", "");
             const logChannel = after.guild.channels.cache.get(logChannelID);
             if (logChannel?.isTextBased()) {
-                const embed = new EmbedBuilder().setTitle("A member is mass changing nicknames over a longer period of time in this Discord server").addFields({ name: "Changer", value: auditLogs }).setColor("Red").setTimestamp(new Date());
+                const embed = new EmbedBuilder()
+                    .setTitle("A member is mass changing nicknames over a longer period of time in this Discord server")
+                    .addFields({ name: "Changer", value: auditLogs })
+                    .setColor("Red")
+                    .setTimestamp(new Date());
                 await logChannel.send({ embeds: [embed] });
             }
             this.violationCounters.vlDelete(after.guild.id, "message");
