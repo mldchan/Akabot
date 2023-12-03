@@ -35,7 +35,11 @@ export class LevelingModule implements Module {
         const pointsToNext = getUserRequirementForNextLevel(points);
         const embed = new EmbedBuilder()
             .setTitle(`Level - ${interaction.user.displayName}`)
-            .setDescription(`You are currently on level ${level} (${points} XP)\nYou need ${pointsToNext - points} XP for next level.`)
+            .setDescription(
+                `You are currently on level ${level} (${points} XP)\nYou need ${
+                    pointsToNext - points
+                } XP for next level.`
+            )
             .setFooter({
                 text: getFormattedDate()
             });
@@ -55,10 +59,14 @@ export class LevelingModule implements Module {
         if (msg.author.bot) return;
         const xpBefore = getUserPoints(msg.guild.id, msg.author.id);
         const levelBefore = getUserLevel(xpBefore);
+        console.log("leveling", "onMessage", "xpBefore", xpBefore, "levelBefore", levelBefore);
         addPointsToUser(msg.guild.id, msg.author.id, msg.content.length);
+        console.log("leveling", "onMessage", "added points", msg.content.length);
         const xpAfter = getUserPoints(msg.guild.id, msg.author.id);
         const levelAfter = getUserLevel(xpAfter);
+        console.log("leveling", "onMessage", "xpAfter", xpAfter, "levelAfter", levelAfter);
         if (levelBefore !== levelAfter) {
+            console.log("leveling", "onMessage", "level up");
             const levelingChannelId = getSetting(msg.guild.id, "levelingChannel", "");
             const levelingChannel = msg.guild.channels.cache.get(levelingChannelId);
             if (!levelingChannel) return;
@@ -73,11 +81,13 @@ export class LevelingModule implements Module {
                     text: getFormattedDate()
                 });
             try {
+                console.log("leveling", "onMessage", "sending message");
                 await levelingChannel.send({
                     content: `<@${msg.author.id}>`,
                     embeds: [embed]
                 });
             } catch (err) {
+                console.error("leveling", "onMessage", "failed to send message", err);
                 console.error(err);
             }
         }

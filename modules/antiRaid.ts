@@ -21,17 +21,23 @@ async function handleNoPfp(member: GuildMember) {
     if (kickNoPfp !== "yes") return;
     if (member.user.avatar) return;
 
+    console.log("antiRaid", "handleNoPfp", member.user.username, member.user.avatar, "no pfp");
     try {
         await member.send(
             "You have been kicked from a server for not having a profile picture. They have the bot set up like this."
         );
-    } catch (_) {}
+        console.log("antiRaid", "handleNoPfp", member.user.username, "sent DM");
+    } catch (_) {
+        console.log("antiRaid", "handleNoPfp", member.user.username, "failed to send DM");
+    }
 
     let kickField = { name: "Action", value: "Kicked" };
     try {
         await member.kick("No PFP");
+        console.log("antiRaid", "handleNoPfp", member.user.username, "kicked");
     } catch (_) {
         kickField = { name: "Action", value: "Failed to kick" };
+        console.log("antiRaid", "handleNoPfp", member.user.username, "failed to kick");
     }
 
     const logChannelID = getSetting(member.guild.id, "loggingChannel", "");
@@ -44,7 +50,12 @@ async function handleNoPfp(member: GuildMember) {
         .setColor("Red")
         .setTimestamp(new Date());
 
-    await logChannel.send({ embeds: [embed] });
+    try {
+        await logChannel.send({ embeds: [embed] });
+        console.log("antiRaid", "handleNoPfp", member.user.username, "sent log message");
+    } catch (_) {
+        console.log("antiRaid", "handleNoPfp", member.user.username, "failed to send log message");
+    }
 }
 
 async function handleNewAccount(member: GuildMember) {
@@ -60,13 +71,18 @@ async function handleNewAccount(member: GuildMember) {
                 (new Date().getTime() - member.user.createdAt.getTime()) / (24 * 60 * 60 * 1000)
             )} days old.`
         );
-    } catch (_) {}
+        console.log("antiRaid", "handleNewAccount", member.user.username, "sent DM");
+    } catch (_) {
+        console.log("antiRaid", "handleNewAccount", member.user.username, "failed to send DM");
+    }
 
     let kickField = { name: "Action", value: "Kicked" };
     try {
         await member.kick("New account");
+        console.log("antiRaid", "handleNewAccount", member.user.username, "kicked");
     } catch (_) {
         kickField = { name: "Action", value: "Failed to kick" };
+        console.log("antiRaid", "handleNewAccount", member.user.username, "failed to kick");
     }
 
     const logChannelID = getSetting(member.guild.id, "loggingChannel", "");
@@ -89,7 +105,12 @@ async function handleNewAccount(member: GuildMember) {
         .setColor("Red")
         .setTimestamp(new Date());
 
-    await logChannel.send({ embeds: [embed] });
+    try {
+        await logChannel.send({ embeds: [embed] });
+        console.log("antiRaid", "handleNewAccount", member.user.username, "sent log message");
+    } catch (_) {
+        console.log("antiRaid", "handleNewAccount", member.user.username, "failed to send log message");
+    }
 }
 
 export class AntiRaidModule implements Module {
@@ -113,7 +134,12 @@ export class AntiRaidModule implements Module {
                     .addFields({ name: "Deleter", value: auditLogs })
                     .setColor("Red")
                     .setTimestamp(new Date());
-                await logChannel.send({ embeds: [embed] });
+                try {
+                    await logChannel.send({ embeds: [embed] });
+                    console.log("antiRaid", "onEmojiDelete", emoji.guild.id, "sent log message");
+                } catch (_) {
+                    console.log("antiRaid", "onEmojiDelete", emoji.guild.id, "failed to send log message");
+                }
             }
             this.violationCounters.vlDelete(emoji.guild.id, "message");
         }

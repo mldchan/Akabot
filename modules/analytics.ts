@@ -24,7 +24,8 @@ function readData(): AnalyticsYear {
     const now = new Date();
     if (!data[now.getFullYear()]) data[now.getFullYear()] = {};
     if (!data[now.getFullYear()][now.getMonth()]) data[now.getFullYear()][now.getMonth()] = {};
-    if (!data[now.getFullYear()][now.getMonth()][now.getDate()]) data[now.getFullYear()][now.getMonth()][now.getDate()] = {};
+    if (!data[now.getFullYear()][now.getMonth()][now.getDate()])
+        data[now.getFullYear()][now.getMonth()][now.getDate()] = {};
     return data;
 }
 
@@ -46,6 +47,14 @@ export class AnalyticsModule implements Module {
         const n = new Date();
         file[n.getFullYear()][n.getMonth()][n.getDate()][interaction.commandName] =
             (file[n.getFullYear()][n.getMonth()][n.getDate()][interaction.commandName] ?? 0) + 1;
+        console.log(
+            "analytics",
+            interaction.commandName,
+            n.getFullYear(),
+            n.getMonth(),
+            n.getDate(),
+            file[n.getFullYear()][n.getMonth()][n.getDate()][interaction.commandName]
+        );
         writeData(file);
     }
     async onButtonClick(interaction: ButtonInteraction<CacheType>): Promise<void> {}
