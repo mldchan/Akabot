@@ -16,6 +16,7 @@ import { AnalyticsModule } from "./modules/analytics";
 import { AntiSpamModule } from "./modules/antiSpam";
 import { isServerBlocked, isUserBlocked } from "./utilities/blockList";
 import { MediaOnlyChannelModule } from "./modules/mediaOnlyChannels";
+import { ChatStreakModule } from "./modules/chatStreak";
 
 dotenv.config();
 
@@ -79,6 +80,7 @@ modules.push(new ModerationModule());
 modules.push(new AnalyticsModule());
 modules.push(new AntiSpamModule());
 modules.push(new MediaOnlyChannelModule());
+modules.push(new ChatStreakModule());
 
 client.on("ready", async () => {
     console.log("I am ready!");

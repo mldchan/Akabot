@@ -1,10 +1,11 @@
 {
   "compilerOptions": {
     "target": "ESNext",
-    "module": "commonjs",
+    "module": "CommonJS",
     "outDir": "dist",
     "rootDir": ".",
-    "strict": true
+    "strict": true,
+    "lib": ["ESNext"]
   },
   "include": ["**/*.ts"],
   "exclude": ["node_modules"]
