@@ -109,7 +109,7 @@ client.on("ready", async () => {
     }
 
     client.user?.setActivity({
-        name: "b7",
+        name: "b8",
         type: ActivityType.Playing
     });
 
