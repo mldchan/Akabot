@@ -1,28 +1,28 @@
 import {
-    ChatInputCommandInteraction,
-    CacheType,
     ButtonInteraction,
-    Role,
+    CacheType,
     Channel,
-    Message,
-    GuildMember,
-    Guild,
+    ChatInputCommandInteraction, EmbedBuilder,
     Emoji,
-    Sticker, SlashCommandBuilder
+    Guild,
+    GuildMember,
+    Message,
+    Role,
+    SlashCommandBuilder,
+    Sticker
 } from "discord.js";
 import { AllCommands, Module } from "./type";
 import * as fs from "fs";
+import { getToday } from "../utilities/dates";
 
 type Streak = {
-    startDate: number,
-    lastMessageDate: number
+    startDate: number, lastMessageDate: number
 }
 
 function streakReadFile(guildID: string, userID: string): Streak {
     if (!fs.existsSync(`data/${guildID}`)) fs.mkdirSync(`data/${guildID}`);
-    if(!fs.existsSync(`data/${guildID}/${userID}streak.json`)) fs.writeFileSync(`data/${guildID}/${userID}streak.json`, JSON.stringify({
-        startDate: Date.now(),
-        lastMessageDate: Date.now()
+    if (!fs.existsSync(`data/${guildID}/${userID}streak.json`)) fs.writeFileSync(`data/${guildID}/${userID}streak.json`, JSON.stringify({
+        startDate: getToday().getTime(), lastMessageDate: getToday().getTime()
     }));
     return JSON.parse(fs.readFileSync(`data/${guildID}/${userID}streak.json`, "utf-8"));
 }
@@ -33,81 +33,124 @@ function streakWriteFile(guildID: string, memberID: string, data: Streak) {
 
 function updateStreak(msg: Message<boolean>) {
     if (!msg.guild) return;
+    const d = new Date();
+    d.setUTCHours(0);
+    d.setUTCMinutes(0);
+    d.setUTCSeconds(0);
     const data = streakReadFile(msg.guild.id, msg.author.id);
-    if (Date.now() - data.lastMessageDate > 48 * 3600 * 1000) {
-        data.startDate = Date.now()
+    if (getToday().getTime() - data.lastMessageDate > 48 * 3600 * 1000) {
+        data.startDate = getToday().getTime();
     }
-    data.lastMessageDate = Date.now()
+    data.lastMessageDate = getToday().getTime();
     streakWriteFile(msg.guild.id, msg.author.id, data);
 }
 
 function getStreakStatus(guildID: string, memberID: string) {
     const data = streakReadFile(guildID, memberID);
     return {
-        expired: Date.now() - data.lastMessageDate > 48 * 3600 * 1000,
-        days: Math.floor((Date.now() - data.startDate) / (24 * 3600 * 1000)),
-        messageTimeDiff: Date.now() - data.lastMessageDate,
-        expiresIn: {
-            hours: Math.floor((48 * 3600 * 1000 - (Date.now() - data.lastMessageDate)) / 3600 / 1000),
-            minutes: Math.floor((48 * 3600 * 1000 - (Date.now() - data.lastMessageDate)) / 60 / 1000) % 60,
-        }
-    }
+        expired: getToday().getTime() - data.lastMessageDate > 48 * 3600 * 1000,
+        days: Math.floor((getToday().getTime() - data.startDate) / (24 * 3600 * 1000)) + 1,
+        messageTimeDiff: getToday().getTime() - data.lastMessageDate
+    };
 }
 
 export class ChatStreakModule implements Module {
-    async onEmojiCreate(emoji: Emoji): Promise<void> {}
-    async onEmojiDelete(emoji: Emoji): Promise<void> {}
-    async onEmojiEdit(before: Emoji, after: Emoji): Promise<void> {}
-    async onStickerCreate(sticker: Sticker): Promise<void> {}
-    async onStickerDelete(sticker: Sticker): Promise<void> {}
-    async onStickerEdit(before: Sticker, after: Sticker): Promise<void> {}
-    commands: AllCommands = [
-        new SlashCommandBuilder()
-            .setName("streak")
-            .setDescription("See what your current chat streak is.")
-    ];
+    commands: AllCommands = [new SlashCommandBuilder()
+        .setName("streak")
+        .setDescription("See what your current chat streak is.")];
     selfMemberId: string = "";
+
+    async onEmojiCreate(emoji: Emoji): Promise<void> {
+    }
+
+    async onEmojiDelete(emoji: Emoji): Promise<void> {
+    }
+
+    async onEmojiEdit(before: Emoji, after: Emoji): Promise<void> {
+    }
+
+    async onStickerCreate(sticker: Sticker): Promise<void> {
+    }
+
+    async onStickerDelete(sticker: Sticker): Promise<void> {
+    }
+
+    async onStickerEdit(before: Sticker, after: Sticker): Promise<void> {
+    }
+
     async onSlashCommand(interaction: ChatInputCommandInteraction<CacheType>): Promise<void> {
         if (interaction.commandName !== "streak") return;
         if (!interaction.guild) return;
         const streakStatus = getStreakStatus(interaction.guild.id, interaction.user.id);
-        await interaction.reply({
-            content: `# Streak Status
-- **Current**: ${streakStatus.days} days
-- Expires in ${streakStatus.expiresIn.hours} hours and ${streakStatus.expiresIn.minutes} minutes
-- **Send a chat message to renew :3**`,
-            ephemeral: true
-        })
+        const plural = streakStatus.days == 1 ? "" : "s";
+
+        const embed = new EmbedBuilder()
+            .setTitle("Streak Status")
+            .setFields([
+                {name: "Current", value: `${streakStatus.days} day${plural}`}
+            ]);
+
+        await interaction.reply({embeds: [embed], ephemeral: true});
     }
-    async onButtonClick(interaction: ButtonInteraction<CacheType>): Promise<void> {}
-    async onRoleCreate(role: Role): Promise<void> {}
-    async onRoleEdit(before: Role, after: Role): Promise<void> {}
-    async onRoleDelete(role: Role): Promise<void> {}
-    async onChannelCreate(role: Channel): Promise<void> {}
-    async onChannelEdit(before: Channel, after: Channel): Promise<void> {}
-    async onChannelDelete(role: Channel): Promise<void> {}
+
+    async onButtonClick(interaction: ButtonInteraction<CacheType>): Promise<void> {
+    }
+
+    async onRoleCreate(role: Role): Promise<void> {
+    }
+
+    async onRoleEdit(before: Role, after: Role): Promise<void> {
+    }
+
+    async onRoleDelete(role: Role): Promise<void> {
+    }
+
+    async onChannelCreate(role: Channel): Promise<void> {
+    }
+
+    async onChannelEdit(before: Channel, after: Channel): Promise<void> {
+    }
+
+    async onChannelDelete(role: Channel): Promise<void> {
+    }
+
     async onMessage(msg: Message<boolean>): Promise<void> {
         if (msg.author.bot) return;
         const streakStatus = getStreakStatus(msg.guild!.id, msg.author.id);
-        console.log('streakMessage days', streakStatus.days);
-        console.log('streakMessage timeDiff', streakStatus.messageTimeDiff);
+        console.log("streakMessage days", streakStatus.days);
+        console.log("streakMessage timeDiff", streakStatus.messageTimeDiff);
         updateStreak(msg);
         const streakStatusAfter = getStreakStatus(msg.guild!.id, msg.author.id);
-        console.log('streakMessage afterDays', streakStatusAfter.days);
+        console.log("streakMessage afterDays", streakStatusAfter.days);
 
         if (streakStatus.expired) {
-            msg.channel.send(`Your streak of ${streakStatus.days} days has expired :c`)
-        }
-        else if (streakStatus.messageTimeDiff > 24 * 3600 * 1000 && streakStatusAfter.messageTimeDiff < 48 * 3600 * 1000) {
-            msg.channel.send(`${streakStatusAfter.days} days of streak! Keep it going :3`)
+            msg.channel.send(`Your streak of ${streakStatus.days} days has expired :c\nYou now have 1 day streak.`);
+        } else if (streakStatus.messageTimeDiff > 24 * 3600 * 1000 && streakStatusAfter.messageTimeDiff < 48 * 3600 * 1000) {
+            msg.channel.send(`${streakStatusAfter.days} days of streak! Keep it going :3`);
         }
     }
-    async onMessageDelete(msg: Message<boolean>): Promise<void> {}
-    async onMessageEdit(before: Message<boolean>, after: Message<boolean>): Promise<void> {}
-    async onMemberJoin(member: GuildMember): Promise<void> {}
-    async onMemberEdit(before: GuildMember, after: GuildMember): Promise<void> {}
-    async onMemberLeave(member: GuildMember): Promise<void> {}
-    async onGuildAdd(guild: Guild): Promise<void> {}
-    async onGuildRemove(guild: Guild): Promise<void> {}
-    async onGuildEdit(before: Guild, after: Guild): Promise<void> {}
+
+    async onMessageDelete(msg: Message<boolean>): Promise<void> {
+    }
+
+    async onMessageEdit(before: Message<boolean>, after: Message<boolean>): Promise<void> {
+    }
+
+    async onMemberJoin(member: GuildMember): Promise<void> {
+    }
+
+    async onMemberEdit(before: GuildMember, after: GuildMember): Promise<void> {
+    }
+
+    async onMemberLeave(member: GuildMember): Promise<void> {
+    }
+
+    async onGuildAdd(guild: Guild): Promise<void> {
+    }
+
+    async onGuildRemove(guild: Guild): Promise<void> {
+    }
+
+    async onGuildEdit(before: Guild, after: Guild): Promise<void> {
+    }
 }
