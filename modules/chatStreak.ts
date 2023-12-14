@@ -87,9 +87,13 @@ export class ChatStreakModule implements Module {
     async onChannelEdit(before: Channel, after: Channel): Promise<void> {}
     async onChannelDelete(role: Channel): Promise<void> {}
     async onMessage(msg: Message<boolean>): Promise<void> {
+        if (msg.author.bot) return;
         const streakStatus = getStreakStatus(msg.guild!.id, msg.author.id);
+        console.log('streakMessage days', streakStatus.days);
+        console.log('streakMessage timeDiff', streakStatus.messageTimeDiff);
         updateStreak(msg);
         const streakStatusAfter = getStreakStatus(msg.guild!.id, msg.author.id);
+        console.log('streakMessage afterDays', streakStatusAfter.days);
 
         if (streakStatus.expired) {
             msg.channel.send(`Your streak of ${streakStatus.days} days has expired :c`)
