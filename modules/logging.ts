@@ -1,61 +1,66 @@
-import { ChatInputCommandInteraction, CacheType, ButtonInteraction, Role, Channel, Message, GuildMember, EmbedBuilder, AuditLogEvent, APIEmbedField, PartialMessage, PartialGuildMember, PermissionsString, PermissionFlagsBits, GuildChannel, ChannelType, Guild, Sticker, GuildEmoji, AttachmentBuilder } from "discord.js";
+import {
+    APIEmbedField,
+    AttachmentBuilder,
+    AuditLogEvent,
+    ButtonInteraction,
+    Channel,
+    ChannelType,
+    ChatInputCommandInteraction,
+    EmbedBuilder,
+    Guild,
+    GuildChannel,
+    GuildEmoji,
+    GuildMember,
+    Message,
+    PartialGuildMember,
+    PartialMessage,
+    PermissionFlagsBits,
+    PermissionsString,
+    Role,
+    Sticker
+} from "discord.js";
 import { AllCommands, Module } from "./type";
-import { getSetting } from "../data/settings";
+import { fetchAuditLog, getLogChannel, getSelfMember } from "../utilities/useful";
 
 export class Logging implements Module {
     commands: AllCommands = [];
     selfMemberId: string = "";
-    async onSlashCommand(interaction: ChatInputCommandInteraction<CacheType>): Promise<void> {}
-    async onButtonClick(interaction: ButtonInteraction<CacheType>): Promise<void> {}
-    async onRoleCreate(role: Role): Promise<void> {
-        const selfMember = role.guild.members.cache.get(this.selfMemberId);
-        if (!selfMember) return;
-        let creator = "No Audit Log Permission";
-        await selfMember.fetch(true);
-        if (selfMember.permissions.has("ViewAuditLog") || selfMember.permissions.has("Administrator")) {
-            const auditLog = await role.guild.fetchAuditLogs({
-                type: AuditLogEvent.RoleCreate,
-                limit: 1
-            });
-            const entry = auditLog.entries.first();
-            if (entry) {
-                creator = entry.executor?.username ?? "Unknown";
-            }
-        }
 
-        const logChannel = getSetting(role.guild.id, "loggingChannel", "");
-        if (!logChannel || logChannel === "") return;
-        const channel = role.guild.channels.cache.get(logChannel);
-        if (!channel) return;
-        if (!channel.isTextBased()) return;
-
-        const embed = new EmbedBuilder().setTitle("Role created").setDescription("A new role was created").addFields({ name: "Role name", value: role.name }, { name: "Role ID", value: role.id }, { name: "Role color", value: role.hexColor }, { name: "Creator", value: creator }).setColor("Green");
-
-        try {
-            await channel.send({ embeds: [embed] });
-        } catch (_) {}
+    async onSlashCommand(interaction: ChatInputCommandInteraction): Promise<void> {
     }
-    async onRoleEdit(before: Role, after: Role): Promise<void> {
-        const selfMember = after.guild.members.cache.get(this.selfMemberId);
-        if (!selfMember) return;
-        let editor = "No Audit Log Permission";
-        await selfMember.fetch(true);
-        if (selfMember.permissions.has("ViewAuditLog") || selfMember.permissions.has("Administrator")) {
-            const auditLog = await after.guild.fetchAuditLogs({
-                type: AuditLogEvent.RoleUpdate,
-                limit: 1
-            });
-            const entry = auditLog.entries.first();
-            if (entry) {
-                editor = entry.executor?.username ?? "Unknown";
-            }
-        }
 
-        const logChannel = getSetting(after.guild.id, "loggingChannel", "");
-        if (!logChannel || logChannel === "") return;
-        const channel = after.guild.channels.cache.get(logChannel);
+    async onButtonClick(interaction: ButtonInteraction): Promise<void> {
+    }
+
+    async onRoleCreate(role: Role): Promise<void> {
+        const selfMember = getSelfMember(role.guild);
+        if (!selfMember) return;
+        let creator = await fetchAuditLog(role.guild, AuditLogEvent.RoleCreate);
+
+        const channel = getLogChannel(role.guild);
         if (!channel) return;
-        if (!channel.isTextBased()) return;
+        if (!channel.permissionsFor(selfMember).has(PermissionFlagsBits.SendMessages)) return;
+
+        const embed = new EmbedBuilder().setTitle("Role created").setDescription("A new role was created").addFields({
+            name: "Role name",
+            value: role.name
+        }, { name: "Role ID", value: role.id }, { name: "Role color", value: role.hexColor }, {
+            name: "Creator",
+            value: creator
+        }).setColor("Green");
+
+        await channel.send({ embeds: [embed] });
+    }
+
+    async onRoleEdit(before: Role, after: Role): Promise<void> {
+        const selfMember = getSelfMember(after.guild);
+        if (!selfMember) return;
+        let editor = await fetchAuditLog(after.guild, AuditLogEvent.RoleUpdate);
+
+        const logs = getLogChannel(after.guild);
+        if (!logs) return;
+        if (!logs.isTextBased()) return;
+        if (!logs.permissionsFor(selfMember).has(PermissionFlagsBits.SendMessages)) return;
 
         let fields: APIEmbedField[] = [];
         fields.push({ name: "Role name", value: after.name });
@@ -113,91 +118,64 @@ export class Logging implements Module {
         });
 
         const embed = new EmbedBuilder().setTitle("Role edited").setDescription("A role was edited").addFields(fields).setColor("Yellow");
-        try {
-            await channel.send({ embeds: [embed] });
-        } catch (_) {}
+        await logs.send({ embeds: [embed] });
     }
+
     async onRoleDelete(role: Role): Promise<void> {
         const selfMember = role.guild.members.cache.get(this.selfMemberId);
         if (!selfMember) return;
-        let deleter = "No Audit Log Permission";
-        await selfMember.fetch(true);
-        if (selfMember.permissions.has("ViewAuditLog") || selfMember.permissions.has("Administrator")) {
-            const auditLog = await role.guild.fetchAuditLogs({
-                type: AuditLogEvent.RoleDelete,
-                limit: 1
-            });
-            const entry = auditLog.entries.first();
-            if (entry) {
-                deleter = entry.executor?.username ?? "Unknown";
-            }
-        }
+        let deleter = await fetchAuditLog(role.guild, AuditLogEvent.RoleDelete);
 
-        const logChannel = getSetting(role.guild.id, "loggingChannel", "");
-        if (!logChannel || logChannel === "") return;
-        const channel = role.guild.channels.cache.get(logChannel);
-        if (!channel) return;
-        if (!channel.isTextBased()) return;
+        const logs = getLogChannel(role.guild);
+        if (!logs) return;
+        if (!logs.isTextBased()) return;
+        if (!logs.permissionsFor(selfMember).has(PermissionFlagsBits.SendMessages)) return;
 
-        const embed = new EmbedBuilder().setTitle("Role deleted").setDescription("A role was deleted").addFields({ name: "Role name", value: role.name }, { name: "Role ID", value: role.id }, { name: "Role color", value: role.hexColor }, { name: "Deleter", value: deleter }).setColor("Red");
-        try {
-            await channel.send({ embeds: [embed] });
-        } catch (_) {}
+        const embed = new EmbedBuilder().setTitle("Role deleted").setDescription("A role was deleted").addFields({
+            name: "Role name",
+            value: role.name
+        }, { name: "Role ID", value: role.id }, { name: "Role color", value: role.hexColor }, {
+            name: "Deleter",
+            value: deleter
+        }).setColor("Red");
+        await logs.send({ embeds: [embed] });
     }
-    async onChannelCreate(channel1: Channel): Promise<void> {
-        if (channel1.isDMBased()) return;
-        const selfMember = channel1.guild.members.cache.get(this.selfMemberId);
+
+    async onChannelCreate(channel: Channel): Promise<void> {
+        if (channel.isDMBased()) return;
+        const selfMember = getSelfMember(channel.guild);
         if (!selfMember) return;
-        let creator = "No Audit Log Permission";
-        await selfMember.fetch(true);
-        if (selfMember.permissions.has("ViewAuditLog") || selfMember.permissions.has("Administrator")) {
-            const auditLog = await channel1.guild.fetchAuditLogs({
-                type: AuditLogEvent.ChannelCreate,
-                limit: 1
-            });
-            const entry = auditLog.entries.first();
-            if (entry) {
-                creator = entry.executor?.username ?? "Unknown";
-            }
-        }
+        let creator = await fetchAuditLog(channel.guild, AuditLogEvent.ChannelCreate);
 
-        const logChannel = getSetting(channel1.guild.id, "loggingChannel", "");
-        if (!logChannel || logChannel === "") return;
-        const channel = channel1.guild.channels.cache.get(logChannel);
-        if (!channel) return;
-        if (!channel.isTextBased()) return;
+        const logs = getLogChannel(channel.guild);
+        if (!logs) return;
+        if (!logs.isTextBased()) return;
+        if (!logs.permissionsFor(selfMember).has(PermissionFlagsBits.SendMessages)) return;
 
-        const embed = new EmbedBuilder().setTitle("Channel created").setDescription("A new channel was created").addFields({ name: "Channel name", value: channel1.name }, { name: "Channel ID", value: channel1.id.toString() }, { name: "Channel type", value: channel1.type.toString() }, { name: "Creator", value: creator }).setColor("Green");
+        const embed = new EmbedBuilder().setTitle("Channel created").setDescription("A new channel was created").addFields({
+            name: "Channel name",
+            value: channel.name
+        }, { name: "Channel ID", value: channel.id.toString() }, {
+            name: "Channel type",
+            value: channel.type.toString()
+        }, { name: "Creator", value: creator }).setColor("Green");
 
-        try {
-            await channel.send({ embeds: [embed] });
-        } catch (_) {}
+        await logs.send({ embeds: [embed] });
     }
+
     async onChannelEdit(before: Channel, after: Channel): Promise<void> {
         if (before.isDMBased()) return;
         if (after.isDMBased()) return;
         if (!before.guild) return;
         if (!after.guild) return;
-        const selfMember = after.guild.members.cache.get(this.selfMemberId);
+        const selfMember = getSelfMember(after.guild);
         if (!selfMember) return;
-        let editor = "No Audit Log Permission";
-        await selfMember.fetch(true);
-        if (selfMember.permissions.has("ViewAuditLog") || selfMember.permissions.has("Administrator")) {
-            const auditLog = await after.guild.fetchAuditLogs({
-                type: AuditLogEvent.ChannelUpdate,
-                limit: 1
-            });
-            const entry = auditLog.entries.first();
-            if (entry) {
-                editor = entry.executor?.username ?? "Unknown";
-            }
-        }
+        let editor = await fetchAuditLog(after.guild, AuditLogEvent.ChannelUpdate);
 
-        const logChannel = getSetting(after.guild.id, "loggingChannel", "");
-        if (!logChannel || logChannel === "") return;
-        const channel = after.guild.channels.cache.get(logChannel);
+        const channel = getLogChannel(after.guild);
         if (!channel) return;
         if (!channel.isTextBased()) return;
+        if (!channel.permissionsFor(selfMember).has(PermissionFlagsBits.SendMessages)) return;
 
         let fields: APIEmbedField[] = [];
 
@@ -337,75 +315,66 @@ export class Logging implements Module {
         });
 
         const embed = new EmbedBuilder().setTitle("Channel edited").setDescription("A channel was edited").addFields(fields).setColor("Yellow");
-        try {
-            await channel.send({ embeds: [embed] });
-        } catch (_) {}
+        await channel.send({ embeds: [embed] });
     }
+
     async onChannelDelete(channel: Channel): Promise<void> {
         if (channel.isDMBased()) return;
-        const selfMember = channel.guild.members.cache.get(this.selfMemberId);
+        const selfMember = getSelfMember(channel.guild);
         if (!selfMember) return;
-        let deleter = "No Audit Log Permission";
-        await selfMember.fetch(true);
-        if (selfMember.permissions.has("ViewAuditLog") || selfMember.permissions.has("Administrator")) {
-            const auditLog = await channel.guild.fetchAuditLogs({
-                type: AuditLogEvent.ChannelDelete,
-                limit: 1
-            });
-            const entry = auditLog.entries.first();
-            if (entry) {
-                deleter = entry.executor?.username ?? "Unknown";
-            }
-        }
+        let deleter = await fetchAuditLog(channel.guild, AuditLogEvent.ChannelDelete);
 
-        const logChannel = getSetting(channel.guild.id, "loggingChannel", "");
-        if (!logChannel || logChannel === "") return;
-        const logChannel1 = channel.guild.channels.cache.get(logChannel);
-        if (!logChannel1) return;
-        if (!logChannel1.isTextBased()) return;
+        const logs = getLogChannel(channel.guild);
+        if (!logs) return;
+        if (!logs.isTextBased()) return;
 
-        const embed = new EmbedBuilder().setTitle("Channel deleted").setDescription("A channel was deleted").addFields({ name: "Channel name", value: channel.name }, { name: "Channel ID", value: channel.id.toString() }, { name: "Channel type", value: channel.type.toString() }, { name: "Deleter", value: deleter }).setColor("Red");
+        const embed = new EmbedBuilder().setTitle("Channel deleted").setDescription("A channel was deleted").addFields({
+            name: "Channel name",
+            value: channel.name
+        }, { name: "Channel ID", value: channel.id.toString() }, {
+            name: "Channel type",
+            value: channel.type.toString()
+        }, { name: "Deleter", value: deleter }).setColor("Red");
 
-        try {
-            await logChannel1.send({ embeds: [embed] });
-        } catch (_) {}
+        await logs.send({ embeds: [embed] });
     }
-    async onMessage(msg: Message<boolean>): Promise<void> {}
-    async onMessageDelete(msg: Message<boolean> | PartialMessage): Promise<void> {
+
+    async onMessage(msg: Message): Promise<void> {
+    }
+
+    async onMessageDelete(msg: Message | PartialMessage): Promise<void> {
         if (!msg.guild) return;
-        if (msg.author?.id === this.selfMemberId) return;
-        const logChannel = getSetting(msg.guild.id, "loggingChannel", "");
-        if (!logChannel || logChannel === "") return;
-        const channel = msg.guild.channels.cache.get(logChannel);
+        const selfMember = getSelfMember(msg.guild);
+        if (!selfMember) return;
+        if (msg.author?.id === selfMember.id) return;
+        const channel = getLogChannel(msg.guild);
         if (!channel) return;
         if (!channel.isTextBased()) return;
+        if (!channel.permissionsFor(selfMember).has(PermissionFlagsBits.SendMessages)) return;
 
         const fields: APIEmbedField[] = [];
 
         if (msg.author) {
-            fields.push({ name: "Author", value: msg.author.username });
+            fields.push({ name: "Message Author", value: msg.author.username });
         }
         if (msg.content) {
-            fields.push({ name: "Original message", value: msg.content });
+            fields.push({ name: "Original Content", value: msg.content });
         }
 
         const embed = new EmbedBuilder().setTitle("Message deleted").setDescription("A message was deleted").addFields(fields).setColor("Red");
 
-        const selfMember = msg.guild.members.cache.get(this.selfMemberId);
-        if (!selfMember) return;
-        try {
-            await channel.send({ embeds: [embed] });
-        } catch (_) {}
+        await channel.send({ embeds: [embed] });
     }
-    async onMessageEdit(before: Message<boolean> | PartialMessage, after: Message<boolean> | PartialMessage): Promise<void> {
-        // detect: message content change
+
+    async onMessageEdit(before: Message | PartialMessage, after: Message | PartialMessage): Promise<void> {
         if (!after.guild) return;
-        if (after.author?.id === this.selfMemberId) return;
-        const logChannel = getSetting(after.guild.id, "loggingChannel", "");
-        if (!logChannel || logChannel === "") return;
-        const channel = after.guild.channels.cache.get(logChannel);
+        const selfMember = getSelfMember(after.guild);
+        if (!selfMember) return;
+        if (after.author?.id === selfMember.id) return;
+        const channel = getLogChannel(after.guild);
         if (!channel) return;
         if (!channel.isTextBased()) return;
+        if (!channel.permissionsFor(selfMember).has(PermissionFlagsBits.SendMessages)) return;
 
         let fields: APIEmbedField[] = [];
         let files: AttachmentBuilder[] = [];
@@ -425,48 +394,42 @@ export class Logging implements Module {
         }
         if (fields.length === 0) return;
         const embed = new EmbedBuilder().setTitle("Message edited").setDescription("A message was edited").addFields(fields).setColor("Yellow");
-        const selfMember = after.guild.members.cache.get(this.selfMemberId);
         if (!selfMember) return;
-        if (channel.permissionsFor(selfMember).has(PermissionFlagsBits.SendMessages)) await channel.send({ embeds: [embed], files });
+        await channel.send({
+            embeds: [embed],
+            files
+        });
     }
-    async onMemberJoin(member: GuildMember): Promise<void> {
-        const logChannel = getSetting(member.guild.id, "loggingChannel", "");
-        if (!logChannel || logChannel === "") return;
-        const channel = member.guild.channels.cache.get(logChannel);
-        if (!channel) return;
-        if (!channel.isTextBased()) return;
 
-        const embed = new EmbedBuilder().setTitle("Member joined").setDescription("A member joined the server").addFields({ name: "Member name", value: member.user.username }, { name: "Member ID", value: member.id }).setColor("Green");
-        const selfMember = member.guild.members.cache.get(this.selfMemberId);
+    async onMemberJoin(member: GuildMember): Promise<void> {
+        const selfMember = getSelfMember(member.guild);
         if (!selfMember) return;
-        try {
-            await channel.send({ embeds: [embed] });
-        } catch (_) {}
-    }
-    async onMemberEdit(before: GuildMember | PartialGuildMember, after: GuildMember | PartialGuildMember): Promise<void> {
-        // detect: nickname change and role changes
-        const logChannel = getSetting(after.guild.id, "loggingChannel", "");
-        if (!logChannel || logChannel === "") return;
-        const channel = after.guild.channels.cache.get(logChannel);
+        const channel = getLogChannel(member.guild);
         if (!channel) return;
         if (!channel.isTextBased()) return;
+        if (!channel.permissionsFor(selfMember).has(PermissionFlagsBits.SendMessages)) return;
+
+        const embed = new EmbedBuilder().setTitle("Member joined").setDescription("A member joined the server").addFields({
+            name: "Member name",
+            value: member.user.username
+        }, { name: "Member ID", value: member.id }).setColor("Green");
+        if (!selfMember) return;
+        await channel.send({ embeds: [embed] });
+    }
+
+    async onMemberEdit(before: GuildMember | PartialGuildMember, after: GuildMember | PartialGuildMember): Promise<void> {
+        const selfMember = getSelfMember(after.guild);
+        if (!selfMember) return;
+        const channel = getLogChannel(after.guild);
+        if (!channel) return;
+        if (!channel.isTextBased()) return;
+        if (!channel.permissionsFor(selfMember).has(PermissionFlagsBits.SendMessages)) return;
 
         let fields: APIEmbedField[] = [];
 
-        try {
-            const update = await after.guild.fetchAuditLogs({
-                type: AuditLogEvent.MemberUpdate,
-                limit: 1
-            });
-            const entry = update.entries.first();
-            if (entry) {
-                fields.push({
-                    name: "Moderator",
-                    value: entry.executor?.username ?? "Unknown"
-                });
-            }
-        } catch (_) {}
+        const update = await fetchAuditLog(after.guild, AuditLogEvent.MemberUpdate);
 
+        fields.push({ name: "Editor", value: update });
         fields.push({ name: "Victim", value: after.user.username });
 
         if (before.nickname !== after.nickname) {
@@ -499,36 +462,38 @@ export class Logging implements Module {
         if (fields.length <= 2) return;
         const embed = new EmbedBuilder().setTitle("Member edited").setDescription("A member was edited").addFields(fields).setColor("Yellow");
 
-        const selfMember = after.guild.members.cache.get(this.selfMemberId);
-        if (!selfMember) return;
-        try {
-            await channel.send({ embeds: [embed] });
-        } catch (_) {}
+        await channel.send({ embeds: [embed] });
     }
+
     async onMemberLeave(member: GuildMember | PartialGuildMember): Promise<void> {
-        const logChannel = getSetting(member.guild.id, "loggingChannel", "");
-        if (!logChannel || logChannel === "") return;
-        const channel = member.guild.channels.cache.get(logChannel);
+        const selfMember = getSelfMember(member.guild);
+        if (!selfMember) return;
+        const channel = getLogChannel(member.guild);
         if (!channel) return;
         if (!channel.isTextBased()) return;
+        if (!channel.permissionsFor(selfMember)?.has(PermissionFlagsBits.SendMessages)) return;
 
-        const embed = new EmbedBuilder().setTitle("Member left").setDescription("A member left the server").addFields({ name: "Member name", value: member.user.username }, { name: "Member ID", value: member.id }).setColor("Red");
-        const selfMember = member.guild.members.cache.get(this.selfMemberId);
-        if (!selfMember) return;
-        try {
-            await channel.send({ embeds: [embed] });
-        } catch (_) {}
+        const embed = new EmbedBuilder().setTitle("Member left").setDescription("A member left the server").addFields({
+            name: "Member name",
+            value: member.user.username
+        }, { name: "Member ID", value: member.id }).setColor("Red");
+        await channel.send({ embeds: [embed] });
     }
-    async onGuildAdd(guild: Guild): Promise<void> {}
-    async onGuildRemove(guild: Guild): Promise<void> {}
+
+    async onGuildAdd(guild: Guild): Promise<void> {
+    }
+
+    async onGuildRemove(guild: Guild): Promise<void> {
+    }
+
     async onGuildEdit(before: Guild, after: Guild): Promise<void> {
         // check for: name change, icon change, inactive channel and time-out change, default notification settings
-
-        const logChannel = getSetting(after.id, "loggingChannel", "");
-        if (!logChannel || logChannel === "") return;
-        const channel = after.channels.cache.get(logChannel);
+        const selfMember = getSelfMember(after);
+        if (!selfMember) return;
+        const channel = getLogChannel(after);
         if (!channel) return;
         if (!channel.isTextBased()) return;
+        if (!channel.permissionsFor(selfMember).has(PermissionFlagsBits.SendMessages)) return;
 
         const fields: APIEmbedField[] = [];
         if (before.name !== after.name) {
@@ -546,7 +511,7 @@ export class Logging implements Module {
         if (before.afkChannelId !== after.afkChannelId) {
             fields.push({
                 name: "AFK channel",
-                value: `${before.afkChannelId ? before.afkChannelId : "*nothing*"} -> ${after.afkChannelId ? after.afkChannelId : "*nothing*"}`
+                value: `${before.afkChannelId ?? "*nothing*"} -> ${after.afkChannelId ?? "*nothing*"}`
             });
         }
         if (before.afkTimeout !== after.afkTimeout) {
@@ -564,93 +529,62 @@ export class Logging implements Module {
 
         if (fields.length === 0) return;
         const embed = new EmbedBuilder().setTitle("Server edited").setDescription("The server was edited").addFields(fields).setColor("Yellow");
-        const selfMember = after.members.cache.get(this.selfMemberId);
-        if (!selfMember) return;
-        try {
-            if (channel.permissionsFor(selfMember).has(PermissionFlagsBits.SendMessages)) await channel.send({ embeds: [embed] });
-        } catch (_) {}
+        await channel.send({ embeds: [embed] });
     }
+
     async onEmojiCreate(emoji: GuildEmoji): Promise<void> {
         if (!emoji.guild) return;
-        const logChannel = getSetting(emoji.guild.id, "loggingChannel", "");
-        if (!logChannel || logChannel === "") return;
-        const channel = emoji.guild.channels.cache.get(logChannel);
+        const selfMember = getSelfMember(emoji.guild);
+        if (!selfMember) return;
+        const channel = getLogChannel(emoji.guild);
         if (!channel) return;
         if (!channel.isTextBased()) return;
+        if (!channel.permissionsFor(selfMember).has(PermissionFlagsBits.SendMessages)) return;
 
-        let moderator = "No Audit Log Permission";
-        try {
-            const auditLog = await emoji.guild.fetchAuditLogs({
-                type: AuditLogEvent.EmojiCreate,
-                limit: 1
-            });
-            const entry = auditLog.entries.first();
-            if (entry) {
-                moderator = entry.executor?.username ?? "Unknown";
-            }
-        } catch (_) {}
+        let moderator = await fetchAuditLog(emoji.guild, AuditLogEvent.EmojiCreate);
 
         const embed = new EmbedBuilder()
             .setTitle("Emoji created")
             .setDescription("An emoji was created")
-            .addFields({ name: "Emoji name", value: emoji.name ?? "unknown" }, { name: "Emoji ID", value: emoji.id }, { name: "Creator", value: moderator })
+            .addFields({ name: "Emoji name", value: emoji.name ?? "unknown" }, {
+                name: "Emoji ID",
+                value: emoji.id
+            }, { name: "Creator", value: moderator })
             .setColor("Green");
-        const selfMember = emoji.guild.members.cache.get(this.selfMemberId);
-        if (!selfMember) return;
-        try {
-            await channel.send({ embeds: [embed] });
-        } catch (_) {}
+        await channel.send({ embeds: [embed] });
     }
+
     async onEmojiDelete(emoji: GuildEmoji): Promise<void> {
         if (!emoji.guild) return;
-        const logChannel = getSetting(emoji.guild.id, "loggingChannel", "");
-        if (!logChannel || logChannel === "") return;
-        const channel = emoji.guild.channels.cache.get(logChannel);
+        const selfMember = getSelfMember(emoji.guild);
+        if (!selfMember) return;
+        const channel = getLogChannel(emoji.guild);
         if (!channel) return;
         if (!channel.isTextBased()) return;
+        if (!channel.permissionsFor(selfMember).has(PermissionFlagsBits.SendMessages)) return;
 
-        let moderator = "No Audit Log Permission";
-        try {
-            const auditLog = await emoji.guild.fetchAuditLogs({
-                type: AuditLogEvent.EmojiDelete,
-                limit: 1
-            });
-            const entry = auditLog.entries.first();
-            if (entry) {
-                moderator = entry.executor?.username ?? "Unknown";
-            }
-        } catch (_) {}
-
+        let moderator = await fetchAuditLog(emoji.guild, AuditLogEvent.EmojiDelete);
         const embed = new EmbedBuilder()
             .setTitle("Emoji deleted")
             .setDescription("An emoji was deleted")
-            .addFields({ name: "Emoji name", value: emoji.name ?? "unknown" }, { name: "Emoji ID", value: emoji.id }, { name: "Deleter", value: moderator })
+            .addFields({ name: "Emoji name", value: emoji.name ?? "unknown" }, {
+                name: "Emoji ID",
+                value: emoji.id
+            }, { name: "Deleter", value: moderator })
             .setColor("Red");
-        const selfMember = emoji.guild.members.cache.get(this.selfMemberId);
-        if (!selfMember) return;
-        try {
-            await channel.send({ embeds: [embed] });
-        } catch (_) {}
+        await channel.send({ embeds: [embed] });
     }
+
     async onEmojiEdit(before: GuildEmoji, after: GuildEmoji): Promise<void> {
         if (!after.guild) return;
-        const logChannel = getSetting(after.guild.id, "loggingChannel", "");
-        if (!logChannel || logChannel === "") return;
-        const channel = after.guild.channels.cache.get(logChannel);
-        if (!channel) return;
-        if (!channel.isTextBased()) return;
+        const selfMember = getSelfMember(after.guild);
+        if (!selfMember) return;
+        const logs = getLogChannel(after.guild);
+        if (!logs) return;
+        if (!logs.isTextBased()) return;
+        if (!logs.permissionsFor(selfMember).has(PermissionFlagsBits.SendMessages)) return;
 
-        let moderator = "No Audit Log Permission";
-        try {
-            const auditLog = await after.guild.fetchAuditLogs({
-                type: AuditLogEvent.EmojiUpdate,
-                limit: 1
-            });
-            const entry = auditLog.entries.first();
-            if (entry) {
-                moderator = entry.executor?.username ?? "Unknown";
-            }
-        } catch (_) {}
+        let moderator = await fetchAuditLog(after.guild, AuditLogEvent.EmojiUpdate);
 
         const fields: APIEmbedField[] = [];
 
@@ -669,95 +603,63 @@ export class Logging implements Module {
         });
 
         const embed = new EmbedBuilder().setTitle("Emoji edited").setDescription("An emoji was edited").addFields(fields).setColor("Yellow");
-        const selfMember = after.guild.members.cache.get(this.selfMemberId);
-        if (!selfMember) return;
-        try {
-            await channel.send({ embeds: [embed] });
-        } catch (_) {}
+        await logs.send({ embeds: [embed] });
     }
+
     async onStickerCreate(sticker: Sticker): Promise<void> {
         if (!sticker.guild) return;
-        const logChannel = getSetting(sticker.guild.id, "loggingChannel", "");
-        if (!logChannel || logChannel === "") return;
-        const channel = sticker.guild.channels.cache.get(logChannel);
-        if (!channel) return;
-        if (!channel.isTextBased()) return;
+        const selfMember = getSelfMember(sticker.guild);
+        if (!selfMember) return;
+        const logs = getLogChannel(sticker.guild);
+        if (!logs) return;
+        if (!logs.isTextBased()) return;
+        if (!logs.permissionsFor(selfMember).has(PermissionFlagsBits.SendMessages)) return;
 
-        let moderator = "No Audit Log Permission";
-        try {
-            const auditLog = await sticker.guild.fetchAuditLogs({
-                type: AuditLogEvent.StickerCreate,
-                limit: 1
-            });
-            const entry = auditLog.entries.first();
-            if (entry) {
-                moderator = entry.executor?.username ?? "Unknown";
-            }
-        } catch (_) {}
+        let moderator = await fetchAuditLog(sticker.guild, AuditLogEvent.StickerCreate);
 
         const embed = new EmbedBuilder()
             .setTitle("Sticker created")
             .setDescription("A sticker was created")
-            .addFields({ name: "Sticker name", value: sticker.name ?? "unknown" }, { name: "Sticker description", value: sticker.description ?? "unknown" }, { name: "Sticker ID", value: sticker.id }, { name: "Creator", value: moderator })
+            .addFields({ name: "Sticker name", value: sticker.name ?? "unknown" }, {
+                name: "Sticker description",
+                value: sticker.description ?? "unknown"
+            }, { name: "Sticker ID", value: sticker.id }, { name: "Creator", value: moderator })
             .setColor("Green");
-        const selfMember = sticker.guild.members.cache.get(this.selfMemberId);
-        if (!selfMember) return;
-        try {
-            await channel.send({ embeds: [embed] });
-        } catch (_) {}
+        await logs.send({ embeds: [embed] });
     }
+
     async onStickerDelete(sticker: Sticker): Promise<void> {
         if (!sticker.guild) return;
-        const logChannel = getSetting(sticker.guild.id, "loggingChannel", "");
-        if (!logChannel || logChannel === "") return;
-        const channel = sticker.guild.channels.cache.get(logChannel);
-        if (!channel) return;
-        if (!channel.isTextBased()) return;
+        const selfMember = getSelfMember(sticker.guild);
+        if (!selfMember) return;
+        const logs = getLogChannel(sticker.guild);
+        if (!logs) return;
+        if (!logs.isTextBased()) return;
+        if (!logs.permissionsFor(selfMember).has(PermissionFlagsBits.SendMessages)) return;
 
-        let moderator = "No Audit Log Permission";
-        try {
-            const auditLog = await sticker.guild.fetchAuditLogs({
-                type: AuditLogEvent.StickerDelete,
-                limit: 1
-            });
-            const entry = auditLog.entries.first();
-            if (entry) {
-                moderator = entry.executor?.username ?? "Unknown";
-            }
-        } catch (_) {}
+        let moderator = await fetchAuditLog(sticker.guild, AuditLogEvent.StickerDelete);
 
         const embed = new EmbedBuilder()
             .setTitle("Sticker deleted")
             .setDescription("A sticker was deleted")
-            .addFields({ name: "Sticker name", value: sticker.name ?? "unknown" }, { name: "Sticker description", value: sticker.description ?? "unknown" }, { name: "Sticker ID", value: sticker.id }, { name: "Deleter", value: moderator })
+            .addFields({ name: "Sticker name", value: sticker.name ?? "unknown" }, {
+                name: "Sticker description",
+                value: sticker.description ?? "unknown"
+            }, { name: "Sticker ID", value: sticker.id }, { name: "Deleter", value: moderator })
             .setColor("Red");
-        const selfMember = sticker.guild.members.cache.get(this.selfMemberId);
-        if (!selfMember) return;
-        try {
-            await channel.send({ embeds: [embed] });
-        } catch (_) {}
+        await logs.send({ embeds: [embed] });
     }
+
     async onStickerEdit(before: Sticker, after: Sticker): Promise<void> {
-        // detect: name change, description change
         if (!after.guild) return;
-        const logChannel = getSetting(after.guild.id, "loggingChannel", "");
-        if (!logChannel || logChannel === "") return;
-        const channel = after.guild.channels.cache.get(logChannel);
-        if (!channel) return;
-        if (!channel.isTextBased()) return;
+        const selfMember = getSelfMember(after.guild);
+        if (!selfMember) return;
+        const logs = getLogChannel(after.guild);
+        if (!logs) return;
+        if (!logs.isTextBased()) return;
+        if (!logs.permissionsFor(selfMember).has(PermissionFlagsBits.SendMessages)) return;
 
-        let moderator = "No Audit Log Permission";
-        try {
-            const auditLog = await after.guild.fetchAuditLogs({
-                type: AuditLogEvent.StickerUpdate,
-                limit: 1
-            });
-            const entry = auditLog.entries.first();
-            if (entry) {
-                moderator = entry.executor?.username ?? "Unknown";
-            }
-        } catch (_) {}
-
+        let moderator = await fetchAuditLog(after.guild, AuditLogEvent.StickerUpdate);
         const fields: APIEmbedField[] = [];
 
         fields.push({ name: "Sticker name", value: after.name ?? "unknown" });
@@ -781,10 +683,6 @@ export class Logging implements Module {
         });
 
         const embed = new EmbedBuilder().setTitle("Sticker edited").setDescription("A sticker was edited").addFields(fields).setColor("Yellow");
-        const selfMember = after.guild.members.cache.get(this.selfMemberId);
-        if (!selfMember) return;
-        try {
-            await channel.send({ embeds: [embed] });
-        } catch (_) {}
+        await logs.send({ embeds: [embed] });
     }
 }

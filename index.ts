@@ -95,23 +95,18 @@ client.on("ready", async () => {
 
         if (process.env.DEV === "true" && process.env.DEV_GUILD_ID) {
             console.log("Registering commands in dev guild...");
-            restClient.put(Routes.applicationGuildCommands(process.env.CLIENT_ID!, process.env.DEV_GUILD_ID), {
+            await restClient.put(Routes.applicationGuildCommands(process.env.CLIENT_ID!, process.env.DEV_GUILD_ID), {
                 body: commands
             });
         } else {
             console.log("Registering commands globally...");
-            restClient.put(Routes.applicationCommands(process.env.CLIENT_ID!), {
+            await restClient.put(Routes.applicationCommands(process.env.CLIENT_ID!), {
                 body: commands
             });
         }
     } catch (error) {
         console.error(error);
     }
-
-    client.user?.setActivity({
-        name: "b8",
-        type: ActivityType.Playing
-    });
 
     console.log(`Loaded with ${client.guilds.cache.size} guilds...`);
     for (const guild of client.guilds.cache.values()) {
@@ -125,6 +120,18 @@ client.on("ready", async () => {
 
         console.log(`\t\t${guild.members.cache.size} members...`);
     }
+
+    client.user?.setActivity({
+        name: `v1.0 | ${client.guilds.cache.size} guilds`,
+        type: ActivityType.Playing
+    });
+
+    setInterval(() => {
+        client.user?.setActivity({
+            name: `v1.0 | ${client.guilds.cache.size} guilds`,
+            type: ActivityType.Playing
+        });
+    }, 300 * 1000);
 });
 
 client.on("messageCreate", async (message) => {
