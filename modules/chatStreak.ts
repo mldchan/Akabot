@@ -124,9 +124,9 @@ export class ChatStreakModule implements Module {
         console.log("streakMessage afterDays", streakStatusAfter.days);
 
         if (streakStatus.expired) {
-            msg.channel.send(`Your streak of ${streakStatus.days} days has expired :c\nYou now have 1 day streak.`);
+            msg.channel.send(`Your streak of ${streakStatus.days} consecutive days of sending a message has expired :c\nYou now have 1 day streak.`);
         } else if (streakStatus.messageTimeDiff > 24 * 3600 * 1000 && streakStatusAfter.messageTimeDiff < 48 * 3600 * 1000) {
-            msg.channel.send(`${streakStatusAfter.days} days of streak! Keep it going :3`);
+            msg.channel.send(`${streakStatusAfter.days} consecutive days of you sending a message! Keep it going :3`);
         }
     }
 
