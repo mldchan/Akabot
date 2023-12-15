@@ -1,28 +1,41 @@
 import {
-    ChatInputCommandInteraction,
-    CacheType,
     ButtonInteraction,
-    Role,
     Channel,
-    Message,
-    GuildMember,
-    Guild,
+    ChatInputCommandInteraction,
     Emoji,
+    Guild,
+    GuildMember,
+    Message,
+    Role,
     Sticker
 } from "discord.js";
 import { AllCommands, Module } from "./type";
 import * as fs from "fs";
+import { getSelfMember } from "../utilities/useful";
 
 export class MediaOnlyChannelModule implements Module {
-    async onEmojiCreate(emoji: Emoji): Promise<void> {}
-    async onEmojiDelete(emoji: Emoji): Promise<void> {}
-    async onEmojiEdit(before: Emoji, after: Emoji): Promise<void> {}
-    async onStickerCreate(sticker: Sticker): Promise<void> {}
-    async onStickerDelete(sticker: Sticker): Promise<void> {}
-    async onStickerEdit(before: Sticker, after: Sticker): Promise<void> {}
     commands: AllCommands = [];
     selfMemberId: string = "";
-    async onSlashCommand(interaction: ChatInputCommandInteraction<CacheType>): Promise<void> {
+
+    async onEmojiCreate(emoji: Emoji): Promise<void> {
+    }
+
+    async onEmojiDelete(emoji: Emoji): Promise<void> {
+    }
+
+    async onEmojiEdit(before: Emoji, after: Emoji): Promise<void> {
+    }
+
+    async onStickerCreate(sticker: Sticker): Promise<void> {
+    }
+
+    async onStickerDelete(sticker: Sticker): Promise<void> {
+    }
+
+    async onStickerEdit(before: Sticker, after: Sticker): Promise<void> {
+    }
+
+    async onSlashCommand(interaction: ChatInputCommandInteraction): Promise<void> {
         console.log(interaction.commandName);
         console.log(interaction.options.getSubcommandGroup(false));
         console.log(interaction.options.getSubcommand(false));
@@ -66,46 +79,66 @@ export class MediaOnlyChannelModule implements Module {
             }
         }
     }
-    async onButtonClick(interaction: ButtonInteraction<CacheType>): Promise<void> {}
-    async onRoleCreate(role: Role): Promise<void> {}
-    async onRoleEdit(before: Role, after: Role): Promise<void> {}
-    async onRoleDelete(role: Role): Promise<void> {}
-    async onChannelCreate(role: Channel): Promise<void> {}
-    async onChannelEdit(before: Channel, after: Channel): Promise<void> {}
-    async onChannelDelete(role: Channel): Promise<void> {}
-    async onMessage(msg: Message<boolean>): Promise<void> {
+
+    async onButtonClick(interaction: ButtonInteraction): Promise<void> {
+    }
+
+    async onRoleCreate(role: Role): Promise<void> {
+    }
+
+    async onRoleEdit(before: Role, after: Role): Promise<void> {
+    }
+
+    async onRoleDelete(role: Role): Promise<void> {
+    }
+
+    async onChannelCreate(role: Channel): Promise<void> {
+    }
+
+    async onChannelEdit(before: Channel, after: Channel): Promise<void> {
+    }
+
+    async onChannelDelete(role: Channel): Promise<void> {
+    }
+
+    async onMessage(msg: Message): Promise<void> {
+        if (msg.author.bot) return ;
         if (!msg.guild) return;
+        if (msg.channel.isDMBased()) return;
+
+        const selfMember = getSelfMember(msg.guild);
+        if (!selfMember) return;
+
+        if (!msg.channel.permissionsFor(selfMember).has("SendMessages")) return;
+        if (!msg.channel.permissionsFor(selfMember).has("ManageMessages")) return;
+
         const channelType = getChannelType(msg.guild.id, msg.channel.id);
         if (channelType === "none") return;
+
         if (!msg.attachments.size) {
             if (msg.reference && getChannelReplies(msg.guild.id, msg.channel.id)) {
                 const reply = await msg.fetchReference();
                 if (reply.attachments.size) return;
             }
-            try {
-                await msg.delete();
-            } catch (_) {}
-            try {
-                const reply = await msg.channel.send("Replies are allowed, but you have to reply to a post.");
-                await new Promise((resolve) => setTimeout(resolve, 5000));
-                await reply.delete();
-            } catch (_) {}
+            await msg.delete();
+            const message = getChannelReplies(msg.guild.id, msg.channel.id) ? "Replies are allowed, but you have to reply to a post." : "You can only send images or videos in this channel.";
+            const reply = await msg.channel.send(message);
+            await new Promise((resolve) => setTimeout(resolve, 5000));
+            await reply.delete();
             return;
         }
+
         switch (channelType) {
             case "image": {
                 // check message attachments are images
                 for (const attachment of msg.attachments.values()) {
                     console.log(attachment.contentType);
                     if (!attachment.contentType?.startsWith("image")) {
-                        try {
-                            await msg.delete();
-                        } catch (_) {}
-                        try {
-                            const reply = await msg.channel.send("You can only send images in this channel.");
-                            await new Promise((resolve) => setTimeout(resolve, 5000));
-                            await reply.delete();
-                        } catch (_) {}
+                        await msg.delete();
+
+                        const reply = await msg.channel.send("You can only send images in this channel.");
+                        await new Promise((resolve) => setTimeout(resolve, 5000));
+                        await reply.delete();
                         return;
                     }
                 }
@@ -115,14 +148,11 @@ export class MediaOnlyChannelModule implements Module {
                 // check message attachments are videos
                 for (const attachment of msg.attachments.values()) {
                     if (!attachment.contentType?.startsWith("video")) {
-                        try {
-                            await msg.delete();
-                        } catch (_) {}
-                        try {
-                            const reply = await msg.channel.send("You can only send videos in this channel.");
-                            await new Promise((resolve) => setTimeout(resolve, 5000));
-                            await reply.delete();
-                        } catch (_) {}
+                        await msg.delete();
+
+                        const reply = await msg.channel.send("You can only send videos in this channel.");
+                        await new Promise((resolve) => setTimeout(resolve, 5000));
+                        await reply.delete();
                         return;
                     }
                 }
@@ -132,14 +162,11 @@ export class MediaOnlyChannelModule implements Module {
                 // check message attachments are images or videos
                 for (const attachment of msg.attachments.values()) {
                     if (!attachment.contentType?.startsWith("image") && !attachment.contentType?.startsWith("video")) {
-                        try {
-                            await msg.delete();
-                        } catch (_) {}
-                        try {
-                            const reply = await msg.channel.send("You can only send images or videos in this channel.");
-                            await new Promise((resolve) => setTimeout(resolve, 5000));
-                            await reply.delete();
-                        } catch (_) {}
+                        await msg.delete();
+
+                        const reply = await msg.channel.send("You can only send images or videos in this channel.");
+                        await new Promise((resolve) => setTimeout(resolve, 5000));
+                        await reply.delete();
                         return;
                     }
                 }
@@ -147,14 +174,30 @@ export class MediaOnlyChannelModule implements Module {
             }
         }
     }
-    async onMessageDelete(msg: Message<boolean>): Promise<void> {}
-    async onMessageEdit(before: Message<boolean>, after: Message<boolean>): Promise<void> {}
-    async onMemberJoin(member: GuildMember): Promise<void> {}
-    async onMemberEdit(before: GuildMember, after: GuildMember): Promise<void> {}
-    async onMemberLeave(member: GuildMember): Promise<void> {}
-    async onGuildAdd(guild: Guild): Promise<void> {}
-    async onGuildRemove(guild: Guild): Promise<void> {}
-    async onGuildEdit(before: Guild, after: Guild): Promise<void> {}
+
+    async onMessageDelete(msg: Message): Promise<void> {
+    }
+
+    async onMessageEdit(before: Message, after: Message): Promise<void> {
+    }
+
+    async onMemberJoin(member: GuildMember): Promise<void> {
+    }
+
+    async onMemberEdit(before: GuildMember, after: GuildMember): Promise<void> {
+    }
+
+    async onMemberLeave(member: GuildMember): Promise<void> {
+    }
+
+    async onGuildAdd(guild: Guild): Promise<void> {
+    }
+
+    async onGuildRemove(guild: Guild): Promise<void> {
+    }
+
+    async onGuildEdit(before: Guild, after: Guild): Promise<void> {
+    }
 }
 
 type MediaOnlyChannelTypes = "image" | "video" | "both";
@@ -237,7 +280,7 @@ function getChannelReplies(guildID: string, channelID: string): boolean {
 }
 
 async function commandHandleCreateMediaOnly(
-    interaction: ChatInputCommandInteraction<CacheType>
+    interaction: ChatInputCommandInteraction
 ): Promise<"Set" | "No guild" | "Channel not found" | "Channel is not a text channel"> {
     if (!interaction.guild) return "No guild";
     const channel = interaction.options.getChannel("channel", true);
@@ -254,7 +297,7 @@ async function commandHandleCreateMediaOnly(
 }
 
 async function commandHandleRemoveMediaOnly(
-    interaction: ChatInputCommandInteraction<CacheType>
+    interaction: ChatInputCommandInteraction
 ): Promise<"Removed" | "No guild" | "Channel not found" | "Channel is not a text channel"> {
     if (!interaction.guild) return "No guild";
     const channel = interaction.options.getChannel("channel", true);

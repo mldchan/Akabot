@@ -170,6 +170,7 @@ export class SettingsModule implements Module {
         if (!interaction.guild) return;
         if (!interaction.member) return;
         if (!interaction.options) return;
+
         const member = interaction.member as GuildMember;
         if (
             !member.permissions.has(PermissionsBitField.Flags.ManageGuild) &&

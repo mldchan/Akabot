@@ -1,39 +1,68 @@
 import {
-    ChatInputCommandInteraction,
-    CacheType,
     ButtonInteraction,
-    Role,
     Channel,
-    Message,
-    GuildMember,
-    Guild,
+    ChatInputCommandInteraction,
+    EmbedBuilder,
     Emoji,
-    Sticker,
-    EmbedBuilder
+    Guild,
+    GuildMember,
+    Message,
+    Role,
+    Sticker
 } from "discord.js";
 import { AllCommands, Module } from "./type";
 import { ViolationCounters, ViolationCountersMessageData } from "../utilities/violationCounters";
 import { getSetting } from "../data/settings";
+import { getLogChannel, getSelfMember } from "../utilities/useful";
 
 export class AntiSpamModule implements Module {
     violationCounters = new ViolationCounters();
-    async onEmojiCreate(emoji: Emoji): Promise<void> {}
-    async onEmojiDelete(emoji: Emoji): Promise<void> {}
-    async onEmojiEdit(before: Emoji, after: Emoji): Promise<void> {}
-    async onStickerCreate(sticker: Sticker): Promise<void> {}
-    async onStickerDelete(sticker: Sticker): Promise<void> {}
-    async onStickerEdit(before: Sticker, after: Sticker): Promise<void> {}
     commands: AllCommands = [];
     selfMemberId: string = "";
-    async onSlashCommand(interaction: ChatInputCommandInteraction<CacheType>): Promise<void> {}
-    async onButtonClick(interaction: ButtonInteraction<CacheType>): Promise<void> {}
-    async onRoleCreate(role: Role): Promise<void> {}
-    async onRoleEdit(before: Role, after: Role): Promise<void> {}
-    async onRoleDelete(role: Role): Promise<void> {}
-    async onChannelCreate(role: Channel): Promise<void> {}
-    async onChannelEdit(before: Channel, after: Channel): Promise<void> {}
-    async onChannelDelete(role: Channel): Promise<void> {}
-    async onMessage(msg: Message<boolean>): Promise<void> {
+
+    async onEmojiCreate(emoji: Emoji): Promise<void> {
+    }
+
+    async onEmojiDelete(emoji: Emoji): Promise<void> {
+    }
+
+    async onEmojiEdit(before: Emoji, after: Emoji): Promise<void> {
+    }
+
+    async onStickerCreate(sticker: Sticker): Promise<void> {
+    }
+
+    async onStickerDelete(sticker: Sticker): Promise<void> {
+    }
+
+    async onStickerEdit(before: Sticker, after: Sticker): Promise<void> {
+    }
+
+    async onSlashCommand(interaction: ChatInputCommandInteraction): Promise<void> {
+    }
+
+    async onButtonClick(interaction: ButtonInteraction): Promise<void> {
+    }
+
+    async onRoleCreate(role: Role): Promise<void> {
+    }
+
+    async onRoleEdit(before: Role, after: Role): Promise<void> {
+    }
+
+    async onRoleDelete(role: Role): Promise<void> {
+    }
+
+    async onChannelCreate(role: Channel): Promise<void> {
+    }
+
+    async onChannelEdit(before: Channel, after: Channel): Promise<void> {
+    }
+
+    async onChannelDelete(role: Channel): Promise<void> {
+    }
+
+    async onMessage(msg: Message): Promise<void> {
         if (!msg.guild) return;
         if (msg.author.bot) return;
 
@@ -56,21 +85,39 @@ export class AntiSpamModule implements Module {
             this.violationCounters.vlDelete(msg.guild.id, "message");
         }
     }
-    async onMessageDelete(msg: Message<boolean>): Promise<void> {}
-    async onMessageEdit(before: Message<boolean>, after: Message<boolean>): Promise<void> {}
-    async onMemberJoin(member: GuildMember): Promise<void> {}
-    async onMemberEdit(before: GuildMember, after: GuildMember): Promise<void> {}
-    async onMemberLeave(member: GuildMember): Promise<void> {}
-    async onGuildAdd(guild: Guild): Promise<void> {}
-    async onGuildRemove(guild: Guild): Promise<void> {}
-    async onGuildEdit(before: Guild, after: Guild): Promise<void> {}
+
+    async onMessageDelete(msg: Message): Promise<void> {
+    }
+
+    async onMessageEdit(before: Message, after: Message): Promise<void> {
+    }
+
+    async onMemberJoin(member: GuildMember): Promise<void> {
+    }
+
+    async onMemberEdit(before: GuildMember, after: GuildMember): Promise<void> {
+    }
+
+    async onMemberLeave(member: GuildMember): Promise<void> {
+    }
+
+    async onGuildAdd(guild: Guild): Promise<void> {
+    }
+
+    async onGuildRemove(guild: Guild): Promise<void> {
+    }
+
+    async onGuildEdit(before: Guild, after: Guild): Promise<void> {
+    }
 }
-async function handleMemberAlert(msg: Message<boolean>) {
+
+async function handleMemberAlert(msg: Message) {
     const spamSendAlert = getSetting(msg.guild!.id, "AntiRaidSpamSendAlert", "no");
     if (spamSendAlert === "yes") {
         await msg.channel.send(`<@${msg.author.id}>, You are sending messages too fast!`);
     }
 }
+
 /**
  *
  * @param msg The message object
@@ -78,20 +125,19 @@ async function handleMemberAlert(msg: Message<boolean>) {
  * @returns The status of the deletion
  */
 async function handleDeletion(
-    msg: Message<boolean>,
+    msg: Message,
     extraData: ViolationCountersMessageData
-): Promise<"Deleted" | "Failed; Probably missing permissions" | "Disabled"> {
-    const spamDeleteSetting = getSetting(msg.guild!.id, "AntiRaidSpamDelete", "no");
-    if (spamDeleteSetting === "yes" && msg.channel.isTextBased() && !msg.channel.isDMBased()) {
-        try {
-            await msg.channel.bulkDelete(extraData.messageIDs);
-            return "Deleted";
-        } catch (_) {
-            return "Failed; Probably missing permissions";
-        }
-    } else {
-        return "Disabled";
+): Promise<"Deleted" | "Missing Permissions" | "Disabled"> {
+    if (msg.channel.isDMBased()) return "Disabled";
+    if (getSetting(msg.guild!.id, "AntiRaidSpamDelete", "no") === "no") return "Disabled";
+
+    const selfMember = getSelfMember(msg.guild!);
+    if (!selfMember?.permissionsIn(msg.channel).has("ManageMessages")) {
+        return "Missing Permissions";
     }
+
+    await msg.channel.bulkDelete(extraData.messageIDs);
+    return "Deleted";
 }
 
 /**
@@ -100,37 +146,44 @@ async function handleDeletion(
  * @returns The status of the timeout
  */
 async function handleTimeout(
-    msg: Message<boolean>
-): Promise<"10 seconds" | "Failed; Probably missing permissions" | "Disabled"> {
-    const spamTimeoutSetting = getSetting(msg.guild!.id, "AntiRaidSpamTimeout", "no");
-    if (spamTimeoutSetting === "yes") {
-        try {
-            await msg.member?.timeout(10000, "Sending messages too fast!");
-            return "10 seconds";
-        } catch (_) {
-            return "Failed; Probably missing permissions";
-        }
-    } else {
-        return "Disabled";
+    msg: Message
+): Promise<"10 seconds" | "Missing Permissions" | "Disabled"> {
+    if (msg.channel.isDMBased()) return "Disabled";
+    if (!msg.member) return "Disabled";
+    if (getSetting(msg.guild!.id, "AntiRaidSpamTimeout", "no") === "no") return "Disabled";
+    const selfMember = getSelfMember(msg.guild!);
+    if (!selfMember) return "Disabled";
+    if (!selfMember.permissionsIn(msg.channel).has("ManageRoles")) {
+        return "Missing Permissions";
     }
-}
-async function handleSendLogMessage(msg: Message<boolean>, fields: { name: string; value: string }[]) {
-    const logChannelID = getSetting(msg.guild!.id, "loggingChannel", "");
-    const logChannel = msg.guild!.channels.cache.get(logChannelID);
-    if (logChannel?.isTextBased()) {
-        const embed = new EmbedBuilder()
-            .setTitle("A member is spamming in this Discord server")
-            .addFields(
-                { name: "Member", value: msg.author.username },
-                { name: "Jump to latest message", value: `[Click here](${msg.url})` },
-                ...fields
-            )
-            .setColor("Red")
-            .setTimestamp(new Date());
-        await logChannel.send({ embeds: [embed] });
+    if (selfMember.roles.highest.comparePositionTo(msg.member.roles.highest) <= 0) {
+        return "Missing Permissions";
     }
+
+    await msg.member.timeout(10000, "Sending messages too fast!");
+    return "10 seconds";
 }
-async function checkRepeatingWords(msg: Message<boolean>) {
+
+async function handleSendLogMessage(msg: Message, fields: { name: string; value: string }[]) {
+    const logChannel = getLogChannel(msg.guild!);
+    const embed = new EmbedBuilder()
+        .setTitle("A member is spamming in this Discord server")
+        .addFields(
+            { name: "Member", value: msg.author.username },
+            { name: "Jump to latest message", value: `[Click here](${msg.url})` },
+            ...fields
+        )
+        .setColor("Red")
+        .setTimestamp(new Date());
+    await logChannel?.send({ embeds: [embed] });
+}
+
+async function checkRepeatingWords(msg: Message) {
+    if (msg.channel.isDMBased()) return;
+    const selfMember = getSelfMember(msg.guild!);
+    if (!selfMember) return;
+    if (!selfMember.permissionsIn(msg.channel).has("ManageMessages")) return;
+    if (msg.channel.isDMBased()) return;
     const words = msg.content
         .replaceAll(/[.,\-_\\/]/g, "")
         .replaceAll("\n", "")
@@ -154,7 +207,8 @@ async function checkRepeatingWords(msg: Message<boolean>) {
         console.log("checkRepeatingWords", "spam detected");
         try {
             await msg.delete();
-        } catch (_) {}
+        } catch (_) {
+        }
     }
     console.log("checkRepeatWords", "percentage", percentage);
 }

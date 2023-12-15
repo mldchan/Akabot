@@ -19,8 +19,9 @@ type AnalyticsMonth = { [key: number]: AnalyticsDay };
 type AnalyticsYear = { [key: number]: AnalyticsMonth };
 
 function readData(): AnalyticsYear {
-    if (!fs.existsSync("./data/analytics.json")) fs.writeFileSync("./data/analytics.json", "{}");
-    const data = JSON.parse(fs.readFileSync("./data/analytics.json", "utf-8")) as AnalyticsYear;
+    if (!fs.existsSync("./store")) fs.mkdirSync("./store");
+    if (!fs.existsSync("./store/analytics.json")) fs.writeFileSync("./store/analytics.json", "{}");
+    const data = JSON.parse(fs.readFileSync("./store/analytics.json", "utf-8")) as AnalyticsYear;
     const now = new Date();
     if (!data[now.getFullYear()]) data[now.getFullYear()] = {};
     if (!data[now.getFullYear()][now.getMonth()]) data[now.getFullYear()][now.getMonth()] = {};
@@ -30,7 +31,7 @@ function readData(): AnalyticsYear {
 }
 
 function writeData(x: AnalyticsYear) {
-    fs.writeFileSync("./data/analytics.json", JSON.stringify(x));
+    fs.writeFileSync("./store/analytics.json", JSON.stringify(x));
 }
 
 export class AnalyticsModule implements Module {

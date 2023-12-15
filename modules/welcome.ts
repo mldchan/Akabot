@@ -13,6 +13,7 @@ import {
 } from "discord.js";
 import { AllCommands, Module } from "./type";
 import { getSetting } from "../data/settings";
+import { getSelfMember } from "../utilities/useful";
 
 export class WelcomeModule implements Module {
     commands: AllCommands = [];
@@ -35,14 +36,16 @@ export class WelcomeModule implements Module {
         if (!channelRes) return;
         if (!channelRes.isTextBased()) return;
 
+        const selfMember = getSelfMember(member.guild);
+        if (!selfMember) return;
+        if (!selfMember.permissionsIn(channelRes).has("SendMessages")) return;
+
         const memberNameType = getSetting(member.guild.id, "welcomeNameType", "nickname");
         const memberName = memberNameType === "nickname" ? member.user.displayName : member.user.username;
         const embed = new EmbedBuilder()
             .setTitle(`Welcome ${memberName}`)
             .setDescription(`Welcome to ${member.guild.name}, ${memberName}! Enjoy your stay.`)
             .setColor("Green");
-        if (!channelRes.permissionsFor(this.selfMemberId)) return;
-        if (!channelRes.permissionsFor(this.selfMemberId)!.has("SendMessages")) return;
         await channelRes.send({ embeds: [embed] });
     }
     async onMemberEdit(before: GuildMember, after: GuildMember): Promise<void> {}

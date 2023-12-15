@@ -1,5 +1,23 @@
-import { ChatInputCommandInteraction, CacheType, ButtonInteraction, Role, Channel, Message, GuildMember, ActionRowBuilder, ButtonBuilder, ButtonStyle, APIRole, ButtonComponent, Guild, Emoji, Sticker, PermissionsBitField } from "discord.js";
+import {
+    ActionRowBuilder,
+    APIRole,
+    ButtonBuilder,
+    ButtonComponent,
+    ButtonInteraction,
+    ButtonStyle,
+    CacheType,
+    Channel,
+    ChatInputCommandInteraction,
+    Emoji,
+    Guild,
+    GuildMember,
+    Message,
+    PermissionsBitField,
+    Role,
+    Sticker
+} from "discord.js";
 import { AllCommands, Module } from "./type";
+import { getSelfMember } from "../utilities/useful";
 
 async function createReactionRoleMessage(msg: string, roles: (Role | APIRole)[], interaction: ChatInputCommandInteraction<CacheType>, modeCode: string) {
     let rows: ActionRowBuilder<ButtonBuilder>[] = [];
@@ -78,36 +96,32 @@ async function handleNormalReactionRole(interaction: ButtonInteraction<CacheType
     if (!interaction.member) return;
     if (!interaction.message) return;
     if (!interaction.user) return;
-    const msg = interaction.message;
+
+    const selfMember = getSelfMember(interaction.guild);
+    if (!selfMember) return;
+    if (!selfMember.permissions.has("ManageRoles")) return;
+
     const member = interaction.member as GuildMember;
-    await member.fetch(true);
+
     const role = interaction.guild.roles.cache.get(interaction.customId.split("-")[1]);
     if (!role) return;
-    if (msg.author.id !== interaction.client.user.id) return;
+
+    if (selfMember.roles.highest.comparePositionTo(role) <= 0) {
+        await interaction.reply({
+            content: `I cannot give you the role **${role.name}** because I don't have permissions`,
+            ephemeral: true
+        });
+        return;
+    }
+
     if (member.roles.cache.has(role.id)) {
-        try {
-            await member.roles.remove(role);
-        } catch (_) {
-            await interaction.reply({
-                content: `Failed to remove role **${role.name}** from you, contact the server administrators`,
-                ephemeral: true
-            });
-            return;
-        }
+        await member.roles.remove(role);
         await interaction.reply({
             content: `Removed role **${role.name}** from you`,
             ephemeral: true
         });
     } else {
-        try {
-            await member.roles.add(role);
-        } catch (_) {
-            await interaction.reply({
-                content: `Failed to add role **${role.name}** to you, contact the server administrators`,
-                ephemeral: true
-            });
-            return;
-        }
+        await member.roles.add(role);
         await interaction.reply({
             content: `Added role **${role.name}** to you`,
             ephemeral: true
@@ -120,27 +134,30 @@ async function handleAddReactionRole(interaction: ButtonInteraction<CacheType>) 
     if (!interaction.member) return;
     if (!interaction.message) return;
     if (!interaction.user) return;
-    const msg = interaction.message;
+
+    const selfMember = getSelfMember(interaction.guild);
+    if (!selfMember) return;
+    if (!selfMember.permissions.has("ManageRoles")) return;
+
     const member = interaction.member as GuildMember;
-    await member.fetch(true);
+
     const role = interaction.guild.roles.cache.get(interaction.customId.split("-")[1]);
     if (!role) return;
-    if (msg.author.id !== interaction.client.user.id) return;
+    if (selfMember.roles.highest.comparePositionTo(role) <= 0) {
+        await interaction.reply({
+            content: `I cannot give you the role **${role.name}** because I don't have permissions`,
+            ephemeral: true
+        });
+        return;
+    }
+
     if (member.roles.cache.has(role.id)) {
         await interaction.reply({
             content: `You already have role **${role.name}**`,
             ephemeral: true
         });
     } else {
-        try {
-            await member.roles.add(role);
-        } catch (_) {
-            await interaction.reply({
-                content: `Failed to add role **${role.name}** to you, contact the server administrators`,
-                ephemeral: true
-            });
-            return;
-        }
+        await member.roles.add(role);
         await interaction.reply({
             content: `Added role **${role.name}** to you`,
             ephemeral: true
@@ -186,13 +203,25 @@ async function handleSingleReactionRole(interaction: ButtonInteraction<CacheType
     if (!interaction.member) return;
     if (!interaction.message) return;
     if (!interaction.user) return;
+
     const msg = interaction.message;
-    await msg.fetch(true);
+
+    const selfMember = getSelfMember(interaction.guild);
+    if (!selfMember) return;
+    if (!selfMember.permissions.has("ManageRoles")) return;
+
     const member = interaction.member as GuildMember;
-    await member.fetch(true);
+
     const role = interaction.guild.roles.cache.get(interaction.customId.split("-")[1]);
     if (!role) return;
-    if (msg.author.id !== interaction.client.user.id) return;
+    if (selfMember.roles.highest.comparePositionTo(role) <= 0) {
+        await interaction.reply({
+            content: `I cannot give you the role **${role.name}** because I don't have permissions`,
+            ephemeral: true
+        });
+        return;
+    }
+
     if (member.roles.cache.has(role.id)) {
         await interaction.reply({
             content: `You already have role **${role.name}**`,
@@ -200,15 +229,7 @@ async function handleSingleReactionRole(interaction: ButtonInteraction<CacheType
         });
         return;
     }
-    try {
-        await member.roles.add(role);
-    } catch (_) {
-        await interaction.reply({
-            content: `Failed to add role **${role.name}** to you, contact the server administrators`,
-            ephemeral: true
-        });
-        return;
-    }
+    await member.roles.add(role);
     let components: ButtonComponent[] = [];
     msg.components.forEach((x) => components.push(...(x.components as ButtonComponent[])));
 
@@ -217,18 +238,11 @@ async function handleSingleReactionRole(interaction: ButtonInteraction<CacheType
         .map((i) => i.customId?.split("-")[1] ?? "")
         .filter((i) => i !== role.id)
         .filter((i) => i !== "")
-        .filter((i) => member.roles.cache.has(i));
+        .filter((i) => member.roles.cache.has(i))
+        .filter((i) => selfMember.roles.highest.comparePositionTo(interaction.guild!.roles.cache.get(i)!) <= 0);
 
     if (otherRoles.length > 0) {
-        try {
-            await member.roles.remove(otherRoles);
-        } catch (_) {
-            await interaction.reply({
-                content: `Failed to remove other roles from you, contact the server administrators`,
-                ephemeral: true
-            });
-            return;
-        }
+        await member.roles.remove(otherRoles);
     }
     const roleNames = otherRoles
         .map((i) => `**${interaction.guild!.roles.cache.get(i)?.name ?? ""}**`)
@@ -261,31 +275,75 @@ async function handleReactionRole(interaction: ButtonInteraction<CacheType>) {
 export class ReactionRolesModule implements Module {
     commands: AllCommands = [];
     selfMemberId: string = "";
+
     async onSlashCommand(interaction: ChatInputCommandInteraction<CacheType>): Promise<void> {
         await handleCreationOfReactionRoles(interaction);
     }
+
     async onButtonClick(interaction: ButtonInteraction<CacheType>): Promise<void> {
         await handleReactionRole(interaction);
     }
-    async onRoleCreate(role: Role): Promise<void> {}
-    async onRoleEdit(before: Role, after: Role): Promise<void> {}
-    async onRoleDelete(role: Role): Promise<void> {}
-    async onChannelCreate(role: Channel): Promise<void> {}
-    async onChannelEdit(before: Channel, after: Channel): Promise<void> {}
-    async onChannelDelete(role: Channel): Promise<void> {}
-    async onMessage(msg: Message<boolean>): Promise<void> {}
-    async onMessageDelete(msg: Message<boolean>): Promise<void> {}
-    async onMessageEdit(before: Message<boolean>, after: Message<boolean>): Promise<void> {}
-    async onMemberJoin(member: GuildMember): Promise<void> {}
-    async onMemberEdit(before: GuildMember, after: GuildMember): Promise<void> {}
-    async onMemberLeave(member: GuildMember): Promise<void> {}
-    async onGuildAdd(guild: Guild): Promise<void> {}
-    async onGuildRemove(guild: Guild): Promise<void> {}
-    async onGuildEdit(before: Guild, after: Guild): Promise<void> {}
-    async onEmojiCreate(emoji: Emoji): Promise<void> {}
-    async onEmojiDelete(emoji: Emoji): Promise<void> {}
-    async onEmojiEdit(before: Emoji, after: Emoji): Promise<void> {}
-    async onStickerCreate(sticker: Sticker): Promise<void> {}
-    async onStickerDelete(sticker: Sticker): Promise<void> {}
-    async onStickerEdit(before: Sticker, after: Sticker): Promise<void> {}
+
+    async onRoleCreate(role: Role): Promise<void> {
+    }
+
+    async onRoleEdit(before: Role, after: Role): Promise<void> {
+    }
+
+    async onRoleDelete(role: Role): Promise<void> {
+    }
+
+    async onChannelCreate(role: Channel): Promise<void> {
+    }
+
+    async onChannelEdit(before: Channel, after: Channel): Promise<void> {
+    }
+
+    async onChannelDelete(role: Channel): Promise<void> {
+    }
+
+    async onMessage(msg: Message<boolean>): Promise<void> {
+    }
+
+    async onMessageDelete(msg: Message<boolean>): Promise<void> {
+    }
+
+    async onMessageEdit(before: Message<boolean>, after: Message<boolean>): Promise<void> {
+    }
+
+    async onMemberJoin(member: GuildMember): Promise<void> {
+    }
+
+    async onMemberEdit(before: GuildMember, after: GuildMember): Promise<void> {
+    }
+
+    async onMemberLeave(member: GuildMember): Promise<void> {
+    }
+
+    async onGuildAdd(guild: Guild): Promise<void> {
+    }
+
+    async onGuildRemove(guild: Guild): Promise<void> {
+    }
+
+    async onGuildEdit(before: Guild, after: Guild): Promise<void> {
+    }
+
+    async onEmojiCreate(emoji: Emoji): Promise<void> {
+    }
+
+    async onEmojiDelete(emoji: Emoji): Promise<void> {
+    }
+
+    async onEmojiEdit(before: Emoji, after: Emoji): Promise<void> {
+    }
+
+    async onStickerCreate(sticker: Sticker): Promise<void> {
+    }
+
+    async onStickerDelete(sticker: Sticker): Promise<void> {
+    }
+
+    async onStickerEdit(before: Sticker, after: Sticker): Promise<void> {
+    }
 }
