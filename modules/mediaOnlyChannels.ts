@@ -198,6 +198,7 @@ export class MediaOnlyChannelModule implements Module {
 
     async onGuildEdit(before: Guild, after: Guild): Promise<void> {
     }
+    async onTick(): Promise<void> {}
 }
 
 type MediaOnlyChannelTypes = "image" | "video" | "both";

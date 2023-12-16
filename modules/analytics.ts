@@ -78,4 +78,5 @@ export class AnalyticsModule implements Module {
     async onGuildAdd(guild: Guild): Promise<void> {}
     async onGuildRemove(guild: Guild): Promise<void> {}
     async onGuildEdit(before: Guild, after: Guild): Promise<void> {}
+    async onTick(): Promise<void> {}
 }

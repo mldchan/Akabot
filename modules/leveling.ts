@@ -153,4 +153,5 @@ export class LevelingModule implements Module {
 
     async onStickerEdit(before: Sticker, after: Sticker): Promise<void> {
     }
+    async onTick(): Promise<void> {}
 }

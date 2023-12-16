@@ -48,4 +48,6 @@ export interface Module {
     onGuildAdd(guild: Guild): Promise<void>;
     onGuildRemove(guild: Guild): Promise<void>;
     onGuildEdit(before: Guild, after: Guild): Promise<void>;
+
+    onTick(): Promise<void>;
 }

@@ -109,6 +109,7 @@ export class AntiSpamModule implements Module {
 
     async onGuildEdit(before: Guild, after: Guild): Promise<void> {
     }
+    async onTick(): Promise<void> {}
 }
 
 async function handleMemberAlert(msg: Message) {

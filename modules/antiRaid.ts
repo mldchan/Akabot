@@ -473,4 +473,5 @@ export class AntiRaidModule implements Module {
 
     async onGuildEdit(before: Guild, after: Guild): Promise<void> {
     }
+    async onTick(): Promise<void> {}
 }
