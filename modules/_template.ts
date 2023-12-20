@@ -8,7 +8,7 @@ import {
     GuildMember,
     Guild,
     Emoji,
-    Sticker
+    Sticker, Client
 } from "discord.js";
 import { AllCommands, Module } from "./type";
 
@@ -39,4 +39,5 @@ export class TemplateModule implements Module {
     async onGuildRemove(guild: Guild): Promise<void> {}
     async onGuildEdit(before: Guild, after: Guild): Promise<void> {}
     async onTick(): Promise<void> {}
+    async onReady(client: Client): Promise<void> {}
 }

@@ -2,7 +2,7 @@ import {
     ButtonInteraction,
     CacheType,
     Channel,
-    ChatInputCommandInteraction, EmbedBuilder,
+    ChatInputCommandInteraction, Client, EmbedBuilder,
     Emoji,
     Guild,
     GuildMember,
@@ -154,4 +154,5 @@ export class ChatStreakModule implements Module {
     async onGuildEdit(before: Guild, after: Guild): Promise<void> {
     }
     async onTick(): Promise<void> {}
+    async onReady(client: Client): Promise<void> {}
 }

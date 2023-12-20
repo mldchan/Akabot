@@ -17,6 +17,7 @@ import { AntiSpamModule } from "./modules/antiSpam";
 import { isServerBlocked, isUserBlocked } from "./utilities/blockList";
 import { MediaOnlyChannelModule } from "./modules/mediaOnlyChannels";
 import { ChatStreakModule } from "./modules/chatStreak";
+import { ChatReviveModule } from "./modules/chatRevive";
 
 dotenv.config();
 
@@ -81,6 +82,7 @@ modules.push(new AnalyticsModule());
 modules.push(new AntiSpamModule());
 modules.push(new MediaOnlyChannelModule());
 modules.push(new ChatStreakModule());
+modules.push(new ChatReviveModule());
 
 client.on("ready", async () => {
     console.log("I am ready!");
@@ -132,6 +134,13 @@ client.on("ready", async () => {
             type: ActivityType.Playing
         });
     }, 300 * 1000);
+
+    console.log("Starting tick tasks...");
+    modules.forEach(x => {
+        x.onReady(client);
+        console.log("\tSetting up tick task for", x.constructor.name);
+        setInterval(x.onTick, 5 * 1000);
+    })
 });
 
 client.on("messageCreate", async (message) => {

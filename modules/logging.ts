@@ -5,7 +5,7 @@ import {
     ButtonInteraction,
     Channel,
     ChannelType,
-    ChatInputCommandInteraction,
+    ChatInputCommandInteraction, Client,
     EmbedBuilder,
     Guild,
     GuildChannel,
@@ -686,4 +686,5 @@ export class Logging implements Module {
         await logs.send({ embeds: [embed] });
     }
     async onTick(): Promise<void> {}
+    async onReady(client: Client): Promise<void> {}
 }

@@ -7,7 +7,7 @@ import {
     ButtonStyle,
     CacheType,
     Channel,
-    ChatInputCommandInteraction,
+    ChatInputCommandInteraction, Client,
     Emoji,
     Guild,
     GuildMember,
@@ -347,4 +347,5 @@ export class ReactionRolesModule implements Module {
     async onStickerEdit(before: Sticker, after: Sticker): Promise<void> {
     }
     async onTick(): Promise<void> {}
+    async onReady(client: Client): Promise<void> {}
 }

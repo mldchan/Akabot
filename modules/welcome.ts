@@ -9,7 +9,7 @@ import {
     EmbedBuilder,
     Guild,
     Emoji,
-    Sticker
+    Sticker, Client
 } from "discord.js";
 import { AllCommands, Module } from "./type";
 import { getSetting } from "../data/settings";
@@ -60,4 +60,6 @@ export class WelcomeModule implements Module {
     async onStickerDelete(sticker: Sticker): Promise<void> {}
     async onStickerEdit(before: Sticker, after: Sticker): Promise<void> {}
     async onTick(): Promise<void> {}
+    async onReady(client: Client): Promise<void> {
+    }
 }
