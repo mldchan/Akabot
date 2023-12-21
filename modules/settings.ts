@@ -166,10 +166,16 @@ export class SettingsModule implements Module {
                 new SettingsGroupBuilder("chatrevive")
                     .addSubcommand(
                         new SlashCommandSubcommandBuilder()
+                            .setName("role")
+                            .setDescription("Set the role to ping when a channel is revived")
+                            .addRoleOption(x => x.setName("role").setDescription("The role").setRequired(true))
+                    )
+                    .addSubcommand(
+                        new SlashCommandSubcommandBuilder()
                             .setName("set")
                             .setDescription("Add or update channel's automatic revive settings")
                             .addChannelOption((ch) => ch.setName("channel").setDescription("The channel").setRequired(true))
-                            .addNumberOption((time) => time.setName("time").setDescription("Time in hours"))
+                            .addNumberOption((time) => time.setName("time").setDescription("Time in hours").setRequired(true))
                     )
                     .addSubcommand(
                         new SlashCommandSubcommandBuilder()

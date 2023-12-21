@@ -24,53 +24,71 @@ interface TheType {
     hasBeenTriggered: boolean;
 }
 
-function readSettingsFile(guildID: string): TheType[] {
+interface TheTheType { // naming doesn't exist
+    roleID: string;
+    things: TheType[];
+}
+
+function readSettingsFile(guildID: string): TheTheType {
     if (!fs.existsSync(`data/${guildID}`)) fs.mkdirSync(`data/${guildID}`);
-    if (!fs.existsSync(`data/${guildID}/revivalsettings.json`)) fs.writeFileSync(`data/${guildID}/revivalsettings.json`, JSON.stringify([]));
+    if (!fs.existsSync(`data/${guildID}/revivalsettings.json`)) fs.writeFileSync(`data/${guildID}/revivalsettings.json`, JSON.stringify({
+        roleID: '',
+        things: []
+    } as TheTheType));
     return JSON.parse(fs.readFileSync(`data/${guildID}/revivalsettings.json`, "utf-8"));
 }
 
-function writeSettingsFile(guildID: string, data: TheType[]) {
+function writeSettingsFile(guildID: string, data: TheTheType) {
     fs.writeFileSync(`data/${guildID}/revivalsettings.json`, JSON.stringify(data));
 }
 
 function setChannel(guildID: string, channelID: string, triggerTime: number) {
     const data = readSettingsFile(guildID);
-    const index = data.findIndex((v: TheType) => v.id === channelID);
+    const index = data.things.findIndex((v: TheType) => v.id === channelID);
     if (index === -1) {
-        data.push({ id: channelID, lastMessageTime: Date.now(), triggerTime, hasBeenTriggered: false });
+        data.things.push({ id: channelID, lastMessageTime: Date.now(), triggerTime, hasBeenTriggered: false });
     } else {
-        data[index].triggerTime = triggerTime;
+        data.things[index].triggerTime = triggerTime;
     }
     writeSettingsFile(guildID, data);
 }
 
 function removeChannel(guildID: string, channelID: string) {
     const data = readSettingsFile(guildID);
-    const index = data.findIndex((v: TheType) => v.id === channelID);
+    const index = data.things.findIndex((v: TheType) => v.id === channelID);
     if (index === -1) return;
-    data.splice(index, 1);
+    data.things.splice(index, 1);
     writeSettingsFile(guildID, data);
 }
 
 function updateChannelLastSentMessage(channel: If<boolean, GuildTextBasedChannel, TextBasedChannel>) {
     if (channel.isDMBased()) return;
     const data = readSettingsFile(channel.guild.id);
-    const channel2 = data.find((v: TheType) => v.id === channel.id);
+    const channel2 = data.things.find((v: TheType) => v.id === channel.id);
     if (!channel2) return;
     channel2.lastMessageTime = Date.now();
     channel2.hasBeenTriggered = false;
     writeSettingsFile(channel.guild.id, data);
 }
 
+function getRoleID(id: string) {
+    const data = readSettingsFile(id);
+    if (data.roleID === "" || data.roleID === "0") return undefined;
+    return data.roleID;
+}
+
 function checkTime(channel: If<boolean, GuildTextBasedChannel, TextBasedChannel>) {
     if (channel.isDMBased()) return;
     const data = readSettingsFile(channel.guild.id);
-    const channel2 = data.find((v: TheType) => v.id === channel.id);
+    const channel2 = data.things.find((v: TheType) => v.id === channel.id);
     if (!channel2) return;
+    const roleID = getRoleID(channel.guild.id);
+    if (!roleID) return;
     console.log(Date.now() - channel2.lastMessageTime, "since last message");
+    console.log(channel2.triggerTime - (Date.now() - channel2.lastMessageTime), "until revive");
     if (Date.now() - channel2.lastMessageTime > channel2.triggerTime) {
-        channel.send("This channel has been inactive for a while. Revive it by sending a message!");
+        if (channel2.hasBeenTriggered) return;
+        channel.send(`<@&${roleID}> This channel has been inactive for a while. Revive it by sending a message!`);
         channel2.hasBeenTriggered = true;
         writeSettingsFile(channel.guild.id, data);
     }
@@ -109,13 +127,50 @@ async function handleSettingsCommand(interaction: ChatInputCommandInteraction) {
             });
             break;
         }
+        case "role": {
+const role = interaction.options.getRole("role", true);
+            const data = readSettingsFile(interaction.guild.id);
+            data.roleID = role.id;
+            writeSettingsFile(interaction.guild.id, data);
+            await interaction.reply({
+                content: `Set role <@&${role.id}> to be pinged when this channel is revived.`,
+                ephemeral: true
+            });
+            break;
+        }
     }
+}
+
+function hasSetPingRole(guild: Guild) {
+    const data = readSettingsFile(guild.id);
+    for (const item of data.things) {
+        const channel = guild.channels.cache.get(item.id);
+        if (!channel) continue;
+        if (!channel.isTextBased()) continue;
+        return true;
+    }
+    return false;
+}
+
+async function hasPermissions(interaction: ChatInputCommandInteraction<CacheType>) {
+//     check manage guild or admin
+    if (!interaction.guild) return false;
+    const member = interaction.guild.members.cache.get(interaction.user.id);
+    if (!member) return false;
+    if (!member.permissions.has("ManageGuild") && !member.permissions.has("Administrator")) {
+        await interaction.reply({
+            content: "You must have the Manage Server permission to use this command.",
+            ephemeral: true
+        });
+        return false;
+    }
+    return true;
 }
 
 export class ChatReviveModule implements Module {
     commands: AllCommands = [];
     selfMemberId: string = "";
-    selfMember: User | null = null;
+    selfMember: User | undefined = undefined;
 
     async onEmojiCreate(emoji: Emoji): Promise<void> {
     }
@@ -140,6 +195,7 @@ export class ChatReviveModule implements Module {
         if (interaction.commandName !== "settings") return;
         const group = interaction.options.getSubcommandGroup(false);
         if (group !== "chatrevive") return;
+        if (!await hasPermissions(interaction)) return;
         await handleSettingsCommand(interaction);
     }
 
@@ -194,19 +250,22 @@ export class ChatReviveModule implements Module {
     }
 
     async onTick(): Promise<void> {
-        console.log("chatRevive tick");
-        if (!this.selfMember) return;
-        for (const guild of this.selfMember.client.guilds.cache) {
-            const data = readSettingsFile(guild[0]);
-            for (const item of data) {
-                const channel = guild[1].channels.cache.get(item.id);
-                if (!channel) continue;
-                if (!channel.isTextBased()) continue;
-                checkTime(channel);
-            }
-        }
     }
+
     async onReady(client: Client): Promise<void> {
-        this.selfMember = client.user;
+        setInterval(() => {
+            for (const guild of client.guilds.cache.values()) {
+                console.log("chatRevive tick checking", guild.name);
+                const data = readSettingsFile(guild.id);
+                if (!hasSetPingRole(guild)) continue;
+                for (const item of data.things) {
+                    const channel = guild.channels.cache.get(item.id);
+                    if (!channel) continue;
+                    console.log("checking", channel.name, "in", guild.name);
+                    if (!channel.isTextBased()) continue;
+                    checkTime(channel);
+                }
+            }
+        }, 5000);
     }
 }

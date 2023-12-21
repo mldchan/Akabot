@@ -138,7 +138,6 @@ client.on("ready", async () => {
     console.log("Starting tick tasks...");
     modules.forEach(x => {
         x.onReady(client);
-        console.log("\tSetting up tick task for", x.constructor.name);
         setInterval(x.onTick, 5 * 1000);
     })
 });
