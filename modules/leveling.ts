@@ -2,7 +2,8 @@ import {
     ButtonInteraction,
     CacheType,
     Channel,
-    ChatInputCommandInteraction, Client,
+    ChatInputCommandInteraction,
+    Client,
     EmbedBuilder,
     Emoji,
     Guild,
@@ -16,6 +17,7 @@ import { AllCommands, Module } from "./type";
 import { addPointsToUser, getUserLevel, getUserPoints, getUserRequirementForNextLevel } from "../data/leveling";
 import { getSetting } from "../data/settings";
 import { getSelfMember } from "../utilities/useful";
+import * as fs from "fs";
 
 function getFormattedDate() {
     const date = new Date();
@@ -45,6 +47,109 @@ async function handleLevelUp(msg: Message<boolean>, selfMember: GuildMember, lev
     });
 }
 
+async function handleLevelCommand(interaction: ChatInputCommandInteraction<CacheType>) {
+    if (!interaction.guild) return;
+    const points = getUserPoints(interaction.guild.id, interaction.user.id);
+    const level = getUserLevel(points);
+    const pointsToNext = getUserRequirementForNextLevel(points);
+    const embed = new EmbedBuilder()
+        .setTitle(`Level - ${interaction.user.displayName}`)
+        .setDescription(
+            `You are currently on level ${level} (${points} XP)\nYou need ${
+                pointsToNext - points
+            } XP for next level.`
+        )
+        .setFooter({
+            text: getFormattedDate()
+        });
+    await interaction.reply({
+        embeds: [embed]
+    });
+}
+
+type LevelingReward = {
+    level: number;
+    role: string;
+};
+
+function loadRewards(guildID: string): LevelingReward[] {
+    if (!fs.existsSync(`./data/${guildID}/levelingRewards.json`)) {
+        fs.writeFileSync(`./data/${guildID}/levelingRewards.json`, JSON.stringify([]));
+        return [];
+    }
+    const rewards = fs.readFileSync(`./data/${guildID}/levelingRewards.json`, "utf-8");
+    return JSON.parse(rewards);
+}
+
+function saveRewards(guildID: string, rewards: LevelingReward[]) {
+    fs.writeFileSync(`./data/${guildID}/levelingRewards.json`, JSON.stringify(rewards));
+}
+
+function addRoleReward(guildID: any, roleID: any, atLevel: number) {
+    const rewards = loadRewards(guildID);
+    const index = rewards.findIndex((v) => v.level === atLevel);
+    if (index === -1) {
+        rewards.push({ level: atLevel, role: roleID });
+    } else {
+        rewards[index].role = roleID;
+    }
+    saveRewards(guildID, rewards);
+}
+
+function removeRoleReward(guildID: any, atLevel: number) {
+    const rewards = loadRewards(guildID);
+    const index = rewards.findIndex((v) => v.level === atLevel);
+    if (index === -1) return;
+    rewards.splice(index, 1);
+    saveRewards(guildID, rewards);
+}
+
+async function handleRewardMngCommands(interaction: ChatInputCommandInteraction<CacheType>) {
+    if (!interaction.guild) return;
+    const subGroup = interaction.options.getSubcommandGroup(false);
+    if (subGroup !== "leveling") return;
+    const subCommand = interaction.options.getSubcommand(false);
+    switch (subCommand) {
+        case "add-reward": {
+            const role = interaction.options.getRole("role", true);
+            const level = interaction.options.getNumber("level", true);
+            addRoleReward(interaction.guild.id, role.id, level);
+            await interaction.reply({
+                content: `Set reward ${role.name} to be added on level ${level}`,
+                ephemeral: true
+            });
+            break;
+        }
+        case "remove-reward": {
+            const level = interaction.options.getNumber("level", true);
+            removeRoleReward(interaction.guild.id, level);
+            await interaction.reply({
+                content: "Removed reward",
+                ephemeral: true
+            });
+            break;
+        }
+    }
+}
+
+async function updateMemberRoles(msg: Message<boolean>) {
+    const rewards = loadRewards(msg.guild!.id);
+    const points = getUserPoints(msg.guild!.id, msg.author.id);
+    const level = getUserLevel(points);
+    const member = msg.guild!.members.cache.get(msg.author.id);
+    if (!member) return;
+    const rolesToAdd = rewards.filter((v) => v.level <= level);
+    rolesToAdd.forEach((v) => {
+        if (!member.roles.cache.has(v.role))
+            member.roles.add(v.role);
+    });
+    const rolesToRemove = rewards.filter((v) => v.level > level);
+    rolesToRemove.forEach((v) => {
+        if (member.roles.cache.has(v.role))
+            member.roles.remove(v.role);
+    });
+}
+
 export class LevelingModule implements Module {
     commands: AllCommands = [
         new SlashCommandBuilder().setName("level").setDescription("Get your current level").setDMPermission(false),
@@ -53,24 +158,14 @@ export class LevelingModule implements Module {
     selfMemberId: string = "";
 
     async onSlashCommand(interaction: ChatInputCommandInteraction<CacheType>): Promise<void> {
-        if (interaction.commandName !== "level" && interaction.commandName !== "rank") return;
         if (!interaction.guild) return;
-        const points = getUserPoints(interaction.guild.id, interaction.user.id);
-        const level = getUserLevel(points);
-        const pointsToNext = getUserRequirementForNextLevel(points);
-        const embed = new EmbedBuilder()
-            .setTitle(`Level - ${interaction.user.displayName}`)
-            .setDescription(
-                `You are currently on level ${level} (${points} XP)\nYou need ${
-                    pointsToNext - points
-                } XP for next level.`
-            )
-            .setFooter({
-                text: getFormattedDate()
-            });
-        await interaction.reply({
-            embeds: [embed]
-        });
+        if (interaction.commandName === "level" || interaction.commandName === "rank") {
+            await handleLevelCommand(interaction);
+        }
+
+        if (interaction.commandName === "settings") {
+            await handleRewardMngCommands(interaction);
+        }
     }
 
     async onButtonClick(interaction: ButtonInteraction<CacheType>): Promise<void> {
@@ -109,6 +204,7 @@ export class LevelingModule implements Module {
         console.log("leveling", "onMessage", "xpAfter", xpAfter, "levelAfter", levelAfter);
         if (levelBefore !== levelAfter) {
             await handleLevelUp(msg, selfMember, levelBefore, xpBefore, levelAfter, xpAfter);
+            await updateMemberRoles(msg);
         }
     }
 
@@ -153,6 +249,10 @@ export class LevelingModule implements Module {
 
     async onStickerEdit(before: Sticker, after: Sticker): Promise<void> {
     }
-    async onTick(): Promise<void> {}
-    async onReady(client: Client): Promise<void> {}
+
+    async onTick(): Promise<void> {
+    }
+
+    async onReady(client: Client): Promise<void> {
+    }
 }
