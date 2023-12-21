@@ -124,13 +124,13 @@ client.on("ready", async () => {
     }
 
     client.user?.setActivity({
-        name: `v1.0 | ${client.guilds.cache.size} guilds`,
+        name: `v1.01 | ${client.guilds.cache.size} guilds`,
         type: ActivityType.Playing
     });
 
     setInterval(() => {
         client.user?.setActivity({
-            name: `v1.0 | ${client.guilds.cache.size} guilds`,
+            name: `v1.01 | ${client.guilds.cache.size} guilds`,
             type: ActivityType.Playing
         });
     }, 300 * 1000);
