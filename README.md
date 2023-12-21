@@ -1,4 +1,4 @@
-# FemboyBot
+# FemBot
 
 An open-source feature-packed Discord bot made by mldkyt.
 

@@ -8,7 +8,7 @@ import {
     GuildMember,
     Guild,
     Emoji,
-    Sticker, SlashCommandBuilder
+    Sticker, SlashCommandBuilder, Client
 } from "discord.js";
 import { AllCommands, Module } from "./type";
 import * as fs from "fs";
@@ -78,4 +78,6 @@ export class AnalyticsModule implements Module {
     async onGuildAdd(guild: Guild): Promise<void> {}
     async onGuildRemove(guild: Guild): Promise<void> {}
     async onGuildEdit(before: Guild, after: Guild): Promise<void> {}
+    async onTick(): Promise<void> {}
+    async onReady(client: Client): Promise<void> {}
 }

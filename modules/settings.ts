@@ -1,25 +1,26 @@
 import {
-    ChatInputCommandInteraction,
-    CacheType,
     ButtonInteraction,
-    Role,
+    CacheType,
     Channel,
-    Message,
-    GuildMember,
-    PermissionsBitField,
-    SlashCommandSubcommandBuilder,
-    Guild,
+    ChatInputCommandInteraction,
+    Client,
     Emoji,
+    Guild,
+    GuildMember,
+    Message,
+    PermissionsBitField,
+    Role,
+    SlashCommandSubcommandBuilder,
     Sticker
 } from "discord.js";
 import { AllCommands, Module } from "./type";
 import {
     ChannelSetting,
+    setChannel,
     SettingsCommandBuilder,
     SettingsGroupBuilder,
     StringChoiceSetting,
-    ToggleSetting,
-    setChannel
+    ToggleSetting
 } from "../types/settings";
 import { getSetting, setSetting } from "../data/settings";
 
@@ -60,7 +61,25 @@ export class SettingsModule implements Module {
                     )
             )
             .addSettingsGroup(
-                new SettingsGroupBuilder("leveling").addChannelSetting(new ChannelSetting("channel", "levelingChannel"))
+                new SettingsGroupBuilder("leveling")
+                    .addChannelSetting(new ChannelSetting("channel", "levelingChannel"))
+                    .addSubcommand(
+                        new SlashCommandSubcommandBuilder()
+                            .setName("add-reward")
+                            .setDescription("Add a reward for a level")
+                            .addRoleOption((role) => role.setName("role").setDescription("The role to give to members at the level").setRequired(true))
+                            .addNumberOption((level) =>
+                                level.setName("level").setDescription("The level to add the role at").setRequired(true)
+                            )
+                    )
+                    .addSubcommand(
+                        new SlashCommandSubcommandBuilder()
+                            .setName("remove-reward")
+                            .setDescription("Remove a reward on a specified level.")
+                            .addNumberOption((level) =>
+                                level.setName("level").setDescription("The level to remove at").setRequired(true)
+                            )
+                    )
             )
             .addSettingsGroup(
                 new SettingsGroupBuilder("reactionroles").addSubcommand(
@@ -162,9 +181,38 @@ export class SettingsModule implements Module {
                             )
                     )
             )
+            .addSettingsGroup(
+                new SettingsGroupBuilder("chatrevive")
+                    .addSubcommand(
+                        new SlashCommandSubcommandBuilder()
+                            .setName("role")
+                            .setDescription("Set the role to ping when a channel is revived")
+                            .addRoleOption((x) => x.setName("role").setDescription("The role").setRequired(true))
+                    )
+                    .addSubcommand(
+                        new SlashCommandSubcommandBuilder()
+                            .setName("set")
+                            .setDescription("Add or update channel's automatic revive settings")
+                            .addChannelOption((ch) =>
+                                ch.setName("channel").setDescription("The channel").setRequired(true)
+                            )
+                            .addNumberOption((time) =>
+                                time.setName("time").setDescription("Time in hours").setRequired(true)
+                            )
+                    )
+                    .addSubcommand(
+                        new SlashCommandSubcommandBuilder()
+                            .setName("remove")
+                            .setDescription("Remove channel's automatic revive settings")
+                            .addChannelOption((ch) =>
+                                ch.setName("channel").setDescription("The channel to remove").setRequired(true)
+                            )
+                    )
+            )
     ];
     settingsMaps = [];
     selfMemberId: string = "";
+
     async onSlashCommand(interaction: ChatInputCommandInteraction<CacheType>): Promise<void> {
         if (interaction.commandName !== "settings") return;
         if (!interaction.guild) return;
@@ -252,26 +300,51 @@ export class SettingsModule implements Module {
             }
         }
     }
+
     async onButtonClick(interaction: ButtonInteraction<CacheType>): Promise<void> {}
+
     async onRoleCreate(role: Role): Promise<void> {}
+
     async onRoleEdit(before: Role, after: Role): Promise<void> {}
+
     async onRoleDelete(role: Role): Promise<void> {}
+
     async onChannelCreate(role: Channel): Promise<void> {}
+
     async onChannelEdit(before: Channel, after: Channel): Promise<void> {}
+
     async onChannelDelete(role: Channel): Promise<void> {}
+
     async onMessage(msg: Message<boolean>): Promise<void> {}
+
     async onMessageDelete(msg: Message<boolean>): Promise<void> {}
+
     async onMessageEdit(before: Message<boolean>, after: Message<boolean>): Promise<void> {}
+
     async onMemberJoin(member: GuildMember): Promise<void> {}
+
     async onMemberEdit(before: GuildMember, after: GuildMember): Promise<void> {}
+
     async onMemberLeave(member: GuildMember): Promise<void> {}
+
     async onGuildAdd(guild: Guild): Promise<void> {}
+
     async onGuildRemove(guild: Guild): Promise<void> {}
+
     async onGuildEdit(before: Guild, after: Guild): Promise<void> {}
+
     async onEmojiCreate(emoji: Emoji): Promise<void> {}
+
     async onEmojiDelete(emoji: Emoji): Promise<void> {}
+
     async onEmojiEdit(before: Emoji, after: Emoji): Promise<void> {}
+
     async onStickerCreate(sticker: Sticker): Promise<void> {}
+
     async onStickerDelete(sticker: Sticker): Promise<void> {}
+
     async onStickerEdit(before: Sticker, after: Sticker): Promise<void> {}
+
+    async onTick(): Promise<void> {}
+    async onReady(client: Client): Promise<void> {}
 }

@@ -1,7 +1,7 @@
 import {
     ButtonInteraction,
     Channel,
-    ChatInputCommandInteraction,
+    ChatInputCommandInteraction, Client,
     Emoji,
     Guild,
     GuildMember,
@@ -198,6 +198,8 @@ export class MediaOnlyChannelModule implements Module {
 
     async onGuildEdit(before: Guild, after: Guild): Promise<void> {
     }
+    async onTick(): Promise<void> {}
+    async onReady(client: Client): Promise<void> {}
 }
 
 type MediaOnlyChannelTypes = "image" | "video" | "both";

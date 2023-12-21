@@ -3,7 +3,7 @@ import {
     ButtonInteraction,
     CacheType,
     Channel,
-    ChatInputCommandInteraction,
+    ChatInputCommandInteraction, Client,
     EmbedBuilder,
     Guild,
     GuildEmoji,
@@ -473,4 +473,6 @@ export class AntiRaidModule implements Module {
 
     async onGuildEdit(before: Guild, after: Guild): Promise<void> {
     }
+    async onTick(): Promise<void> {}
+    async onReady(client: Client): Promise<void> {}
 }

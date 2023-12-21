@@ -1,7 +1,7 @@
 import {
     ButtonInteraction,
     Channel,
-    ChatInputCommandInteraction,
+    ChatInputCommandInteraction, Client,
     EmbedBuilder,
     Emoji,
     Guild,
@@ -109,6 +109,8 @@ export class AntiSpamModule implements Module {
 
     async onGuildEdit(before: Guild, after: Guild): Promise<void> {
     }
+    async onTick(): Promise<void> {}
+    async onReady(client: Client): Promise<void> {}
 }
 
 async function handleMemberAlert(msg: Message) {

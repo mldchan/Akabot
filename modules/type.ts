@@ -2,7 +2,7 @@ import {
     ButtonInteraction,
     CacheType,
     Channel,
-    ChatInputCommandInteraction,
+    ChatInputCommandInteraction, Client,
     Emoji,
     Guild,
     GuildMember,
@@ -48,4 +48,7 @@ export interface Module {
     onGuildAdd(guild: Guild): Promise<void>;
     onGuildRemove(guild: Guild): Promise<void>;
     onGuildEdit(before: Guild, after: Guild): Promise<void>;
+
+    onTick(): Promise<void>;
+    onReady(client: Client): Promise<void>;
 }

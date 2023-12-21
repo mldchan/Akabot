@@ -2,7 +2,7 @@ import {
     ButtonInteraction,
     CacheType,
     Channel,
-    ChatInputCommandInteraction,
+    ChatInputCommandInteraction, Client,
     Emoji,
     Guild,
     GuildMember,
@@ -82,4 +82,6 @@ export class Suggestions implements Module {
     async onStickerCreate(sticker: Sticker): Promise<void> {}
     async onStickerDelete(sticker: Sticker): Promise<void> {}
     async onStickerEdit(before: Sticker, after: Sticker): Promise<void> {}
+    async onTick(): Promise<void> {}
+    async onReady(client: Client): Promise<void> {}
 }
