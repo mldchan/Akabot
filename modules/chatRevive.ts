@@ -249,9 +249,6 @@ export class ChatReviveModule implements Module {
     async onGuildEdit(before: Guild, after: Guild): Promise<void> {
     }
 
-    async onTick(): Promise<void> {
-    }
-
     async onReady(client: Client): Promise<void> {
         setInterval(() => {
             for (const guild of client.guilds.cache.values()) {

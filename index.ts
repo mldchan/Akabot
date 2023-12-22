@@ -18,6 +18,7 @@ import { isServerBlocked, isUserBlocked } from "./utilities/blockList";
 import { MediaOnlyChannelModule } from "./modules/mediaOnlyChannels";
 import { ChatStreakModule } from "./modules/chatStreak";
 import { ChatReviveModule } from "./modules/chatRevive";
+import { DailyChatSummary } from "./modules/chatSummary";
 
 dotenv.config();
 
@@ -83,6 +84,7 @@ modules.push(new AntiSpamModule());
 modules.push(new MediaOnlyChannelModule());
 modules.push(new ChatStreakModule());
 modules.push(new ChatReviveModule());
+modules.push(new DailyChatSummary());
 
 client.on("ready", async () => {
     console.log("I am ready!");
@@ -124,22 +126,21 @@ client.on("ready", async () => {
     }
 
     client.user?.setActivity({
-        name: `v1.0 | ${client.guilds.cache.size} guilds`,
+        name: `v1.1 | ${client.guilds.cache.size} guilds`,
         type: ActivityType.Playing
     });
 
     setInterval(() => {
         client.user?.setActivity({
-            name: `v1.0 | ${client.guilds.cache.size} guilds`,
+            name: `v1.1 | ${client.guilds.cache.size} guilds`,
             type: ActivityType.Playing
         });
     }, 300 * 1000);
 
-    console.log("Starting tick tasks...");
+    console.log("Readying modules...");
     modules.forEach(x => {
         x.onReady(client);
-        setInterval(x.onTick, 5 * 1000);
-    })
+    });
 });
 
 client.on("messageCreate", async (message) => {
