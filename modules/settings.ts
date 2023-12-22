@@ -209,6 +209,23 @@ export class SettingsModule implements Module {
                             )
                     )
             )
+            .addSettingsGroup(
+                new SettingsGroupBuilder("chatsummary")
+                    .addSubcommand(
+                        new SlashCommandSubcommandBuilder()
+                            .setName("add-channel")
+                            .setDescription("Add a channel to summarize daily")
+                            .addChannelOption((ch) => ch.setName("channel").setDescription("Channel to add").setRequired(true))
+                    )
+                    .addSubcommand(
+                        new SlashCommandSubcommandBuilder()
+                            .setName("remove-channel")
+                            .setDescription("Remove a channel from daily summary")
+                            .addChannelOption((ch) =>
+                                ch.setName("channel").setDescription("Channel to remove").setRequired(true)
+                            )
+                    )
+            )
     ];
     settingsMaps = [];
     selfMemberId: string = "";
@@ -301,49 +318,72 @@ export class SettingsModule implements Module {
         }
     }
 
-    async onButtonClick(interaction: ButtonInteraction<CacheType>): Promise<void> {}
+    async onButtonClick(interaction: ButtonInteraction<CacheType>): Promise<void> {
+    }
 
-    async onRoleCreate(role: Role): Promise<void> {}
+    async onRoleCreate(role: Role): Promise<void> {
+    }
 
-    async onRoleEdit(before: Role, after: Role): Promise<void> {}
+    async onRoleEdit(before: Role, after: Role): Promise<void> {
+    }
 
-    async onRoleDelete(role: Role): Promise<void> {}
+    async onRoleDelete(role: Role): Promise<void> {
+    }
 
-    async onChannelCreate(role: Channel): Promise<void> {}
+    async onChannelCreate(role: Channel): Promise<void> {
+    }
 
-    async onChannelEdit(before: Channel, after: Channel): Promise<void> {}
+    async onChannelEdit(before: Channel, after: Channel): Promise<void> {
+    }
 
-    async onChannelDelete(role: Channel): Promise<void> {}
+    async onChannelDelete(role: Channel): Promise<void> {
+    }
 
-    async onMessage(msg: Message<boolean>): Promise<void> {}
+    async onMessage(msg: Message<boolean>): Promise<void> {
+    }
 
-    async onMessageDelete(msg: Message<boolean>): Promise<void> {}
+    async onMessageDelete(msg: Message<boolean>): Promise<void> {
+    }
 
-    async onMessageEdit(before: Message<boolean>, after: Message<boolean>): Promise<void> {}
+    async onMessageEdit(before: Message<boolean>, after: Message<boolean>): Promise<void> {
+    }
 
-    async onMemberJoin(member: GuildMember): Promise<void> {}
+    async onMemberJoin(member: GuildMember): Promise<void> {
+    }
 
-    async onMemberEdit(before: GuildMember, after: GuildMember): Promise<void> {}
+    async onMemberEdit(before: GuildMember, after: GuildMember): Promise<void> {
+    }
 
-    async onMemberLeave(member: GuildMember): Promise<void> {}
+    async onMemberLeave(member: GuildMember): Promise<void> {
+    }
 
-    async onGuildAdd(guild: Guild): Promise<void> {}
+    async onGuildAdd(guild: Guild): Promise<void> {
+    }
 
-    async onGuildRemove(guild: Guild): Promise<void> {}
+    async onGuildRemove(guild: Guild): Promise<void> {
+    }
 
-    async onGuildEdit(before: Guild, after: Guild): Promise<void> {}
+    async onGuildEdit(before: Guild, after: Guild): Promise<void> {
+    }
 
-    async onEmojiCreate(emoji: Emoji): Promise<void> {}
+    async onEmojiCreate(emoji: Emoji): Promise<void> {
+    }
 
-    async onEmojiDelete(emoji: Emoji): Promise<void> {}
+    async onEmojiDelete(emoji: Emoji): Promise<void> {
+    }
 
-    async onEmojiEdit(before: Emoji, after: Emoji): Promise<void> {}
+    async onEmojiEdit(before: Emoji, after: Emoji): Promise<void> {
+    }
 
-    async onStickerCreate(sticker: Sticker): Promise<void> {}
+    async onStickerCreate(sticker: Sticker): Promise<void> {
+    }
 
-    async onStickerDelete(sticker: Sticker): Promise<void> {}
+    async onStickerDelete(sticker: Sticker): Promise<void> {
+    }
 
-    async onStickerEdit(before: Sticker, after: Sticker): Promise<void> {}
+    async onStickerEdit(before: Sticker, after: Sticker): Promise<void> {
+    }
 
-    async onReady(client: Client): Promise<void> {}
+    async onReady(client: Client): Promise<void> {
+    }
 }
