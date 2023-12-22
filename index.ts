@@ -134,12 +134,6 @@ client.on("ready", async () => {
             type: ActivityType.Playing
         });
     }, 300 * 1000);
-
-    console.log("Starting tick tasks...");
-    modules.forEach(x => {
-        x.onReady(client);
-        setInterval(x.onTick, 5 * 1000);
-    })
 });
 
 client.on("messageCreate", async (message) => {

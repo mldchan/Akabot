@@ -153,6 +153,5 @@ export class ChatStreakModule implements Module {
 
     async onGuildEdit(before: Guild, after: Guild): Promise<void> {
     }
-    async onTick(): Promise<void> {}
     async onReady(client: Client): Promise<void> {}
 }

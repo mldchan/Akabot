@@ -345,6 +345,5 @@ export class SettingsModule implements Module {
 
     async onStickerEdit(before: Sticker, after: Sticker): Promise<void> {}
 
-    async onTick(): Promise<void> {}
     async onReady(client: Client): Promise<void> {}
 }

@@ -685,6 +685,5 @@ export class Logging implements Module {
         const embed = new EmbedBuilder().setTitle("Sticker edited").setDescription("A sticker was edited").addFields(fields).setColor("Yellow");
         await logs.send({ embeds: [embed] });
     }
-    async onTick(): Promise<void> {}
     async onReady(client: Client): Promise<void> {}
 }

@@ -5,6 +5,7 @@
     "main": "index.js",
     "scripts": {
         "serve": "tsc --watch",
+        "start": "cd dist && nodemon -e js .",
         "test": "echo \"Error: no test specified\" && exit 1"
     },
     "keywords": [],
