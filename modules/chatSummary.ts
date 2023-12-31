@@ -22,17 +22,18 @@ type DailyChatSummaryData = {
         owo: number;
         catface: number;
         meow: number;
-    },
+    };
     users: {
         userID: string;
         messages: number;
-    }[],
+    }[];
     lastSentDay: number;
     lastSentMonth: number;
-}
+};
 
 function loadDailyChatSummary(guildId: string): DailyChatSummaryData[] {
-    if (!fs.existsSync(`./data/${guildId}/dailyChatSummary.json`)) fs.writeFileSync(`./data/${guildId}/dailyChatSummary.json`, JSON.stringify([]));
+    if (!fs.existsSync(`./data/${guildId}/dailyChatSummary.json`))
+        fs.writeFileSync(`./data/${guildId}/dailyChatSummary.json`, JSON.stringify([]));
     const data = fs.readFileSync(`./data/${guildId}/dailyChatSummary.json`, "utf8");
     return JSON.parse(data);
 }
@@ -40,7 +41,6 @@ function loadDailyChatSummary(guildId: string): DailyChatSummaryData[] {
 function saveDailyChatSummary(guildId: string, data: DailyChatSummaryData[]) {
     fs.writeFileSync(`./data/${guildId}/dailyChatSummary.json`, JSON.stringify(data));
 }
-
 
 async function handleMessage(msg: Message<boolean>) {
     if (!msg.guild) return;
@@ -124,6 +124,10 @@ async function settingsRemoveChannel(interaction: ChatInputCommandInteraction<Ca
 
 async function handleSettingsCommands(interaction: ChatInputCommandInteraction<CacheType>) {
     if (!interaction.guild) return;
+    if (!interaction.member) return;
+    if (!interaction.memberPermissions) return;
+    if (!interaction.memberPermissions.has("ManageGuild") || !interaction.memberPermissions.has("Administrator"))
+        return;
     if (interaction.commandName !== "settings") return;
     const subcommandGroup = interaction.options.getSubcommandGroup(true);
     if (subcommandGroup !== "chatsummary") return;
@@ -144,7 +148,7 @@ async function checkDailyChatSummary(client: Client) {
     console.log("checking daily chat summary");
     const date = new Date();
     const guilds = client.guilds.cache;
-    console.log('checking daily chat summary for', guilds.size, 'guilds');
+    console.log("checking daily chat summary for", guilds.size, "guilds");
     for (let guild of guilds.values()) {
         const data = loadDailyChatSummary(guild.id);
         for (let a of data) {
@@ -160,13 +164,18 @@ async function checkDailyChatSummary(client: Client) {
 
             const embed = {
                 title: `Chat Summary for ${date.getUTCMonth() + 1}/${date.getUTCDate() - 1}/${date.getUTCFullYear()}`,
-                description: `**Messages: ${a.messages}**\n` +
+                description:
+                    `**Messages: ${a.messages}**\n` +
                     `"owo"s: ${a.special.owo}\n` +
                     `":3"s: ${a.special.catface}\n` +
                     `meows: ${a.special.meow}\n` +
                     `Users: ${a.users.length}\n\n` +
                     `Top 5 Users:\n` +
-                    a.users.sort((a, b) => b.messages - a.messages).slice(0, 5).map((v, i) => `${i + 1}. <@${v.userID}>: ${v.messages}`).join("\n"),
+                    a.users
+                        .sort((a, b) => b.messages - a.messages)
+                        .slice(0, 5)
+                        .map((v, i) => `${i + 1}. <@${v.userID}>: ${v.messages}`)
+                        .join("\n"),
                 color: 0x00ff00
             };
             await channel.send({ embeds: [embed] });
@@ -182,82 +191,61 @@ async function checkDailyChatSummary(client: Client) {
             saveDailyChatSummary(guild.id, data);
         }
     }
- }
+}
 
 export class DailyChatSummary implements Module {
     commands: AllCommands = [];
     selfMemberId: string = "";
 
-    async onEmojiCreate(emoji: Emoji): Promise<void> {
-    }
+    async onEmojiCreate(emoji: Emoji): Promise<void> {}
 
-    async onEmojiDelete(emoji: Emoji): Promise<void> {
-    }
+    async onEmojiDelete(emoji: Emoji): Promise<void> {}
 
-    async onEmojiEdit(before: Emoji, after: Emoji): Promise<void> {
-    }
+    async onEmojiEdit(before: Emoji, after: Emoji): Promise<void> {}
 
-    async onStickerCreate(sticker: Sticker): Promise<void> {
-    }
+    async onStickerCreate(sticker: Sticker): Promise<void> {}
 
-    async onStickerDelete(sticker: Sticker): Promise<void> {
-    }
+    async onStickerDelete(sticker: Sticker): Promise<void> {}
 
-    async onStickerEdit(before: Sticker, after: Sticker): Promise<void> {
-    }
+    async onStickerEdit(before: Sticker, after: Sticker): Promise<void> {}
 
     async onSlashCommand(interaction: ChatInputCommandInteraction<CacheType>): Promise<void> {
         await handleSettingsCommands(interaction);
     }
 
-    async onButtonClick(interaction: ButtonInteraction<CacheType>): Promise<void> {
-    }
+    async onButtonClick(interaction: ButtonInteraction<CacheType>): Promise<void> {}
 
-    async onRoleCreate(role: Role): Promise<void> {
-    }
+    async onRoleCreate(role: Role): Promise<void> {}
 
-    async onRoleEdit(before: Role, after: Role): Promise<void> {
-    }
+    async onRoleEdit(before: Role, after: Role): Promise<void> {}
 
-    async onRoleDelete(role: Role): Promise<void> {
-    }
+    async onRoleDelete(role: Role): Promise<void> {}
 
-    async onChannelCreate(role: Channel): Promise<void> {
-    }
+    async onChannelCreate(role: Channel): Promise<void> {}
 
-    async onChannelEdit(before: Channel, after: Channel): Promise<void> {
-    }
+    async onChannelEdit(before: Channel, after: Channel): Promise<void> {}
 
-    async onChannelDelete(role: Channel): Promise<void> {
-    }
+    async onChannelDelete(role: Channel): Promise<void> {}
 
     async onMessage(msg: Message<boolean>): Promise<void> {
         await handleMessage(msg);
     }
 
-    async onMessageDelete(msg: Message<boolean>): Promise<void> {
-    }
+    async onMessageDelete(msg: Message<boolean>): Promise<void> {}
 
-    async onMessageEdit(before: Message<boolean>, after: Message<boolean>): Promise<void> {
-    }
+    async onMessageEdit(before: Message<boolean>, after: Message<boolean>): Promise<void> {}
 
-    async onMemberJoin(member: GuildMember): Promise<void> {
-    }
+    async onMemberJoin(member: GuildMember): Promise<void> {}
 
-    async onMemberEdit(before: GuildMember, after: GuildMember): Promise<void> {
-    }
+    async onMemberEdit(before: GuildMember, after: GuildMember): Promise<void> {}
 
-    async onMemberLeave(member: GuildMember): Promise<void> {
-    }
+    async onMemberLeave(member: GuildMember): Promise<void> {}
 
-    async onGuildAdd(guild: Guild): Promise<void> {
-    }
+    async onGuildAdd(guild: Guild): Promise<void> {}
 
-    async onGuildRemove(guild: Guild): Promise<void> {
-    }
+    async onGuildRemove(guild: Guild): Promise<void> {}
 
-    async onGuildEdit(before: Guild, after: Guild): Promise<void> {
-    }
+    async onGuildEdit(before: Guild, after: Guild): Promise<void> {}
 
     async onReady(client: Client): Promise<void> {
         await checkDailyChatSummary(client);
