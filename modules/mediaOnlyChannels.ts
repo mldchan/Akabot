@@ -1,7 +1,8 @@
 import {
     ButtonInteraction,
     Channel,
-    ChatInputCommandInteraction, Client,
+    ChatInputCommandInteraction,
+    Client,
     Emoji,
     Guild,
     GuildMember,
@@ -17,23 +18,17 @@ export class MediaOnlyChannelModule implements Module {
     commands: AllCommands = [];
     selfMemberId: string = "";
 
-    async onEmojiCreate(emoji: Emoji): Promise<void> {
-    }
+    async onEmojiCreate(emoji: Emoji): Promise<void> {}
 
-    async onEmojiDelete(emoji: Emoji): Promise<void> {
-    }
+    async onEmojiDelete(emoji: Emoji): Promise<void> {}
 
-    async onEmojiEdit(before: Emoji, after: Emoji): Promise<void> {
-    }
+    async onEmojiEdit(before: Emoji, after: Emoji): Promise<void> {}
 
-    async onStickerCreate(sticker: Sticker): Promise<void> {
-    }
+    async onStickerCreate(sticker: Sticker): Promise<void> {}
 
-    async onStickerDelete(sticker: Sticker): Promise<void> {
-    }
+    async onStickerDelete(sticker: Sticker): Promise<void> {}
 
-    async onStickerEdit(before: Sticker, after: Sticker): Promise<void> {
-    }
+    async onStickerEdit(before: Sticker, after: Sticker): Promise<void> {}
 
     async onSlashCommand(interaction: ChatInputCommandInteraction): Promise<void> {
         console.log(interaction.commandName);
@@ -80,29 +75,22 @@ export class MediaOnlyChannelModule implements Module {
         }
     }
 
-    async onButtonClick(interaction: ButtonInteraction): Promise<void> {
-    }
+    async onButtonClick(interaction: ButtonInteraction): Promise<void> {}
 
-    async onRoleCreate(role: Role): Promise<void> {
-    }
+    async onRoleCreate(role: Role): Promise<void> {}
 
-    async onRoleEdit(before: Role, after: Role): Promise<void> {
-    }
+    async onRoleEdit(before: Role, after: Role): Promise<void> {}
 
-    async onRoleDelete(role: Role): Promise<void> {
-    }
+    async onRoleDelete(role: Role): Promise<void> {}
 
-    async onChannelCreate(role: Channel): Promise<void> {
-    }
+    async onChannelCreate(role: Channel): Promise<void> {}
 
-    async onChannelEdit(before: Channel, after: Channel): Promise<void> {
-    }
+    async onChannelEdit(before: Channel, after: Channel): Promise<void> {}
 
-    async onChannelDelete(role: Channel): Promise<void> {
-    }
+    async onChannelDelete(role: Channel): Promise<void> {}
 
     async onMessage(msg: Message): Promise<void> {
-        if (msg.author.bot) return ;
+        if (msg.author.bot) return;
         if (!msg.guild) return;
         if (msg.channel.isDMBased()) return;
 
@@ -121,7 +109,9 @@ export class MediaOnlyChannelModule implements Module {
                 if (reply.attachments.size) return;
             }
             await msg.delete();
-            const message = getChannelReplies(msg.guild.id, msg.channel.id) ? "Replies are allowed, but you have to reply to a post." : "You can only send images or videos in this channel.";
+            const message = getChannelReplies(msg.guild.id, msg.channel.id)
+                ? "Replies are allowed, but you have to reply to a post."
+                : "You can only send images or videos in this channel.";
             const reply = await msg.channel.send(message);
             await new Promise((resolve) => setTimeout(resolve, 5000));
             await reply.delete();
@@ -175,29 +165,21 @@ export class MediaOnlyChannelModule implements Module {
         }
     }
 
-    async onMessageDelete(msg: Message): Promise<void> {
-    }
+    async onMessageDelete(msg: Message): Promise<void> {}
 
-    async onMessageEdit(before: Message, after: Message): Promise<void> {
-    }
+    async onMessageEdit(before: Message, after: Message): Promise<void> {}
 
-    async onMemberJoin(member: GuildMember): Promise<void> {
-    }
+    async onMemberJoin(member: GuildMember): Promise<void> {}
 
-    async onMemberEdit(before: GuildMember, after: GuildMember): Promise<void> {
-    }
+    async onMemberEdit(before: GuildMember, after: GuildMember): Promise<void> {}
 
-    async onMemberLeave(member: GuildMember): Promise<void> {
-    }
+    async onMemberLeave(member: GuildMember): Promise<void> {}
 
-    async onGuildAdd(guild: Guild): Promise<void> {
-    }
+    async onGuildAdd(guild: Guild): Promise<void> {}
 
-    async onGuildRemove(guild: Guild): Promise<void> {
-    }
+    async onGuildRemove(guild: Guild): Promise<void> {}
 
-    async onGuildEdit(before: Guild, after: Guild): Promise<void> {
-    }
+    async onGuildEdit(before: Guild, after: Guild): Promise<void> {}
     async onReady(client: Client): Promise<void> {}
 }
 
@@ -209,41 +191,38 @@ function registerChannel(
     channelType: MediaOnlyChannelTypes,
     allowReplies: boolean
 ) {
-    if (!fs.existsSync("./data")) fs.mkdirSync("./data");
-    if (!fs.existsSync("./data/settings")) fs.mkdirSync("./data/settings");
-    if (!fs.existsSync("./data/settings/mediaOnlyChannels")) fs.mkdirSync("./data/settings/mediaOnlyChannels");
-    if (!fs.existsSync(`./data/settings/mediaOnlyChannels/${guildID}.json`))
-        fs.writeFileSync(`./data/settings/mediaOnlyChannels/${guildID}.json`, JSON.stringify({}));
-    const data = JSON.parse(fs.readFileSync(`./data/settings/mediaOnlyChannels/${guildID}.json`, "utf-8")) as {
+    if (!fs.existsSync("datastore")) fs.mkdirSync("datastore");
+    if (!fs.existsSync("datastore/mediaOnlyChannels")) fs.mkdirSync("datastore/mediaOnlyChannels");
+    if (!fs.existsSync(`datastore/mediaOnlyChannels/${guildID}.json`))
+        fs.writeFileSync(`datastore/mediaOnlyChannels/${guildID}.json`, JSON.stringify({}));
+    const data = JSON.parse(fs.readFileSync(`datastore/mediaOnlyChannels/${guildID}.json`, "utf-8")) as {
         channels: { id: string; type: MediaOnlyChannelTypes; replies: boolean }[];
     };
     if (!data.channels) data.channels = [];
     if (!data.channels.find((c) => c.id === channelID))
         data.channels.push({ id: channelID, type: channelType, replies: allowReplies });
-    fs.writeFileSync(`./data/settings/mediaOnlyChannels/${guildID}.json`, JSON.stringify(data));
+    fs.writeFileSync(`datastore/mediaOnlyChannels/${guildID}.json`, JSON.stringify(data));
 }
 
 function unregisterChannel(guildID: string, channelID: string) {
-    if (!fs.existsSync("./data")) fs.mkdirSync("./data");
-    if (!fs.existsSync("./data/settings")) fs.mkdirSync("./data/settings");
-    if (!fs.existsSync("./data/settings/mediaOnlyChannels")) fs.mkdirSync("./data/settings/mediaOnlyChannels");
-    if (!fs.existsSync(`./data/settings/mediaOnlyChannels/${guildID}.json`))
-        fs.writeFileSync(`./data/settings/mediaOnlyChannels/${guildID}.json`, JSON.stringify({}));
-    const data = JSON.parse(fs.readFileSync(`./data/settings/mediaOnlyChannels/${guildID}.json`, "utf-8")) as {
+    if (!fs.existsSync("datastore")) fs.mkdirSync("datastore");
+    if (!fs.existsSync("datastore/mediaOnlyChannels")) fs.mkdirSync("datastore/mediaOnlyChannels");
+    if (!fs.existsSync(`datastore/mediaOnlyChannels/${guildID}.json`))
+        fs.writeFileSync(`datastore/mediaOnlyChannels/${guildID}.json`, JSON.stringify({}));
+    const data = JSON.parse(fs.readFileSync(`datastore/mediaOnlyChannels/${guildID}.json`, "utf-8")) as {
         channels: { id: string; type: MediaOnlyChannelTypes; replies: boolean }[];
     };
     if (!data.channels) data.channels = [];
     data.channels = data.channels.filter((c) => c.id !== channelID);
-    fs.writeFileSync(`./data/settings/mediaOnlyChannels/${guildID}.json`, JSON.stringify(data));
+    fs.writeFileSync(`datastore/mediaOnlyChannels/${guildID}.json`, JSON.stringify(data));
 }
 
 function channelRegistered(guildID: string, channelID: string): boolean {
-    if (!fs.existsSync("./data")) fs.mkdirSync("./data");
-    if (!fs.existsSync("./data/settings")) fs.mkdirSync("./data/settings");
-    if (!fs.existsSync("./data/settings/mediaOnlyChannels")) fs.mkdirSync("./data/settings/mediaOnlyChannels");
-    if (!fs.existsSync(`./data/settings/mediaOnlyChannels/${guildID}.json`))
-        fs.writeFileSync(`./data/settings/mediaOnlyChannels/${guildID}.json`, JSON.stringify({}));
-    const data = JSON.parse(fs.readFileSync(`./data/settings/mediaOnlyChannels/${guildID}.json`, "utf-8")) as {
+    if (!fs.existsSync("datastore")) fs.mkdirSync("datastore");
+    if (!fs.existsSync("datastore/mediaOnlyChannels")) fs.mkdirSync("datastore/mediaOnlyChannels");
+    if (!fs.existsSync(`datastore/mediaOnlyChannels/${guildID}.json`))
+        fs.writeFileSync(`datastore/mediaOnlyChannels/${guildID}.json`, JSON.stringify({}));
+    const data = JSON.parse(fs.readFileSync(`datastore/mediaOnlyChannels/${guildID}.json`, "utf-8")) as {
         channels: { id: string; type: MediaOnlyChannelTypes; replies: boolean }[];
     };
     if (!data.channels) data.channels = [];
@@ -251,12 +230,11 @@ function channelRegistered(guildID: string, channelID: string): boolean {
 }
 
 function getChannelType(guildID: string, channelID: string): MediaOnlyChannelTypes | "none" {
-    if (!fs.existsSync("./data")) fs.mkdirSync("./data");
-    if (!fs.existsSync("./data/settings")) fs.mkdirSync("./data/settings");
-    if (!fs.existsSync("./data/settings/mediaOnlyChannels")) fs.mkdirSync("./data/settings/mediaOnlyChannels");
-    if (!fs.existsSync(`./data/settings/mediaOnlyChannels/${guildID}.json`))
-        fs.writeFileSync(`./data/settings/mediaOnlyChannels/${guildID}.json`, JSON.stringify({}));
-    const data = JSON.parse(fs.readFileSync(`./data/settings/mediaOnlyChannels/${guildID}.json`, "utf-8")) as {
+    if (!fs.existsSync("datastore")) fs.mkdirSync("datastore");
+    if (!fs.existsSync("datastore/mediaOnlyChannels")) fs.mkdirSync("datastore/mediaOnlyChannels");
+    if (!fs.existsSync(`datastore/mediaOnlyChannels/${guildID}.json`))
+        fs.writeFileSync(`datastore/mediaOnlyChannels/${guildID}.json`, JSON.stringify({}));
+    const data = JSON.parse(fs.readFileSync(`datastore/mediaOnlyChannels/${guildID}.json`, "utf-8")) as {
         channels: { id: string; type: MediaOnlyChannelTypes; replies: boolean }[];
     };
     if (!data.channels) data.channels = [];
@@ -266,12 +244,11 @@ function getChannelType(guildID: string, channelID: string): MediaOnlyChannelTyp
 }
 
 function getChannelReplies(guildID: string, channelID: string): boolean {
-    if (!fs.existsSync("./data")) fs.mkdirSync("./data");
-    if (!fs.existsSync("./data/settings")) fs.mkdirSync("./data/settings");
-    if (!fs.existsSync("./data/settings/mediaOnlyChannels")) fs.mkdirSync("./data/settings/mediaOnlyChannels");
-    if (!fs.existsSync(`./data/settings/mediaOnlyChannels/${guildID}.json`))
-        fs.writeFileSync(`./data/settings/mediaOnlyChannels/${guildID}.json`, JSON.stringify({}));
-    const data = JSON.parse(fs.readFileSync(`./data/settings/mediaOnlyChannels/${guildID}.json`, "utf-8")) as {
+    if (!fs.existsSync("datastore")) fs.mkdirSync("datastore");
+    if (!fs.existsSync("datastore/mediaOnlyChannels")) fs.mkdirSync("datastore/mediaOnlyChannels");
+    if (!fs.existsSync(`datastore/mediaOnlyChannels/${guildID}.json`))
+        fs.writeFileSync(`datastore/mediaOnlyChannels/${guildID}.json`, JSON.stringify({}));
+    const data = JSON.parse(fs.readFileSync(`datastore/mediaOnlyChannels/${guildID}.json`, "utf-8")) as {
         channels: { id: string; type: MediaOnlyChannelTypes; replies: boolean }[];
     };
     if (!data.channels) data.channels = [];

@@ -32,14 +32,18 @@ type DailyChatSummaryData = {
 };
 
 function loadDailyChatSummary(guildId: string): DailyChatSummaryData[] {
-    if (!fs.existsSync(`./data/${guildId}/dailyChatSummary.json`))
-        fs.writeFileSync(`./data/${guildId}/dailyChatSummary.json`, JSON.stringify([]));
-    const data = fs.readFileSync(`./data/${guildId}/dailyChatSummary.json`, "utf8");
+    if (!fs.existsSync("datastore")) fs.mkdirSync("datastore");
+    if (!fs.existsSync("datastore/chatsummary")) fs.mkdirSync("datastore/chatsummary");
+    if (!fs.existsSync(`datastore/chatsummary/${guildId}.json`))
+        fs.writeFileSync(`datastore/chatsummary/${guildId}.json`, JSON.stringify([]));
+    const data = fs.readFileSync(`datastore/chatsummary/${guildId}.json`, "utf8");
     return JSON.parse(data);
 }
 
 function saveDailyChatSummary(guildId: string, data: DailyChatSummaryData[]) {
-    fs.writeFileSync(`./data/${guildId}/dailyChatSummary.json`, JSON.stringify(data));
+    if (!fs.existsSync("datastore")) fs.mkdirSync("datastore");
+    if (!fs.existsSync("datastore/chatsummary")) fs.mkdirSync("datastore/chatsummary");
+    fs.writeFileSync(`datastore/chatsummary/${guildId}.json`, JSON.stringify(data));
 }
 
 async function handleMessage(msg: Message<boolean>) {

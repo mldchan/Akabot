@@ -9,7 +9,8 @@ import {
     EmbedBuilder,
     Guild,
     Emoji,
-    Sticker, Client
+    Sticker,
+    Client
 } from "discord.js";
 import { AllCommands, Module } from "./type";
 import { getSetting } from "../data/settings";
@@ -42,10 +43,18 @@ export class WelcomeModule implements Module {
 
         const memberNameType = getSetting(member.guild.id, "welcomeNameType", "nickname");
         const memberName = memberNameType === "nickname" ? member.user.displayName : member.user.username;
-        const embed = new EmbedBuilder()
-            .setTitle(`Welcome ${memberName}`)
-            .setDescription(`Welcome to ${member.guild.name}, ${memberName}! Enjoy your stay.`)
-            .setColor("Green");
+
+        let welcomeTitle = getSetting(member.guild.id, "welcomeTitle", "Welcome");
+        welcomeTitle = welcomeTitle.replace("{user}", memberName);
+        welcomeTitle = welcomeTitle.replace("{server}", member.guild.name);
+        welcomeTitle = welcomeTitle.replace("{memberCount}", member.guild.memberCount.toString());
+
+        let welcomeMessage = getSetting(member.guild.id, "welcomeMessage", "Welcome to the server {user}!");
+        welcomeMessage = welcomeMessage.replace("{user}", memberName);
+        welcomeMessage = welcomeMessage.replace("{server}", member.guild.name);
+        welcomeMessage = welcomeMessage.replace("{memberCount}", member.guild.memberCount.toString());
+
+        const embed = new EmbedBuilder().setTitle(welcomeTitle).setDescription(welcomeMessage).setColor("Green");
         await channelRes.send({ embeds: [embed] });
     }
     async onMemberEdit(before: GuildMember, after: GuildMember): Promise<void> {}
@@ -59,6 +68,5 @@ export class WelcomeModule implements Module {
     async onStickerCreate(sticker: Sticker): Promise<void> {}
     async onStickerDelete(sticker: Sticker): Promise<void> {}
     async onStickerEdit(before: Sticker, after: Sticker): Promise<void> {}
-    async onReady(client: Client): Promise<void> {
-    }
+    async onReady(client: Client): Promise<void> {}
 }

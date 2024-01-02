@@ -8,7 +8,9 @@ import {
     GuildMember,
     Guild,
     Emoji,
-    Sticker, SlashCommandBuilder, Client
+    Sticker,
+    SlashCommandBuilder,
+    Client
 } from "discord.js";
 import { AllCommands, Module } from "./type";
 import * as fs from "fs";
@@ -19,9 +21,11 @@ type AnalyticsMonth = { [key: number]: AnalyticsDay };
 type AnalyticsYear = { [key: number]: AnalyticsMonth };
 
 function readData(): AnalyticsYear {
-    if (!fs.existsSync("./store")) fs.mkdirSync("./store");
-    if (!fs.existsSync("./store/analytics.json")) fs.writeFileSync("./store/analytics.json", "{}");
-    const data = JSON.parse(fs.readFileSync("./store/analytics.json", "utf-8")) as AnalyticsYear;
+    if (!fs.existsSync("datastore")) fs.mkdirSync("datastore");
+    if (!fs.existsSync("datastore/analytics")) fs.mkdirSync("datastore/analytics");
+    if (!fs.existsSync("datastore/analytics/analytics.json"))
+        fs.writeFileSync("datastore/analytics/analytics.json", "{}");
+    const data = JSON.parse(fs.readFileSync("datastore/analytics/analytics.json", "utf-8")) as AnalyticsYear;
     const now = new Date();
     if (!data[now.getFullYear()]) data[now.getFullYear()] = {};
     if (!data[now.getFullYear()][now.getMonth()]) data[now.getFullYear()][now.getMonth()] = {};
@@ -31,7 +35,9 @@ function readData(): AnalyticsYear {
 }
 
 function writeData(x: AnalyticsYear) {
-    fs.writeFileSync("./store/analytics.json", JSON.stringify(x));
+    if (!fs.existsSync("datastore")) fs.mkdirSync("datastore");
+    if (!fs.existsSync("datastore/analytics")) fs.mkdirSync("datastore/analytics");
+    fs.writeFileSync("datastore/analytics/analytics.json", JSON.stringify(x));
 }
 
 export class AnalyticsModule implements Module {
@@ -41,11 +47,7 @@ export class AnalyticsModule implements Module {
     async onStickerCreate(sticker: Sticker): Promise<void> {}
     async onStickerDelete(sticker: Sticker): Promise<void> {}
     async onStickerEdit(before: Sticker, after: Sticker): Promise<void> {}
-    commands: AllCommands = [
-        new SlashCommandBuilder()
-            .setName("privacy")
-            .setDescription("Privacy")
-    ];
+    commands: AllCommands = [new SlashCommandBuilder().setName("privacy").setDescription("Privacy")];
     selfMemberId: string = "";
     async onSlashCommand(interaction: ChatInputCommandInteraction<CacheType>): Promise<void> {
         let file = readData();

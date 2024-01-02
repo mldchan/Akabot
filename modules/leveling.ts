@@ -24,7 +24,14 @@ function getFormattedDate() {
     return `${date.getUTCFullYear()}/${date.getUTCMonth()}/${date.getUTCDate()} ${date.getUTCHours()}:${date.getUTCMinutes()}:${date.getUTCSeconds()} UTC`;
 }
 
-async function handleLevelUp(msg: Message<boolean>, selfMember: GuildMember, levelBefore: number, xpBefore: number, levelAfter: number, xpAfter: number) {
+async function handleLevelUp(
+    msg: Message<boolean>,
+    selfMember: GuildMember,
+    levelBefore: number,
+    xpBefore: number,
+    levelAfter: number,
+    xpAfter: number
+) {
     console.log("leveling", "onMessage", "level up");
     const levelingChannelId = getSetting(msg.guild!.id, "levelingChannel", "");
     const levelingChannel = msg.guild!.channels.cache.get(levelingChannelId);
@@ -55,9 +62,7 @@ async function handleLevelCommand(interaction: ChatInputCommandInteraction<Cache
     const embed = new EmbedBuilder()
         .setTitle(`Level - ${interaction.user.displayName}`)
         .setDescription(
-            `You are currently on level ${level} (${points} XP)\nYou need ${
-                pointsToNext - points
-            } XP for next level.`
+            `You are currently on level ${level} (${points} XP)\nYou need ${pointsToNext - points} XP for next level.`
         )
         .setFooter({
             text: getFormattedDate()
@@ -73,16 +78,22 @@ type LevelingReward = {
 };
 
 function loadRewards(guildID: string): LevelingReward[] {
-    if (!fs.existsSync(`./data/${guildID}/levelingRewards.json`)) {
-        fs.writeFileSync(`./data/${guildID}/levelingRewards.json`, JSON.stringify([]));
+    if (!fs.existsSync(`datastore`)) fs.mkdirSync(`datastore`);
+    if (!fs.existsSync(`datastore/leveling`)) fs.mkdirSync(`datastore/leveling`);
+    if (!fs.existsSync(`datastore/leveling/${guildID}`)) fs.mkdirSync(`datastore/leveling/${guildID}`);
+    if (!fs.existsSync(`datastore/leveling/${guildID}/rewards.json`)) {
+        fs.writeFileSync(`datastore/leveling/${guildID}/rewards.json`, JSON.stringify([]));
         return [];
     }
-    const rewards = fs.readFileSync(`./data/${guildID}/levelingRewards.json`, "utf-8");
+    const rewards = fs.readFileSync(`datastore/leveling/${guildID}/rewards.json`, "utf-8");
     return JSON.parse(rewards);
 }
 
 function saveRewards(guildID: string, rewards: LevelingReward[]) {
-    fs.writeFileSync(`./data/${guildID}/levelingRewards.json`, JSON.stringify(rewards));
+    if (!fs.existsSync(`datastore`)) fs.mkdirSync(`datastore`);
+    if (!fs.existsSync(`datastore/leveling`)) fs.mkdirSync(`datastore/leveling`);
+    if (!fs.existsSync(`datastore/leveling/${guildID}`)) fs.mkdirSync(`datastore/leveling/${guildID}`);
+    fs.writeFileSync(`datastore/leveling/${guildID}/rewards.json`, JSON.stringify(rewards));
 }
 
 function addRoleReward(guildID: any, roleID: any, atLevel: number) {
@@ -140,13 +151,11 @@ async function updateMemberRoles(msg: Message<boolean>) {
     if (!member) return;
     const rolesToAdd = rewards.filter((v) => v.level <= level);
     rolesToAdd.forEach((v) => {
-        if (!member.roles.cache.has(v.role))
-            member.roles.add(v.role);
+        if (!member.roles.cache.has(v.role)) member.roles.add(v.role);
     });
     const rolesToRemove = rewards.filter((v) => v.level > level);
     rolesToRemove.forEach((v) => {
-        if (member.roles.cache.has(v.role))
-            member.roles.remove(v.role);
+        if (member.roles.cache.has(v.role)) member.roles.remove(v.role);
     });
 }
 
@@ -168,26 +177,19 @@ export class LevelingModule implements Module {
         }
     }
 
-    async onButtonClick(interaction: ButtonInteraction<CacheType>): Promise<void> {
-    }
+    async onButtonClick(interaction: ButtonInteraction<CacheType>): Promise<void> {}
 
-    async onRoleCreate(role: Role): Promise<void> {
-    }
+    async onRoleCreate(role: Role): Promise<void> {}
 
-    async onRoleEdit(before: Role, after: Role): Promise<void> {
-    }
+    async onRoleEdit(before: Role, after: Role): Promise<void> {}
 
-    async onRoleDelete(role: Role): Promise<void> {
-    }
+    async onRoleDelete(role: Role): Promise<void> {}
 
-    async onChannelCreate(role: Channel): Promise<void> {
-    }
+    async onChannelCreate(role: Channel): Promise<void> {}
 
-    async onChannelEdit(before: Channel, after: Channel): Promise<void> {
-    }
+    async onChannelEdit(before: Channel, after: Channel): Promise<void> {}
 
-    async onChannelDelete(role: Channel): Promise<void> {
-    }
+    async onChannelDelete(role: Channel): Promise<void> {}
 
     async onMessage(msg: Message<boolean>): Promise<void> {
         if (!msg.guild) return;
@@ -208,49 +210,33 @@ export class LevelingModule implements Module {
         }
     }
 
-    async onMessageDelete(msg: Message<boolean>): Promise<void> {
-    }
+    async onMessageDelete(msg: Message<boolean>): Promise<void> {}
 
-    async onMessageEdit(before: Message<boolean>, after: Message<boolean>): Promise<void> {
-    }
+    async onMessageEdit(before: Message<boolean>, after: Message<boolean>): Promise<void> {}
 
-    async onMemberJoin(member: GuildMember): Promise<void> {
-    }
+    async onMemberJoin(member: GuildMember): Promise<void> {}
 
-    async onMemberEdit(before: GuildMember, after: GuildMember): Promise<void> {
-    }
+    async onMemberEdit(before: GuildMember, after: GuildMember): Promise<void> {}
 
-    async onMemberLeave(member: GuildMember): Promise<void> {
-    }
+    async onMemberLeave(member: GuildMember): Promise<void> {}
 
-    async onGuildAdd(guild: Guild): Promise<void> {
-    }
+    async onGuildAdd(guild: Guild): Promise<void> {}
 
-    async onGuildRemove(guild: Guild): Promise<void> {
-    }
+    async onGuildRemove(guild: Guild): Promise<void> {}
 
-    async onGuildEdit(before: Guild, after: Guild): Promise<void> {
-    }
+    async onGuildEdit(before: Guild, after: Guild): Promise<void> {}
 
-    async onEmojiCreate(emoji: Emoji): Promise<void> {
-    }
+    async onEmojiCreate(emoji: Emoji): Promise<void> {}
 
-    async onEmojiDelete(emoji: Emoji): Promise<void> {
-    }
+    async onEmojiDelete(emoji: Emoji): Promise<void> {}
 
-    async onEmojiEdit(before: Emoji, after: Emoji): Promise<void> {
-    }
+    async onEmojiEdit(before: Emoji, after: Emoji): Promise<void> {}
 
-    async onStickerCreate(sticker: Sticker): Promise<void> {
-    }
+    async onStickerCreate(sticker: Sticker): Promise<void> {}
 
-    async onStickerDelete(sticker: Sticker): Promise<void> {
-    }
+    async onStickerDelete(sticker: Sticker): Promise<void> {}
 
-    async onStickerEdit(before: Sticker, after: Sticker): Promise<void> {
-    }
+    async onStickerEdit(before: Sticker, after: Sticker): Promise<void> {}
 
-
-    async onReady(client: Client): Promise<void> {
-    }
+    async onReady(client: Client): Promise<void> {}
 }
