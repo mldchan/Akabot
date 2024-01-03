@@ -153,7 +153,13 @@ async function handleBanMember(interaction: ChatInputCommandInteraction<CacheTyp
 
     const targetUser = interaction.options.getUser("user", true);
     const targetMember = interaction.guild.members.cache.find((x) => x.user.id === targetUser.id);
-    if (!targetMember) return;
+    if (!targetMember) {
+        await interaction.reply({
+            content: "User not found.",
+            ephemeral: true
+        });
+        return;
+    }
 
     if (targetUser.id === moderator.id) {
         await interaction.reply({
@@ -220,7 +226,13 @@ async function handleKickMember(interaction: ChatInputCommandInteraction<CacheTy
 
     const targetUser = interaction.options.getUser("user", true);
     const targetMember = interaction.guild.members.cache.find((x) => x.user.id === targetUser.id);
-    if (!targetMember) return;
+    if (!targetMember) {
+        await interaction.reply({
+            content: "User not found.",
+            ephemeral: true
+        });
+        return;
+    }
 
     if (moderator.id === targetMember.id) {
         await interaction.reply({
@@ -290,7 +302,13 @@ async function handleMuteMember(interaction: ChatInputCommandInteraction<CacheTy
 
     const targetUser = interaction.options.getUser("user", true);
     const targetMember = interaction.guild.members.cache.find((x) => x.user.id === targetUser.id);
-    if (!targetMember) return;
+    if (!targetMember) {
+        await interaction.reply({
+            content: "User not found.",
+            ephemeral: true
+        });
+        return;
+    }
 
     if (moderator.id === targetMember.id) {
         await interaction.reply({
