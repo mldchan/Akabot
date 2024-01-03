@@ -355,7 +355,6 @@ async function handleMuteMember(interaction: ChatInputCommandInteraction<CacheTy
             content: "You can only mute for up to 7 days",
             ephemeral: true
         });
-
         return;
     }
 
