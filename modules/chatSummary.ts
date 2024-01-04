@@ -14,6 +14,7 @@ import {
 import { AllCommands, Module } from "./type";
 import * as fs from "fs";
 import { getSelfMember } from "../utilities/useful";
+import { getSetting } from "../data/settings";
 
 type DailyChatSummaryData = {
     channelID: string;
@@ -100,7 +101,7 @@ async function settingsAddChannel(interaction: ChatInputCommandInteraction<Cache
         lastSentMonth: new Date().getMonth()
     });
     await interaction.reply({
-        content: "Added channel to daily chat summary, messages will be counted from now on",
+        content: "Added channel to daily chat summary",
         ephemeral: true
     });
     saveDailyChatSummary(interaction.guild.id, data);
@@ -166,20 +167,33 @@ async function checkDailyChatSummary(client: Client) {
             if (!selfMember) continue;
             if (!selfMember.permissionsIn(channel).has("SendMessages")) continue;
 
-            const embed = {
-                title: `Chat Summary for ${date.getUTCMonth() + 1}/${date.getUTCDate() - 1}/${date.getUTCFullYear()}`,
-                description:
-                    `**Messages: ${a.messages}**\n` +
-                    `"owo"s: ${a.special.owo}\n` +
-                    `":3"s: ${a.special.catface}\n` +
-                    `meows: ${a.special.meow}\n` +
-                    `Users: ${a.users.length}\n\n` +
-                    `Top 5 Users:\n` +
+            const includeSpecial = getSetting(guild.id, "chatSummarySpecial", "Yes") == "Yes";
+            const howManyTopChatters = getSetting(guild.id, "chatSummaryTopUsers", "5");
+
+            if (isNaN(parseInt(howManyTopChatters))) {
+                console.warn("warning: chatSummaryTopUsers is not a number");
+                continue;
+            }
+
+            let message = `**Messages**: ${a.messages}\n`;
+            if (includeSpecial) {
+                message += `"owo"s: ${a.special.owo}\n":3"s: ${a.special.catface}\nmeows: ${a.special.meow}\n`;
+            }
+
+            if (howManyTopChatters !== "0") {
+                message +=
+                    `Unique chatters: ${a.users.length}\n\n` +
+                    `The best ${howManyTopChatters} chatters:\n` +
                     a.users
-                        .sort((a, b) => b.messages - a.messages)
-                        .slice(0, 5)
+                        .toSorted((a, b) => b.messages - a.messages)
+                        .slice(0, parseInt(howManyTopChatters))
                         .map((v, i) => `${i + 1}. <@${v.userID}>: ${v.messages}`)
-                        .join("\n"),
+                        .join("\n");
+            }
+
+            const embed = {
+                title: `Chat summary for ${date.getUTCMonth() + 1}/${date.getUTCDate() - 1}/${date.getUTCFullYear()}`,
+                description: message,
                 color: 0x00ff00
             };
             await channel.send({ embeds: [embed] });
