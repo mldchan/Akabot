@@ -20,43 +20,11 @@ export class SettingsCommandBuilder extends SlashCommandBuilder {
             .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild);
     }
 
-    findSettingsKeyForCommand(group: string, command: string): string | undefined {
-        for (const _group of this.groups) {
-            if (_group.name !== group) continue;
-            for (const subcommand of _group.subcommands) {
-                if (subcommand.name === command) {
-                    return subcommand.settingsKey;
-                }
-            }
-        }
-        return undefined;
-    }
-
-    findSettingTypeForCommand(group: string, command: string): "string" | "channel" | "toggle" | undefined {
-        for (const _group of this.groups) {
-            if (_group.name !== group) continue;
-            for (const subcommand of _group.subcommands) {
-                if (subcommand.name === command) {
-                    if (subcommand instanceof StringSetting || subcommand instanceof StringChoiceSetting)
-                        return "string";
-                    if (subcommand instanceof ChannelSetting) return "channel";
-                    if (subcommand instanceof ToggleSetting) return "toggle";
-                }
-            }
-        }
-        return undefined;
-    }
-
-    findDescriptionForCommand(group: string, command: string): string | undefined {
-        for (const _group of this.groups) {
-            if (_group.name !== group) continue;
-            for (const subcommand of _group.subcommands) {
-                if (subcommand.name === command) {
-                    return subcommand.description;
-                }
-            }
-        }
-        return undefined;
+    findSettingGroup(group: string, command: string): BaseOption | undefined {
+        const foundGroup = this.groups.find((x) => x.name === group);
+        if (!foundGroup) return undefined;
+        const foundSetting = foundGroup.subcommands.find((x) => x.name === command);
+        return foundSetting;
     }
 
     addSettingsGroup(x: SettingsGroupBuilder): this {
@@ -67,7 +35,7 @@ export class SettingsCommandBuilder extends SlashCommandBuilder {
 }
 
 export class SettingsGroupBuilder extends SlashCommandSubcommandGroupBuilder {
-    subcommands: (StringSetting | StringChoiceSetting | ChannelSetting | ToggleSetting)[] = [];
+    subcommands: (StringSetting | StringChoiceSetting | ChannelSetting | ToggleSetting | IntegerSetting)[] = [];
     constructor(group: string) {
         super();
         this.setName(group).setDescription(`Manage settings for ${group}`);
@@ -90,9 +58,26 @@ export class SettingsGroupBuilder extends SlashCommandSubcommandGroupBuilder {
         this.subcommands.push(toggle);
         return this;
     }
+
+    addIntegerSetting(integer: IntegerSetting): this {
+        this.addSubcommand(integer);
+        this.subcommands.push(integer);
+        return this;
+    }
 }
 
-export class StringSetting extends SlashCommandSubcommandBuilder {
+export interface BaseOption {
+    getType(): string;
+    settingsKey: string;
+    name: string;
+    description: string;
+}
+
+export class StringSetting extends SlashCommandSubcommandBuilder implements BaseOption {
+    getType(): string {
+        return "string";
+    }
+
     settingsKey: string;
     constructor(name: string, settingsKey: string, description: string) {
         super();
@@ -102,7 +87,11 @@ export class StringSetting extends SlashCommandSubcommandBuilder {
             .addStringOption((newValue) => newValue.setName("newvalue").setDescription(description));
     }
 }
-export class StringChoiceSetting extends SlashCommandSubcommandBuilder {
+export class StringChoiceSetting extends SlashCommandSubcommandBuilder implements BaseOption {
+    getType(): string {
+        return "string";
+    }
+
     settingsKey: string;
     constructor(name: string, settingsKey: string, description: string, choices: { display: string; value: string }[]) {
         super();
@@ -124,7 +113,11 @@ export class StringChoiceSetting extends SlashCommandSubcommandBuilder {
     }
 }
 
-export class ToggleSetting extends SlashCommandSubcommandBuilder {
+export class ToggleSetting extends SlashCommandSubcommandBuilder implements BaseOption {
+    getType(): string {
+        return "toggle";
+    }
+
     settingsKey: string;
     constructor(name: string, settingsKey: string, desc: string) {
         super();
@@ -135,7 +128,11 @@ export class ToggleSetting extends SlashCommandSubcommandBuilder {
     }
 }
 
-export class ChannelSetting extends SlashCommandSubcommandBuilder {
+export class ChannelSetting extends SlashCommandSubcommandBuilder implements BaseOption {
+    getType(): string {
+        return "channel";
+    }
+
     /**
      * Add a channel setting
      * @param name The name displayed in the command description
@@ -150,6 +147,37 @@ export class ChannelSetting extends SlashCommandSubcommandBuilder {
             .addChannelOption((newValue) =>
                 newValue.setName("newvalue").setDescription(`Change ${name} to something different`)
             );
+    }
+}
+
+export type IntegerSettingOptions = {
+    minimum?: number;
+    maximum?: number;
+    mode?: "all" | "only negative" | "only positive" | "only zero";
+};
+
+export class IntegerSetting extends SlashCommandSubcommandBuilder implements BaseOption {
+    getType(): string {
+        return "integer";
+    }
+
+    /**
+     * Add an integer setting
+     * @param name The name displayed in the command description
+     * @param settingsKey The settings key, with `Integer` appended to the end
+     * @param description The description displayed in the command description
+     */
+    settingsKey: string;
+    integerSettingOptions: IntegerSettingOptions = {};
+    constructor(name: string, settingsKey: string, description: string, options?: IntegerSettingOptions) {
+        super();
+        if (options) {
+            this.integerSettingOptions = options;
+        }
+        this.settingsKey = settingsKey;
+        this.setName(name)
+            .setDescription(description)
+            .addIntegerOption((newValue) => newValue.setName("newvalue").setDescription(description));
     }
 }
 
