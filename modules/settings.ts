@@ -259,6 +259,26 @@ export class SettingsModule implements Module {
                                 ch.setName("channel").setDescription("Channel to remove").setRequired(true)
                             )
                     )
+                    .addStringSetting(
+                        new StringChoiceSetting(
+                            "include-special",
+                            "chatSummarySpecial",
+                            'Include counting of "owo", ":3" and "meow"s',
+                            [
+                                {
+                                    display: "Yes",
+                                    value: "Yes"
+                                },
+                                {
+                                    display: "No",
+                                    value: "No"
+                                }
+                            ]
+                        )
+                    )
+                    .addStringSetting(
+                        new StringSetting("top-users", "chatSummaryTopUsers", "How many top users to show")
+                    )
             )
     ];
     settingsMaps = [];
