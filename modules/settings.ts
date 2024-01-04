@@ -16,6 +16,7 @@ import {
 import { AllCommands, Module } from "./type";
 import {
     ChannelSetting,
+    IntegerSetting,
     setChannel,
     SettingsCommandBuilder,
     SettingsGroupBuilder,
@@ -276,8 +277,11 @@ export class SettingsModule implements Module {
                             ]
                         )
                     )
-                    .addStringSetting(
-                        new StringSetting("top-users", "chatSummaryTopUsers", "How many top users to show")
+                    .addIntegerSetting(
+                        new IntegerSetting("top-users", "chatSummaryTopUsers", "How many top users to show", {
+                            maximum: 10,
+                            minimum: 0
+                        })
                     )
             )
     ];
@@ -307,12 +311,11 @@ export class SettingsModule implements Module {
         const subcommand = interaction.options.getSubcommand(false);
         if (!subcommand) return;
         const commandBuilder = this.commands[0] as SettingsCommandBuilder;
-        const settingsKey = commandBuilder.findSettingsKeyForCommand(subcommandGroup, subcommand);
-        if (!settingsKey) return;
-        const settingType = commandBuilder.findSettingTypeForCommand(subcommandGroup, subcommand);
-        if (!settingType) return;
-        const settingDesc = commandBuilder.findDescriptionForCommand(subcommandGroup, subcommand);
-        if (!settingDesc) return;
+        const command = commandBuilder.findSettingGroup(subcommandGroup, subcommand);
+        if (!command) return;
+        const settingsKey = command.settingsKey;
+        const settingType = command.getType();
+        const settingDesc = command.description;
 
         switch (settingType) {
             case "channel": {
@@ -365,6 +368,74 @@ export class SettingsModule implements Module {
                 setSetting(interaction.guild.id, settingsKey, value ? "yes" : "no");
                 await interaction.reply({
                     content: `Set \`${settingDesc}\` to \`${value ? "yes" : "no"}\``,
+                    ephemeral: true
+                });
+                break;
+            }
+            case "integer": {
+                const value = interaction.options.getInteger("newvalue");
+                if (value === null || value === undefined) {
+                    const current = getSetting(interaction.guild.id, settingsKey, "0");
+                    await interaction.reply({
+                        content: `\`${settingDesc}\` is currently set to \`${current}\``,
+                        ephemeral: true
+                    });
+                    break;
+                }
+
+                const option = command as IntegerSetting;
+                if (option.integerSettingOptions.maximum && value >= option.integerSettingOptions.maximum) {
+                    await interaction.reply({
+                        content: `The maximum value is ${option.integerSettingOptions.maximum}`,
+                        ephemeral: true
+                    });
+                    return;
+                }
+
+                if (option.integerSettingOptions.minimum && value <= option.integerSettingOptions.minimum) {
+                    await interaction.reply({
+                        content: `The minimum value is ${option.integerSettingOptions.minimum}`,
+                        ephemeral: true
+                    });
+                    return;
+                }
+
+                switch (option.integerSettingOptions.mode) {
+                    case "only negative": {
+                        if (value > 0) {
+                            await interaction.reply({
+                                content: "Only negative values are allowed",
+                                ephemeral: true
+                            });
+                            return;
+                        }
+                        break;
+                    }
+                    case "only positive": {
+                        if (value < 0) {
+                            await interaction.reply({
+                                content: "Only positive values are allowed",
+                                ephemeral: true
+                            });
+                            return;
+                        }
+                        break;
+                    }
+                    case "only zero": {
+                        if (value !== 0) {
+                            await interaction.reply({
+                                content: "Only zero is allowed",
+                                ephemeral: true
+                            });
+                            return;
+                        }
+                        break;
+                    }
+                }
+
+                setSetting(interaction.guild.id, settingsKey, value.toString());
+                await interaction.reply({
+                    content: `Set \`${settingDesc}\` to \`${value}\``,
                     ephemeral: true
                 });
                 break;
