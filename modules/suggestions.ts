@@ -2,7 +2,8 @@ import {
     ButtonInteraction,
     CacheType,
     Channel,
-    ChatInputCommandInteraction, Client,
+    ChatInputCommandInteraction,
+    Client,
     Emoji,
     Guild,
     GuildMember,
@@ -12,8 +13,8 @@ import {
     SlashCommandSubcommandsOnlyBuilder,
     Sticker
 } from "discord.js";
-import { Module } from "@/modules/type";
-import { addBugReport, addSuggestion } from "@/data/feedback";
+import { Module } from "./type";
+import { addBugReport, addSuggestion } from "../data/feedback";
 
 export class Suggestions implements Module {
     async onRoleEdit(before: Role, after: Role): Promise<void> {}
@@ -41,7 +42,9 @@ export class Suggestions implements Module {
                 subcommand
                     .setName("bug")
                     .setDescription("Create a bug report")
-                    .addStringOption((option) => option.setName("bug").setDescription("The bug you want to report").setRequired(true))
+                    .addStringOption((option) =>
+                        option.setName("bug").setDescription("The bug you want to report").setRequired(true)
+                    )
             )
     ];
     selfMemberId: string = "";

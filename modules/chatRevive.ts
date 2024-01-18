@@ -2,9 +2,10 @@ import {
     ButtonInteraction,
     CacheType,
     Channel,
-    ChatInputCommandInteraction, Client,
+    ChatInputCommandInteraction,
+    Client,
     Emoji,
-    Guild, GuildBasedChannel, GuildChannel,
+    Guild,
     GuildMember,
     GuildTextBasedChannel,
     If,
@@ -14,7 +15,7 @@ import {
     TextBasedChannel,
     User
 } from "discord.js";
-import { AllCommands, Module } from "@/modules/type";
+import { AllCommands, Module } from "./type";
 import * as fs from "fs";
 
 interface TheType {
@@ -24,17 +25,22 @@ interface TheType {
     hasBeenTriggered: boolean;
 }
 
-interface TheTheType { // naming doesn't exist
+interface TheTheType {
+    // naming doesn't exist
     roleID: string;
     things: TheType[];
 }
 
 function readSettingsFile(guildID: string): TheTheType {
     if (!fs.existsSync(`data/${guildID}`)) fs.mkdirSync(`data/${guildID}`);
-    if (!fs.existsSync(`data/${guildID}/revivalsettings.json`)) fs.writeFileSync(`data/${guildID}/revivalsettings.json`, JSON.stringify({
-        roleID: '',
-        things: []
-    } as TheTheType));
+    if (!fs.existsSync(`data/${guildID}/revivalsettings.json`))
+        fs.writeFileSync(
+            `data/${guildID}/revivalsettings.json`,
+            JSON.stringify({
+                roleID: "",
+                things: []
+            } as TheTheType)
+        );
     return JSON.parse(fs.readFileSync(`data/${guildID}/revivalsettings.json`, "utf-8"));
 }
 
@@ -128,7 +134,7 @@ async function handleSettingsCommand(interaction: ChatInputCommandInteraction) {
             break;
         }
         case "role": {
-const role = interaction.options.getRole("role", true);
+            const role = interaction.options.getRole("role", true);
             const data = readSettingsFile(interaction.guild.id);
             data.roleID = role.id;
             writeSettingsFile(interaction.guild.id, data);
@@ -153,7 +159,7 @@ function hasSetPingRole(guild: Guild) {
 }
 
 async function hasPermissions(interaction: ChatInputCommandInteraction<CacheType>) {
-//     check manage guild or admin
+    //     check manage guild or admin
     if (!interaction.guild) return false;
     const member = interaction.guild.members.cache.get(interaction.user.id);
     if (!member) return false;
@@ -172,82 +178,61 @@ export class ChatReviveModule implements Module {
     selfMemberId: string = "";
     selfMember: User | undefined = undefined;
 
-    async onEmojiCreate(emoji: Emoji): Promise<void> {
-    }
+    async onEmojiCreate(emoji: Emoji): Promise<void> {}
 
-    async onEmojiDelete(emoji: Emoji): Promise<void> {
-    }
+    async onEmojiDelete(emoji: Emoji): Promise<void> {}
 
-    async onEmojiEdit(before: Emoji, after: Emoji): Promise<void> {
-    }
+    async onEmojiEdit(before: Emoji, after: Emoji): Promise<void> {}
 
-    async onStickerCreate(sticker: Sticker): Promise<void> {
-    }
+    async onStickerCreate(sticker: Sticker): Promise<void> {}
 
-    async onStickerDelete(sticker: Sticker): Promise<void> {
-    }
+    async onStickerDelete(sticker: Sticker): Promise<void> {}
 
-    async onStickerEdit(before: Sticker, after: Sticker): Promise<void> {
-    }
+    async onStickerEdit(before: Sticker, after: Sticker): Promise<void> {}
 
     async onSlashCommand(interaction: ChatInputCommandInteraction<CacheType>): Promise<void> {
         if (!interaction.guild) return;
         if (interaction.commandName !== "settings") return;
         const group = interaction.options.getSubcommandGroup(false);
         if (group !== "chatrevive") return;
-        if (!await hasPermissions(interaction)) return;
+        if (!(await hasPermissions(interaction))) return;
         await handleSettingsCommand(interaction);
     }
 
-    async onButtonClick(interaction: ButtonInteraction<CacheType>): Promise<void> {
-    }
+    async onButtonClick(interaction: ButtonInteraction<CacheType>): Promise<void> {}
 
-    async onRoleCreate(role: Role): Promise<void> {
-    }
+    async onRoleCreate(role: Role): Promise<void> {}
 
-    async onRoleEdit(before: Role, after: Role): Promise<void> {
-    }
+    async onRoleEdit(before: Role, after: Role): Promise<void> {}
 
-    async onRoleDelete(role: Role): Promise<void> {
-    }
+    async onRoleDelete(role: Role): Promise<void> {}
 
-    async onChannelCreate(role: Channel): Promise<void> {
-    }
+    async onChannelCreate(role: Channel): Promise<void> {}
 
-    async onChannelEdit(before: Channel, after: Channel): Promise<void> {
-    }
+    async onChannelEdit(before: Channel, after: Channel): Promise<void> {}
 
-    async onChannelDelete(role: Channel): Promise<void> {
-    }
+    async onChannelDelete(role: Channel): Promise<void> {}
 
     async onMessage(msg: Message<boolean>): Promise<void> {
         if (msg.author.bot) return;
         updateChannelLastSentMessage(msg.channel);
     }
 
-    async onMessageDelete(msg: Message<boolean>): Promise<void> {
-    }
+    async onMessageDelete(msg: Message<boolean>): Promise<void> {}
 
-    async onMessageEdit(before: Message<boolean>, after: Message<boolean>): Promise<void> {
-    }
+    async onMessageEdit(before: Message<boolean>, after: Message<boolean>): Promise<void> {}
 
-    async onMemberJoin(member: GuildMember): Promise<void> {
-    }
+    async onMemberJoin(member: GuildMember): Promise<void> {}
 
-    async onMemberEdit(before: GuildMember, after: GuildMember): Promise<void> {
-    }
+    async onMemberEdit(before: GuildMember, after: GuildMember): Promise<void> {}
 
-    async onMemberLeave(member: GuildMember): Promise<void> {
-    }
+    async onMemberLeave(member: GuildMember): Promise<void> {}
 
-    async onGuildAdd(guild: Guild): Promise<void> {
-    }
+    async onGuildAdd(guild: Guild): Promise<void> {}
 
-    async onGuildRemove(guild: Guild): Promise<void> {
-    }
+    async onGuildRemove(guild: Guild): Promise<void> {}
 
-    async onGuildEdit(before: Guild, after: Guild): Promise<void> {
-    }
+    async onGuildEdit(before: Guild, after: Guild): Promise<void> {}
 
     async onReady(client: Client): Promise<void> {
         setInterval(() => {

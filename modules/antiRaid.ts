@@ -3,7 +3,8 @@ import {
     ButtonInteraction,
     CacheType,
     Channel,
-    ChatInputCommandInteraction, Client,
+    ChatInputCommandInteraction,
+    Client,
     EmbedBuilder,
     Guild,
     GuildEmoji,
@@ -12,12 +13,10 @@ import {
     Role,
     Sticker
 } from "discord.js";
-import { AllCommands, Module } from "@/modules/type";
-import { getSetting } from "@/data/settings";
-import { ViolationCounters } from "@/utilities/violationCounters";
-import { fetchAuditLog, getLogChannel, getSelfMember } from "@/utilities/useful";
-
-
+import { AllCommands, Module } from "./type";
+import { getSetting } from "../data/settings";
+import { ViolationCounters } from "../utilities/violationCounters";
+import { fetchAuditLog, getLogChannel, getSelfMember } from "../utilities/useful";
 
 async function handleNoPfp(member: GuildMember) {
     const kickNoPfp = getSetting(member.guild.id, "AntiRaidNoPFP", "no");
@@ -29,9 +28,13 @@ async function handleNoPfp(member: GuildMember) {
         console.log("antiRaid", "handleNoPfp", member.user.username, "has higher role than bot");
         const embed = new EmbedBuilder()
             .setTitle("A member is joining with no PFP in this Discord server")
-            .addFields({ name: "Member", value: member.user.username }, {
-                name: "Action", value: "No action, the bot's role is under member's"
-            })
+            .addFields(
+                { name: "Member", value: member.user.username },
+                {
+                    name: "Action",
+                    value: "No action, the bot's role is under member's"
+                }
+            )
             .setColor("Red")
             .setTimestamp(new Date());
         const logChannel = getLogChannel(member.guild);
@@ -43,9 +46,13 @@ async function handleNoPfp(member: GuildMember) {
         console.log("antiRaid", "handleNoPfp", member.user.username, "no kick permission");
         const embed = new EmbedBuilder()
             .setTitle("A member is joining with no PFP in this Discord server")
-            .addFields({ name: "Member", value: member.user.username }, {
-                name: "Action", value: "No action, the bot has no kick permission"
-            })
+            .addFields(
+                { name: "Member", value: member.user.username },
+                {
+                    name: "Action",
+                    value: "No action, the bot has no kick permission"
+                }
+            )
             .setColor("Red")
             .setTimestamp(new Date());
         const logChannel = getLogChannel(member.guild);
@@ -55,7 +62,9 @@ async function handleNoPfp(member: GuildMember) {
 
     console.log("antiRaid", "handleNoPfp", member.user.username, member.user.avatar, "no pfp");
     try {
-        await member.send("You have been kicked from a server for not having a profile picture. They have the bot set up like this.");
+        await member.send(
+            "You have been kicked from a server for not having a profile picture. They have the bot set up like this."
+        );
         console.log("antiRaid", "handleNoPfp", member.user.username, "sent DM");
     } catch (_) {
         console.log("antiRaid", "handleNoPfp", member.user.username, "failed to send DM");
@@ -93,13 +102,20 @@ async function handleNewAccount(member: GuildMember) {
         console.log("antiRaid", "handleNewAccount", member.user.username, "has higher role than bot");
         const embed = new EmbedBuilder()
             .setTitle("A member is joining with a new account in this Discord server")
-            .addFields({ name: "Member", value: member.user.username }, {
-                name: "Action",
-                value: "No action, the bot's role is under member's"
-            }, {
-                name: "Account age",
-                value: `${Math.floor((new Date().getTime() - member.user.createdAt.getTime()) / (24 * 60 * 60 * 1000))} days old`
-            }, { name: "Server setting", value: `${days} days old` })
+            .addFields(
+                { name: "Member", value: member.user.username },
+                {
+                    name: "Action",
+                    value: "No action, the bot's role is under member's"
+                },
+                {
+                    name: "Account age",
+                    value: `${Math.floor(
+                        (new Date().getTime() - member.user.createdAt.getTime()) / (24 * 60 * 60 * 1000)
+                    )} days old`
+                },
+                { name: "Server setting", value: `${days} days old` }
+            )
             .setColor("Red")
             .setTimestamp(new Date());
         const logChannel = getLogChannel(member.guild);
@@ -111,13 +127,20 @@ async function handleNewAccount(member: GuildMember) {
         console.log("antiRaid", "handleNewAccount", member.user.username, "no kick permission");
         const embed = new EmbedBuilder()
             .setTitle("A member is joining with a new account in this Discord server")
-            .addFields({ name: "Member", value: member.user.username }, {
-                name: "Action",
-                value: "No action, the bot has no kick permission"
-            }, {
-                name: "Account age",
-                value: `${Math.floor((new Date().getTime() - member.user.createdAt.getTime()) / (24 * 60 * 60 * 1000))} days old`
-            }, { name: "Server setting", value: `${days} days old` })
+            .addFields(
+                { name: "Member", value: member.user.username },
+                {
+                    name: "Action",
+                    value: "No action, the bot has no kick permission"
+                },
+                {
+                    name: "Account age",
+                    value: `${Math.floor(
+                        (new Date().getTime() - member.user.createdAt.getTime()) / (24 * 60 * 60 * 1000)
+                    )} days old`
+                },
+                { name: "Server setting", value: `${days} days old` }
+            )
             .setColor("Red")
             .setTimestamp(new Date());
         const logChannel = getLogChannel(member.guild);
@@ -126,7 +149,11 @@ async function handleNewAccount(member: GuildMember) {
     }
 
     try {
-        await member.send(`Your account needs to be at least ${days} days old to join this server. Your account is ${Math.floor((new Date().getTime() - member.user.createdAt.getTime()) / (24 * 60 * 60 * 1000))} days old.`);
+        await member.send(
+            `Your account needs to be at least ${days} days old to join this server. Your account is ${Math.floor(
+                (new Date().getTime() - member.user.createdAt.getTime()) / (24 * 60 * 60 * 1000)
+            )} days old.`
+        );
         console.log("antiRaid", "handleNewAccount", member.user.username, "sent DM");
     } catch (_) {
         console.log("antiRaid", "handleNewAccount", member.user.username, "failed to send DM");
@@ -138,10 +165,17 @@ async function handleNewAccount(member: GuildMember) {
 
     const embed = new EmbedBuilder()
         .setTitle("A member is joining with a new account in this Discord server")
-        .addFields({ name: "Member", value: member.user.username }, { name: "Action", value: "Kicked" }, {
-            name: "Account age",
-            value: `${Math.floor((new Date().getTime() - member.user.createdAt.getTime()) / (24 * 60 * 60 * 1000))} days old`
-        }, { name: "Server setting", value: `${days} days old` })
+        .addFields(
+            { name: "Member", value: member.user.username },
+            { name: "Action", value: "Kicked" },
+            {
+                name: "Account age",
+                value: `${Math.floor(
+                    (new Date().getTime() - member.user.createdAt.getTime()) / (24 * 60 * 60 * 1000)
+                )} days old`
+            },
+            { name: "Server setting", value: `${days} days old` }
+        )
         .setColor("Red")
         .setTimestamp(new Date());
 
@@ -153,15 +187,12 @@ async function handleNewAccount(member: GuildMember) {
     }
 }
 
-
-
 export class AntiRaidModule implements Module {
     violationCounters = new ViolationCounters();
     commands: AllCommands = [];
     selfMemberId: string = "";
 
-    async onEmojiCreate(emoji: GuildEmoji): Promise<void> {
-    }
+    async onEmojiCreate(emoji: GuildEmoji): Promise<void> {}
 
     async onEmojiDelete(emoji: GuildEmoji): Promise<void> {
         const vl = this.violationCounters.vlNew(emoji.guild.id, "emojiDel", 2000);
@@ -194,17 +225,14 @@ export class AntiRaidModule implements Module {
                 .setTimestamp(new Date());
             try {
                 await logChannel?.send({ embeds: [embed] });
-            } catch (_) {
-            }
+            } catch (_) {}
             this.violationCounters.vlDelete(emoji.guild.id, "message");
         }
     }
 
-    async onEmojiEdit(before: GuildEmoji, after: GuildEmoji): Promise<void> {
-    }
+    async onEmojiEdit(before: GuildEmoji, after: GuildEmoji): Promise<void> {}
 
-    async onStickerCreate(sticker: Sticker): Promise<void> {
-    }
+    async onStickerCreate(sticker: Sticker): Promise<void> {}
 
     async onStickerDelete(sticker: Sticker): Promise<void> {
         if (!sticker.guild) return;
@@ -220,9 +248,7 @@ export class AntiRaidModule implements Module {
                 .setTimestamp(new Date());
             try {
                 await logChannel?.send({ embeds: [embed] });
-
-            } catch (_) {
-            }
+            } catch (_) {}
             this.violationCounters.vlDelete(sticker.guild.id, "message");
         }
         const vl2 = this.violationCounters.vlNew(sticker.guild.id, "stickerDel2", 30000);
@@ -237,21 +263,16 @@ export class AntiRaidModule implements Module {
                 .setTimestamp(new Date());
             try {
                 await logChannel?.send({ embeds: [embed] });
-
-            } catch (_) {
-            }
+            } catch (_) {}
             this.violationCounters.vlDelete(sticker.guild.id, "message");
         }
     }
 
-    async onStickerEdit(before: Sticker, after: Sticker): Promise<void> {
-    }
+    async onStickerEdit(before: Sticker, after: Sticker): Promise<void> {}
 
-    async onSlashCommand(interaction: ChatInputCommandInteraction<CacheType>): Promise<void> {
-    }
+    async onSlashCommand(interaction: ChatInputCommandInteraction<CacheType>): Promise<void> {}
 
-    async onButtonClick(interaction: ButtonInteraction<CacheType>): Promise<void> {
-    }
+    async onButtonClick(interaction: ButtonInteraction<CacheType>): Promise<void> {}
 
     async onRoleCreate(role: Role): Promise<void> {
         const vl = this.violationCounters.vlNew(role.guild.id, "roleCre", 3000);
@@ -266,8 +287,7 @@ export class AntiRaidModule implements Module {
                 .setTimestamp(new Date());
             try {
                 await logChannel?.send({ embeds: [embed] });
-            } catch (_) {
-            }
+            } catch (_) {}
             this.violationCounters.vlDelete(role.guild.id, "message");
         }
         const vl2 = this.violationCounters.vlNew(role.guild.id, "roleCre2", 30000);
@@ -282,14 +302,12 @@ export class AntiRaidModule implements Module {
                 .setTimestamp(new Date());
             try {
                 await logChannel?.send({ embeds: [embed] });
-            } catch (_) {
-            }
+            } catch (_) {}
             this.violationCounters.vlDelete(role.guild.id, "message");
         }
     }
 
-    async onRoleEdit(before: Role, after: Role): Promise<void> {
-    }
+    async onRoleEdit(before: Role, after: Role): Promise<void> {}
 
     async onRoleDelete(role: Role): Promise<void> {
         const vl = this.violationCounters.vlNew(role.guild.id, "roleDel", 3000);
@@ -304,8 +322,7 @@ export class AntiRaidModule implements Module {
                 .setTimestamp(new Date());
             try {
                 await logChannel?.send({ embeds: [embed] });
-            } catch (_) {
-            }
+            } catch (_) {}
             this.violationCounters.vlDelete(role.guild.id, "message");
         }
         const vl2 = this.violationCounters.vlNew(role.guild.id, "roleDel2", 30000);
@@ -320,9 +337,7 @@ export class AntiRaidModule implements Module {
                 .setTimestamp(new Date());
             try {
                 await logChannel?.send({ embeds: [embed] });
-
-            } catch (_) {
-            }
+            } catch (_) {}
             this.violationCounters.vlDelete(role.guild.id, "message");
         }
     }
@@ -342,9 +357,7 @@ export class AntiRaidModule implements Module {
                 .setTimestamp(new Date());
             try {
                 await logChannel?.send({ embeds: [embed] });
-
-            } catch (_) {
-            }
+            } catch (_) {}
             this.violationCounters.vlDelete(channel.guild.id, "message");
         }
         const vl2 = this.violationCounters.vlNew(channel.guild.id, "channelCre2", 30000);
@@ -359,15 +372,12 @@ export class AntiRaidModule implements Module {
                 .setTimestamp(new Date());
             try {
                 await logChannel?.send({ embeds: [embed] });
-
-            } catch (_) {
-            }
+            } catch (_) {}
             this.violationCounters.vlDelete(channel.guild.id, "message");
         }
     }
 
-    async onChannelEdit(before: Channel, after: Channel): Promise<void> {
-    }
+    async onChannelEdit(before: Channel, after: Channel): Promise<void> {}
 
     async onChannelDelete(channel: Channel): Promise<void> {
         if (channel.isDMBased()) return;
@@ -384,9 +394,7 @@ export class AntiRaidModule implements Module {
                 .setTimestamp(new Date());
             try {
                 await logChannel?.send({ embeds: [embed] });
-
-            } catch (_) {
-            }
+            } catch (_) {}
             this.violationCounters.vlDelete(channel.guild.id, "message");
         }
         const vl2 = this.violationCounters.vlNew(channel.guild.id, "channelDel2", 30000);
@@ -401,21 +409,16 @@ export class AntiRaidModule implements Module {
                 .setTimestamp(new Date());
             try {
                 await logChannel?.send({ embeds: [embed] });
-
-            } catch (_) {
-            }
+            } catch (_) {}
             this.violationCounters.vlDelete(channel.guild.id, "message");
         }
     }
 
-    async onMessage(msg: Message<boolean>): Promise<void> {
-    }
+    async onMessage(msg: Message<boolean>): Promise<void> {}
 
-    async onMessageDelete(msg: Message<boolean>): Promise<void> {
-    }
+    async onMessageDelete(msg: Message<boolean>): Promise<void> {}
 
-    async onMessageEdit(before: Message<boolean>, after: Message<boolean>): Promise<void> {
-    }
+    async onMessageEdit(before: Message<boolean>, after: Message<boolean>): Promise<void> {}
 
     async onMemberJoin(member: GuildMember): Promise<void> {
         await handleNoPfp(member);
@@ -438,9 +441,7 @@ export class AntiRaidModule implements Module {
                 .setTimestamp(new Date());
             try {
                 await logChannel?.send({ embeds: [embed] });
-            } catch (_) {
-
-            }
+            } catch (_) {}
             this.violationCounters.vlDelete(after.guild.id, "message");
         }
         const vl2 = this.violationCounters.vlNew(after.guild.id, "memberEdit", 30000);
@@ -455,23 +456,17 @@ export class AntiRaidModule implements Module {
                 .setTimestamp(new Date());
             try {
                 await logChannel?.send({ embeds: [embed] });
-
-            } catch (_) {
-            }
+            } catch (_) {}
             this.violationCounters.vlDelete(after.guild.id, "message");
         }
     }
 
-    async onMemberLeave(member: GuildMember): Promise<void> {
-    }
+    async onMemberLeave(member: GuildMember): Promise<void> {}
 
-    async onGuildAdd(guild: Guild): Promise<void> {
-    }
+    async onGuildAdd(guild: Guild): Promise<void> {}
 
-    async onGuildRemove(guild: Guild): Promise<void> {
-    }
+    async onGuildRemove(guild: Guild): Promise<void> {}
 
-    async onGuildEdit(before: Guild, after: Guild): Promise<void> {
-    }
+    async onGuildEdit(before: Guild, after: Guild): Promise<void> {}
     async onReady(client: Client): Promise<void> {}
 }

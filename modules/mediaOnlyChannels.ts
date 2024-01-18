@@ -1,7 +1,8 @@
 import {
     ButtonInteraction,
     Channel,
-    ChatInputCommandInteraction, Client,
+    ChatInputCommandInteraction,
+    Client,
     Emoji,
     Guild,
     GuildMember,
@@ -9,31 +10,25 @@ import {
     Role,
     Sticker
 } from "discord.js";
-import { AllCommands, Module } from "@/modules/type";
+import { AllCommands, Module } from "./type";
 import * as fs from "fs";
-import { getSelfMember } from "@/utilities/useful";
+import { getSelfMember } from "../utilities/useful";
 
 export class MediaOnlyChannelModule implements Module {
     commands: AllCommands = [];
     selfMemberId: string = "";
 
-    async onEmojiCreate(emoji: Emoji): Promise<void> {
-    }
+    async onEmojiCreate(emoji: Emoji): Promise<void> {}
 
-    async onEmojiDelete(emoji: Emoji): Promise<void> {
-    }
+    async onEmojiDelete(emoji: Emoji): Promise<void> {}
 
-    async onEmojiEdit(before: Emoji, after: Emoji): Promise<void> {
-    }
+    async onEmojiEdit(before: Emoji, after: Emoji): Promise<void> {}
 
-    async onStickerCreate(sticker: Sticker): Promise<void> {
-    }
+    async onStickerCreate(sticker: Sticker): Promise<void> {}
 
-    async onStickerDelete(sticker: Sticker): Promise<void> {
-    }
+    async onStickerDelete(sticker: Sticker): Promise<void> {}
 
-    async onStickerEdit(before: Sticker, after: Sticker): Promise<void> {
-    }
+    async onStickerEdit(before: Sticker, after: Sticker): Promise<void> {}
 
     async onSlashCommand(interaction: ChatInputCommandInteraction): Promise<void> {
         console.log(interaction.commandName);
@@ -80,29 +75,22 @@ export class MediaOnlyChannelModule implements Module {
         }
     }
 
-    async onButtonClick(interaction: ButtonInteraction): Promise<void> {
-    }
+    async onButtonClick(interaction: ButtonInteraction): Promise<void> {}
 
-    async onRoleCreate(role: Role): Promise<void> {
-    }
+    async onRoleCreate(role: Role): Promise<void> {}
 
-    async onRoleEdit(before: Role, after: Role): Promise<void> {
-    }
+    async onRoleEdit(before: Role, after: Role): Promise<void> {}
 
-    async onRoleDelete(role: Role): Promise<void> {
-    }
+    async onRoleDelete(role: Role): Promise<void> {}
 
-    async onChannelCreate(role: Channel): Promise<void> {
-    }
+    async onChannelCreate(role: Channel): Promise<void> {}
 
-    async onChannelEdit(before: Channel, after: Channel): Promise<void> {
-    }
+    async onChannelEdit(before: Channel, after: Channel): Promise<void> {}
 
-    async onChannelDelete(role: Channel): Promise<void> {
-    }
+    async onChannelDelete(role: Channel): Promise<void> {}
 
     async onMessage(msg: Message): Promise<void> {
-        if (msg.author.bot) return ;
+        if (msg.author.bot) return;
         if (!msg.guild) return;
         if (msg.channel.isDMBased()) return;
 
@@ -121,7 +109,9 @@ export class MediaOnlyChannelModule implements Module {
                 if (reply.attachments.size) return;
             }
             await msg.delete();
-            const message = getChannelReplies(msg.guild.id, msg.channel.id) ? "Replies are allowed, but you have to reply to a post." : "You can only send images or videos in this channel.";
+            const message = getChannelReplies(msg.guild.id, msg.channel.id)
+                ? "Replies are allowed, but you have to reply to a post."
+                : "You can only send images or videos in this channel.";
             const reply = await msg.channel.send(message);
             await new Promise((resolve) => setTimeout(resolve, 5000));
             await reply.delete();
@@ -175,29 +165,21 @@ export class MediaOnlyChannelModule implements Module {
         }
     }
 
-    async onMessageDelete(msg: Message): Promise<void> {
-    }
+    async onMessageDelete(msg: Message): Promise<void> {}
 
-    async onMessageEdit(before: Message, after: Message): Promise<void> {
-    }
+    async onMessageEdit(before: Message, after: Message): Promise<void> {}
 
-    async onMemberJoin(member: GuildMember): Promise<void> {
-    }
+    async onMemberJoin(member: GuildMember): Promise<void> {}
 
-    async onMemberEdit(before: GuildMember, after: GuildMember): Promise<void> {
-    }
+    async onMemberEdit(before: GuildMember, after: GuildMember): Promise<void> {}
 
-    async onMemberLeave(member: GuildMember): Promise<void> {
-    }
+    async onMemberLeave(member: GuildMember): Promise<void> {}
 
-    async onGuildAdd(guild: Guild): Promise<void> {
-    }
+    async onGuildAdd(guild: Guild): Promise<void> {}
 
-    async onGuildRemove(guild: Guild): Promise<void> {
-    }
+    async onGuildRemove(guild: Guild): Promise<void> {}
 
-    async onGuildEdit(before: Guild, after: Guild): Promise<void> {
-    }
+    async onGuildEdit(before: Guild, after: Guild): Promise<void> {}
     async onReady(client: Client): Promise<void> {}
 }
 

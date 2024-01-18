@@ -5,7 +5,8 @@ import {
     ButtonInteraction,
     Channel,
     ChannelType,
-    ChatInputCommandInteraction, Client,
+    ChatInputCommandInteraction,
+    Client,
     EmbedBuilder,
     Guild,
     GuildChannel,
@@ -19,18 +20,16 @@ import {
     Role,
     Sticker
 } from "discord.js";
-import { AllCommands, Module } from "@/modules/type";
-import { fetchAuditLog, getLogChannel, getSelfMember } from "@/utilities/useful";
+import { AllCommands, Module } from "./type";
+import { fetchAuditLog, getLogChannel, getSelfMember } from "../utilities/useful";
 
 export class Logging implements Module {
     commands: AllCommands = [];
     selfMemberId: string = "";
 
-    async onSlashCommand(interaction: ChatInputCommandInteraction): Promise<void> {
-    }
+    async onSlashCommand(interaction: ChatInputCommandInteraction): Promise<void> {}
 
-    async onButtonClick(interaction: ButtonInteraction): Promise<void> {
-    }
+    async onButtonClick(interaction: ButtonInteraction): Promise<void> {}
 
     async onRoleCreate(role: Role): Promise<void> {
         const selfMember = getSelfMember(role.guild);
@@ -41,13 +40,22 @@ export class Logging implements Module {
         if (!channel) return;
         if (!channel.permissionsFor(selfMember).has(PermissionFlagsBits.SendMessages)) return;
 
-        const embed = new EmbedBuilder().setTitle("Role created").setDescription("A new role was created").addFields({
-            name: "Role name",
-            value: role.name
-        }, { name: "Role ID", value: role.id }, { name: "Role color", value: role.hexColor }, {
-            name: "Creator",
-            value: creator
-        }).setColor("Green");
+        const embed = new EmbedBuilder()
+            .setTitle("Role created")
+            .setDescription("A new role was created")
+            .addFields(
+                {
+                    name: "Role name",
+                    value: role.name
+                },
+                { name: "Role ID", value: role.id },
+                { name: "Role color", value: role.hexColor },
+                {
+                    name: "Creator",
+                    value: creator
+                }
+            )
+            .setColor("Green");
 
         await channel.send({ embeds: [embed] });
     }
@@ -117,7 +125,11 @@ export class Logging implements Module {
             value: editor
         });
 
-        const embed = new EmbedBuilder().setTitle("Role edited").setDescription("A role was edited").addFields(fields).setColor("Yellow");
+        const embed = new EmbedBuilder()
+            .setTitle("Role edited")
+            .setDescription("A role was edited")
+            .addFields(fields)
+            .setColor("Yellow");
         await logs.send({ embeds: [embed] });
     }
 
@@ -131,13 +143,22 @@ export class Logging implements Module {
         if (!logs.isTextBased()) return;
         if (!logs.permissionsFor(selfMember).has(PermissionFlagsBits.SendMessages)) return;
 
-        const embed = new EmbedBuilder().setTitle("Role deleted").setDescription("A role was deleted").addFields({
-            name: "Role name",
-            value: role.name
-        }, { name: "Role ID", value: role.id }, { name: "Role color", value: role.hexColor }, {
-            name: "Deleter",
-            value: deleter
-        }).setColor("Red");
+        const embed = new EmbedBuilder()
+            .setTitle("Role deleted")
+            .setDescription("A role was deleted")
+            .addFields(
+                {
+                    name: "Role name",
+                    value: role.name
+                },
+                { name: "Role ID", value: role.id },
+                { name: "Role color", value: role.hexColor },
+                {
+                    name: "Deleter",
+                    value: deleter
+                }
+            )
+            .setColor("Red");
         await logs.send({ embeds: [embed] });
     }
 
@@ -152,13 +173,22 @@ export class Logging implements Module {
         if (!logs.isTextBased()) return;
         if (!logs.permissionsFor(selfMember).has(PermissionFlagsBits.SendMessages)) return;
 
-        const embed = new EmbedBuilder().setTitle("Channel created").setDescription("A new channel was created").addFields({
-            name: "Channel name",
-            value: channel.name
-        }, { name: "Channel ID", value: channel.id.toString() }, {
-            name: "Channel type",
-            value: channel.type.toString()
-        }, { name: "Creator", value: creator }).setColor("Green");
+        const embed = new EmbedBuilder()
+            .setTitle("Channel created")
+            .setDescription("A new channel was created")
+            .addFields(
+                {
+                    name: "Channel name",
+                    value: channel.name
+                },
+                { name: "Channel ID", value: channel.id.toString() },
+                {
+                    name: "Channel type",
+                    value: channel.type.toString()
+                },
+                { name: "Creator", value: creator }
+            )
+            .setColor("Green");
 
         await logs.send({ embeds: [embed] });
     }
@@ -186,7 +216,10 @@ export class Logging implements Module {
             });
         }
 
-        if ((before.type === ChannelType.GuildText && after.type === ChannelType.GuildText) || (before.type === ChannelType.GuildForum && after.type === ChannelType.GuildForum)) {
+        if (
+            (before.type === ChannelType.GuildText && after.type === ChannelType.GuildText) ||
+            (before.type === ChannelType.GuildForum && after.type === ChannelType.GuildForum)
+        ) {
             if (before.topic !== after.topic) {
                 fields.push({
                     name: "Channel Topic",
@@ -314,7 +347,11 @@ export class Logging implements Module {
             value: editor
         });
 
-        const embed = new EmbedBuilder().setTitle("Channel edited").setDescription("A channel was edited").addFields(fields).setColor("Yellow");
+        const embed = new EmbedBuilder()
+            .setTitle("Channel edited")
+            .setDescription("A channel was edited")
+            .addFields(fields)
+            .setColor("Yellow");
         await channel.send({ embeds: [embed] });
     }
 
@@ -328,19 +365,27 @@ export class Logging implements Module {
         if (!logs) return;
         if (!logs.isTextBased()) return;
 
-        const embed = new EmbedBuilder().setTitle("Channel deleted").setDescription("A channel was deleted").addFields({
-            name: "Channel name",
-            value: channel.name
-        }, { name: "Channel ID", value: channel.id.toString() }, {
-            name: "Channel type",
-            value: channel.type.toString()
-        }, { name: "Deleter", value: deleter }).setColor("Red");
+        const embed = new EmbedBuilder()
+            .setTitle("Channel deleted")
+            .setDescription("A channel was deleted")
+            .addFields(
+                {
+                    name: "Channel name",
+                    value: channel.name
+                },
+                { name: "Channel ID", value: channel.id.toString() },
+                {
+                    name: "Channel type",
+                    value: channel.type.toString()
+                },
+                { name: "Deleter", value: deleter }
+            )
+            .setColor("Red");
 
         await logs.send({ embeds: [embed] });
     }
 
-    async onMessage(msg: Message): Promise<void> {
-    }
+    async onMessage(msg: Message): Promise<void> {}
 
     async onMessageDelete(msg: Message | PartialMessage): Promise<void> {
         if (!msg.guild) return;
@@ -361,7 +406,11 @@ export class Logging implements Module {
             fields.push({ name: "Original Content", value: msg.content });
         }
 
-        const embed = new EmbedBuilder().setTitle("Message deleted").setDescription("A message was deleted").addFields(fields).setColor("Red");
+        const embed = new EmbedBuilder()
+            .setTitle("Message deleted")
+            .setDescription("A message was deleted")
+            .addFields(fields)
+            .setColor("Red");
 
         await channel.send({ embeds: [embed] });
     }
@@ -393,7 +442,11 @@ export class Logging implements Module {
             }
         }
         if (fields.length === 0) return;
-        const embed = new EmbedBuilder().setTitle("Message edited").setDescription("A message was edited").addFields(fields).setColor("Yellow");
+        const embed = new EmbedBuilder()
+            .setTitle("Message edited")
+            .setDescription("A message was edited")
+            .addFields(fields)
+            .setColor("Yellow");
         if (!selfMember) return;
         await channel.send({
             embeds: [embed],
@@ -409,15 +462,25 @@ export class Logging implements Module {
         if (!channel.isTextBased()) return;
         if (!channel.permissionsFor(selfMember).has(PermissionFlagsBits.SendMessages)) return;
 
-        const embed = new EmbedBuilder().setTitle("Member joined").setDescription("A member joined the server").addFields({
-            name: "Member name",
-            value: member.user.username
-        }, { name: "Member ID", value: member.id }).setColor("Green");
+        const embed = new EmbedBuilder()
+            .setTitle("Member joined")
+            .setDescription("A member joined the server")
+            .addFields(
+                {
+                    name: "Member name",
+                    value: member.user.username
+                },
+                { name: "Member ID", value: member.id }
+            )
+            .setColor("Green");
         if (!selfMember) return;
         await channel.send({ embeds: [embed] });
     }
 
-    async onMemberEdit(before: GuildMember | PartialGuildMember, after: GuildMember | PartialGuildMember): Promise<void> {
+    async onMemberEdit(
+        before: GuildMember | PartialGuildMember,
+        after: GuildMember | PartialGuildMember
+    ): Promise<void> {
         const selfMember = getSelfMember(after.guild);
         if (!selfMember) return;
         const channel = getLogChannel(after.guild);
@@ -460,7 +523,11 @@ export class Logging implements Module {
         }
 
         if (fields.length <= 2) return;
-        const embed = new EmbedBuilder().setTitle("Member edited").setDescription("A member was edited").addFields(fields).setColor("Yellow");
+        const embed = new EmbedBuilder()
+            .setTitle("Member edited")
+            .setDescription("A member was edited")
+            .addFields(fields)
+            .setColor("Yellow");
 
         await channel.send({ embeds: [embed] });
     }
@@ -473,18 +540,23 @@ export class Logging implements Module {
         if (!channel.isTextBased()) return;
         if (!channel.permissionsFor(selfMember)?.has(PermissionFlagsBits.SendMessages)) return;
 
-        const embed = new EmbedBuilder().setTitle("Member left").setDescription("A member left the server").addFields({
-            name: "Member name",
-            value: member.user.username
-        }, { name: "Member ID", value: member.id }).setColor("Red");
+        const embed = new EmbedBuilder()
+            .setTitle("Member left")
+            .setDescription("A member left the server")
+            .addFields(
+                {
+                    name: "Member name",
+                    value: member.user.username
+                },
+                { name: "Member ID", value: member.id }
+            )
+            .setColor("Red");
         await channel.send({ embeds: [embed] });
     }
 
-    async onGuildAdd(guild: Guild): Promise<void> {
-    }
+    async onGuildAdd(guild: Guild): Promise<void> {}
 
-    async onGuildRemove(guild: Guild): Promise<void> {
-    }
+    async onGuildRemove(guild: Guild): Promise<void> {}
 
     async onGuildEdit(before: Guild, after: Guild): Promise<void> {
         // check for: name change, icon change, inactive channel and time-out change, default notification settings
@@ -528,7 +600,11 @@ export class Logging implements Module {
         }
 
         if (fields.length === 0) return;
-        const embed = new EmbedBuilder().setTitle("Server edited").setDescription("The server was edited").addFields(fields).setColor("Yellow");
+        const embed = new EmbedBuilder()
+            .setTitle("Server edited")
+            .setDescription("The server was edited")
+            .addFields(fields)
+            .setColor("Yellow");
         await channel.send({ embeds: [embed] });
     }
 
@@ -546,10 +622,14 @@ export class Logging implements Module {
         const embed = new EmbedBuilder()
             .setTitle("Emoji created")
             .setDescription("An emoji was created")
-            .addFields({ name: "Emoji name", value: emoji.name ?? "unknown" }, {
-                name: "Emoji ID",
-                value: emoji.id
-            }, { name: "Creator", value: moderator })
+            .addFields(
+                { name: "Emoji name", value: emoji.name ?? "unknown" },
+                {
+                    name: "Emoji ID",
+                    value: emoji.id
+                },
+                { name: "Creator", value: moderator }
+            )
             .setColor("Green");
         await channel.send({ embeds: [embed] });
     }
@@ -567,10 +647,14 @@ export class Logging implements Module {
         const embed = new EmbedBuilder()
             .setTitle("Emoji deleted")
             .setDescription("An emoji was deleted")
-            .addFields({ name: "Emoji name", value: emoji.name ?? "unknown" }, {
-                name: "Emoji ID",
-                value: emoji.id
-            }, { name: "Deleter", value: moderator })
+            .addFields(
+                { name: "Emoji name", value: emoji.name ?? "unknown" },
+                {
+                    name: "Emoji ID",
+                    value: emoji.id
+                },
+                { name: "Deleter", value: moderator }
+            )
             .setColor("Red");
         await channel.send({ embeds: [embed] });
     }
@@ -602,7 +686,11 @@ export class Logging implements Module {
             value: moderator
         });
 
-        const embed = new EmbedBuilder().setTitle("Emoji edited").setDescription("An emoji was edited").addFields(fields).setColor("Yellow");
+        const embed = new EmbedBuilder()
+            .setTitle("Emoji edited")
+            .setDescription("An emoji was edited")
+            .addFields(fields)
+            .setColor("Yellow");
         await logs.send({ embeds: [embed] });
     }
 
@@ -620,10 +708,15 @@ export class Logging implements Module {
         const embed = new EmbedBuilder()
             .setTitle("Sticker created")
             .setDescription("A sticker was created")
-            .addFields({ name: "Sticker name", value: sticker.name ?? "unknown" }, {
-                name: "Sticker description",
-                value: sticker.description ?? "unknown"
-            }, { name: "Sticker ID", value: sticker.id }, { name: "Creator", value: moderator })
+            .addFields(
+                { name: "Sticker name", value: sticker.name ?? "unknown" },
+                {
+                    name: "Sticker description",
+                    value: sticker.description ?? "unknown"
+                },
+                { name: "Sticker ID", value: sticker.id },
+                { name: "Creator", value: moderator }
+            )
             .setColor("Green");
         await logs.send({ embeds: [embed] });
     }
@@ -642,10 +735,15 @@ export class Logging implements Module {
         const embed = new EmbedBuilder()
             .setTitle("Sticker deleted")
             .setDescription("A sticker was deleted")
-            .addFields({ name: "Sticker name", value: sticker.name ?? "unknown" }, {
-                name: "Sticker description",
-                value: sticker.description ?? "unknown"
-            }, { name: "Sticker ID", value: sticker.id }, { name: "Deleter", value: moderator })
+            .addFields(
+                { name: "Sticker name", value: sticker.name ?? "unknown" },
+                {
+                    name: "Sticker description",
+                    value: sticker.description ?? "unknown"
+                },
+                { name: "Sticker ID", value: sticker.id },
+                { name: "Deleter", value: moderator }
+            )
             .setColor("Red");
         await logs.send({ embeds: [embed] });
     }
@@ -682,7 +780,11 @@ export class Logging implements Module {
             value: moderator
         });
 
-        const embed = new EmbedBuilder().setTitle("Sticker edited").setDescription("A sticker was edited").addFields(fields).setColor("Yellow");
+        const embed = new EmbedBuilder()
+            .setTitle("Sticker edited")
+            .setDescription("A sticker was edited")
+            .addFields(fields)
+            .setColor("Yellow");
         await logs.send({ embeds: [embed] });
     }
     async onReady(client: Client): Promise<void> {}

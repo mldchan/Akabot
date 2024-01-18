@@ -1,7 +1,8 @@
 import {
     ButtonInteraction,
     Channel,
-    ChatInputCommandInteraction, Client,
+    ChatInputCommandInteraction,
+    Client,
     EmbedBuilder,
     Emoji,
     Guild,
@@ -10,57 +11,43 @@ import {
     Role,
     Sticker
 } from "discord.js";
-import { AllCommands, Module } from "@/modules/type";
-import { ViolationCounters, ViolationCountersMessageData } from "@//utilities/violationCounters";
-import { getSetting } from "@/data/settings";
-import { getLogChannel, getSelfMember } from "@//utilities/useful";
+import { AllCommands, Module } from "./type";
+import { ViolationCounters, ViolationCountersMessageData } from "../utilities/violationCounters";
+import { getSetting } from "../data/settings";
+import { getLogChannel, getSelfMember } from "../utilities/useful";
 
 export class AntiSpamModule implements Module {
     violationCounters = new ViolationCounters();
     commands: AllCommands = [];
     selfMemberId: string = "";
 
-    async onEmojiCreate(emoji: Emoji): Promise<void> {
-    }
+    async onEmojiCreate(emoji: Emoji): Promise<void> {}
 
-    async onEmojiDelete(emoji: Emoji): Promise<void> {
-    }
+    async onEmojiDelete(emoji: Emoji): Promise<void> {}
 
-    async onEmojiEdit(before: Emoji, after: Emoji): Promise<void> {
-    }
+    async onEmojiEdit(before: Emoji, after: Emoji): Promise<void> {}
 
-    async onStickerCreate(sticker: Sticker): Promise<void> {
-    }
+    async onStickerCreate(sticker: Sticker): Promise<void> {}
 
-    async onStickerDelete(sticker: Sticker): Promise<void> {
-    }
+    async onStickerDelete(sticker: Sticker): Promise<void> {}
 
-    async onStickerEdit(before: Sticker, after: Sticker): Promise<void> {
-    }
+    async onStickerEdit(before: Sticker, after: Sticker): Promise<void> {}
 
-    async onSlashCommand(interaction: ChatInputCommandInteraction): Promise<void> {
-    }
+    async onSlashCommand(interaction: ChatInputCommandInteraction): Promise<void> {}
 
-    async onButtonClick(interaction: ButtonInteraction): Promise<void> {
-    }
+    async onButtonClick(interaction: ButtonInteraction): Promise<void> {}
 
-    async onRoleCreate(role: Role): Promise<void> {
-    }
+    async onRoleCreate(role: Role): Promise<void> {}
 
-    async onRoleEdit(before: Role, after: Role): Promise<void> {
-    }
+    async onRoleEdit(before: Role, after: Role): Promise<void> {}
 
-    async onRoleDelete(role: Role): Promise<void> {
-    }
+    async onRoleDelete(role: Role): Promise<void> {}
 
-    async onChannelCreate(role: Channel): Promise<void> {
-    }
+    async onChannelCreate(role: Channel): Promise<void> {}
 
-    async onChannelEdit(before: Channel, after: Channel): Promise<void> {
-    }
+    async onChannelEdit(before: Channel, after: Channel): Promise<void> {}
 
-    async onChannelDelete(role: Channel): Promise<void> {
-    }
+    async onChannelDelete(role: Channel): Promise<void> {}
 
     async onMessage(msg: Message): Promise<void> {
         if (!msg.guild) return;
@@ -86,29 +73,21 @@ export class AntiSpamModule implements Module {
         }
     }
 
-    async onMessageDelete(msg: Message): Promise<void> {
-    }
+    async onMessageDelete(msg: Message): Promise<void> {}
 
-    async onMessageEdit(before: Message, after: Message): Promise<void> {
-    }
+    async onMessageEdit(before: Message, after: Message): Promise<void> {}
 
-    async onMemberJoin(member: GuildMember): Promise<void> {
-    }
+    async onMemberJoin(member: GuildMember): Promise<void> {}
 
-    async onMemberEdit(before: GuildMember, after: GuildMember): Promise<void> {
-    }
+    async onMemberEdit(before: GuildMember, after: GuildMember): Promise<void> {}
 
-    async onMemberLeave(member: GuildMember): Promise<void> {
-    }
+    async onMemberLeave(member: GuildMember): Promise<void> {}
 
-    async onGuildAdd(guild: Guild): Promise<void> {
-    }
+    async onGuildAdd(guild: Guild): Promise<void> {}
 
-    async onGuildRemove(guild: Guild): Promise<void> {
-    }
+    async onGuildRemove(guild: Guild): Promise<void> {}
 
-    async onGuildEdit(before: Guild, after: Guild): Promise<void> {
-    }
+    async onGuildEdit(before: Guild, after: Guild): Promise<void> {}
     async onReady(client: Client): Promise<void> {}
 }
 
@@ -146,9 +125,7 @@ async function handleDeletion(
  * @param msg Message object
  * @returns The status of the timeout
  */
-async function handleTimeout(
-    msg: Message
-): Promise<"10 seconds" | "Missing Permissions" | "Disabled"> {
+async function handleTimeout(msg: Message): Promise<"10 seconds" | "Missing Permissions" | "Disabled"> {
     if (msg.channel.isDMBased()) return "Disabled";
     if (!msg.member) return "Disabled";
     if (getSetting(msg.guild!.id, "AntiRaidSpamTimeout", "no") === "no") return "Disabled";
@@ -208,8 +185,7 @@ async function checkRepeatingWords(msg: Message) {
         console.log("checkRepeatingWords", "spam detected");
         try {
             await msg.delete();
-        } catch (_) {
-        }
+        } catch (_) {}
     }
     console.log("checkRepeatWords", "percentage", percentage);
 }

@@ -8,9 +8,11 @@ import {
     GuildMember,
     Guild,
     Emoji,
-    Sticker, SlashCommandBuilder, Client
+    Sticker,
+    SlashCommandBuilder,
+    Client
 } from "discord.js";
-import { AllCommands, Module } from "@/modules/type";
+import { AllCommands, Module } from "./type";
 import * as fs from "fs";
 
 type AnalyticsBlock = { [key: string]: number | undefined };
@@ -41,11 +43,7 @@ export class AnalyticsModule implements Module {
     async onStickerCreate(sticker: Sticker): Promise<void> {}
     async onStickerDelete(sticker: Sticker): Promise<void> {}
     async onStickerEdit(before: Sticker, after: Sticker): Promise<void> {}
-    commands: AllCommands = [
-        new SlashCommandBuilder()
-            .setName("privacy")
-            .setDescription("Privacy")
-    ];
+    commands: AllCommands = [new SlashCommandBuilder().setName("privacy").setDescription("Privacy")];
     selfMemberId: string = "";
     async onSlashCommand(interaction: ChatInputCommandInteraction<CacheType>): Promise<void> {
         let file = readData();

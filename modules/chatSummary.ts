@@ -11,9 +11,9 @@ import {
     Role,
     Sticker
 } from "discord.js";
-import { AllCommands, Module } from "@/modules/type";
+import { AllCommands, Module } from "./type";
 import * as fs from "fs";
-import { getSelfMember } from "@/utilities/useful";
+import { getSelfMember } from "../utilities/useful";
 
 type DailyChatSummaryData = {
     channelID: string;
@@ -172,7 +172,7 @@ async function checkDailyChatSummary(client: Client) {
                     `Users: ${a.users.length}\n\n` +
                     `Top 5 Users:\n` +
                     a.users
-                        .sort((a, b) => b.messages - a.messages)
+                        .toSorted((a, b) => b.messages - a.messages)
                         .slice(0, 5)
                         .map((v, i) => `${i + 1}. <@${v.userID}>: ${v.messages}`)
                         .join("\n"),

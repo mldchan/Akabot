@@ -5,10 +5,7 @@
     "outDir": "dist",
     "rootDir": ".",
     "strict": true,
-    "lib": ["ESNext"],
-    "paths": {
-      "@/*": ["./*", "/app/build"] 
-    }
+    "lib": ["ESNext"]
   },
   "include": ["**/*.ts"],
   "exclude": ["node_modules"]

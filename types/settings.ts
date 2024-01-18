@@ -8,7 +8,7 @@ import {
     SlashCommandSubcommandBuilder,
     SlashCommandSubcommandGroupBuilder
 } from "discord.js";
-import { getSetting, setSetting } from "@/data/settings";
+import { getSetting, setSetting } from "../data/settings";
 
 export class SettingsCommandBuilder extends SlashCommandBuilder {
     groups: SettingsGroupBuilder[] = [];
