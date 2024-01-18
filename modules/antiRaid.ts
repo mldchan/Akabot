@@ -12,10 +12,10 @@ import {
     Role,
     Sticker
 } from "discord.js";
-import { AllCommands, Module } from "./type";
-import { getSetting } from "../data/settings";
-import { ViolationCounters } from "../utilities/violationCounters";
-import { fetchAuditLog, getLogChannel, getSelfMember } from "../utilities/useful";
+import { AllCommands, Module } from "@/modules/type";
+import { getSetting } from "@/data/settings";
+import { ViolationCounters } from "@/utilities/violationCounters";
+import { fetchAuditLog, getLogChannel, getSelfMember } from "@/utilities/useful";
 
 
 

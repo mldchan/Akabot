@@ -13,10 +13,10 @@ import {
     SlashCommandBuilder,
     Sticker
 } from "discord.js";
-import { AllCommands, Module } from "./type";
-import { addPointsToUser, getUserLevel, getUserPoints, getUserRequirementForNextLevel } from "../data/leveling";
-import { getSetting } from "../data/settings";
-import { getSelfMember } from "../utilities/useful";
+import { AllCommands, Module } from "@/modules/type";
+import { addPointsToUser, getUserLevel, getUserPoints, getUserRequirementForNextLevel } from "@/data/leveling";
+import { getSetting } from "@/data/settings";
+import { getSelfMember } from "@/utilities/useful";
 import * as fs from "fs";
 
 function getFormattedDate() {

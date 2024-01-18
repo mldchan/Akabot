@@ -10,7 +10,7 @@ import {
     Emoji,
     Sticker, SlashCommandBuilder, Client
 } from "discord.js";
-import { AllCommands, Module } from "./type";
+import { AllCommands, Module } from "@/modules/type";
 import * as fs from "fs";
 
 type AnalyticsBlock = { [key: string]: number | undefined };

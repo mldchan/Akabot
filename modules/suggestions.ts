@@ -12,8 +12,8 @@ import {
     SlashCommandSubcommandsOnlyBuilder,
     Sticker
 } from "discord.js";
-import { Module } from "./type";
-import { addBugReport, addSuggestion } from "../data/feedback";
+import { Module } from "@/modules/type";
+import { addBugReport, addSuggestion } from "@/data/feedback";
 
 export class Suggestions implements Module {
     async onRoleEdit(before: Role, after: Role): Promise<void> {}

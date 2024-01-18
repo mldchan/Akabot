@@ -8,7 +8,7 @@ import {
     TextChannel,
     VoiceChannel
 } from "discord.js";
-import { getSetting } from "../data/settings";
+import { getSetting } from "@/data/settings";
 
 export function getLogChannel(guild: Guild): NewsChannel | StageChannel | TextChannel | PrivateThreadChannel | PublicThreadChannel<boolean> | VoiceChannel | undefined {
     const channelID = getSetting(guild.id, "loggingChannel", "");

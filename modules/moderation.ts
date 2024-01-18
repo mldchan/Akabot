@@ -12,8 +12,8 @@ import {
     SlashCommandBuilder,
     Sticker
 } from "discord.js";
-import { AllCommands, Module } from "./type";
-import { getSelfMember } from "../utilities/useful";
+import { AllCommands, Module } from "@/modules/type";
+import { getSelfMember } from "@/utilities/useful";
 
 export class ModerationModule implements Module {
     commands: AllCommands = [

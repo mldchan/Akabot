@@ -10,10 +10,10 @@ import {
     Role,
     Sticker
 } from "discord.js";
-import { AllCommands, Module } from "./type";
-import { ViolationCounters, ViolationCountersMessageData } from "../utilities/violationCounters";
-import { getSetting } from "../data/settings";
-import { getLogChannel, getSelfMember } from "../utilities/useful";
+import { AllCommands, Module } from "@/modules/type";
+import { ViolationCounters, ViolationCountersMessageData } from "@//utilities/violationCounters";
+import { getSetting } from "@/data/settings";
+import { getLogChannel, getSelfMember } from "@//utilities/useful";
 
 export class AntiSpamModule implements Module {
     violationCounters = new ViolationCounters();

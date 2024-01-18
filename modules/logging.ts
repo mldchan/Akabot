@@ -19,8 +19,8 @@ import {
     Role,
     Sticker
 } from "discord.js";
-import { AllCommands, Module } from "./type";
-import { fetchAuditLog, getLogChannel, getSelfMember } from "../utilities/useful";
+import { AllCommands, Module } from "@/modules/type";
+import { fetchAuditLog, getLogChannel, getSelfMember } from "@/utilities/useful";
 
 export class Logging implements Module {
     commands: AllCommands = [];

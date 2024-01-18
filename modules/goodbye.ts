@@ -12,9 +12,9 @@ import {
     Role,
     Sticker
 } from "discord.js";
-import { AllCommands, Module } from "./type";
-import { getSetting } from "../data/settings";
-import { getSelfMember } from "../utilities/useful";
+import { AllCommands, Module } from "@/modules/type";
+import { getSetting } from "@/data/settings";
+import { getSelfMember } from "@/utilities/useful";
 
 export class GoodbyeModule implements Module {
     commands: AllCommands = [];

@@ -10,7 +10,7 @@ import {
     Emoji,
     Sticker, Client
 } from "discord.js";
-import { AllCommands, Module } from "./type";
+import { AllCommands, Module } from "@/modules/type";
 
 export class TemplateModule implements Module {
     async onEmojiCreate(emoji: Emoji): Promise<void> {}

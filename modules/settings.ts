@@ -13,7 +13,7 @@ import {
     SlashCommandSubcommandBuilder,
     Sticker
 } from "discord.js";
-import { AllCommands, Module } from "./type";
+import { AllCommands, Module } from "@/modules/type";
 import {
     ChannelSetting,
     setChannel,
@@ -21,8 +21,8 @@ import {
     SettingsGroupBuilder,
     StringChoiceSetting,
     ToggleSetting
-} from "../types/settings";
-import { getSetting, setSetting } from "../data/settings";
+} from "@/types/settings";
+import { getSetting, setSetting } from "@/data/settings";
 
 export class SettingsModule implements Module {
     commands: AllCommands = [

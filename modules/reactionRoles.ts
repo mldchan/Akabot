@@ -16,8 +16,8 @@ import {
     Role,
     Sticker
 } from "discord.js";
-import { AllCommands, Module } from "./type";
-import { getSelfMember } from "../utilities/useful";
+import { AllCommands, Module } from "@/modules/type";
+import { getSelfMember } from "@/utilities/useful";
 
 async function createReactionRoleMessage(msg: string, roles: (Role | APIRole)[], interaction: ChatInputCommandInteraction<CacheType>, modeCode: string) {
     let rows: ActionRowBuilder<ButtonBuilder>[] = [];

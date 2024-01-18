@@ -11,9 +11,9 @@ import {
     Emoji,
     Sticker, Client
 } from "discord.js";
-import { AllCommands, Module } from "./type";
-import { getSetting } from "../data/settings";
-import { getSelfMember } from "../utilities/useful";
+import { AllCommands, Module } from "@/modules/type";
+import { getSetting } from "@/data/settings";
+import { getSelfMember } from "@/utilities/useful";
 
 export class WelcomeModule implements Module {
     commands: AllCommands = [];

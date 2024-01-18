@@ -14,7 +14,7 @@ import {
     TextBasedChannel,
     User
 } from "discord.js";
-import { AllCommands, Module } from "./type";
+import { AllCommands, Module } from "@/modules/type";
 import * as fs from "fs";
 
 interface TheType {

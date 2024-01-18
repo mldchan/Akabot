@@ -11,9 +11,9 @@ import {
     SlashCommandBuilder,
     Sticker
 } from "discord.js";
-import { AllCommands, Module } from "./type";
+import { AllCommands, Module } from "@/modules/type";
 import * as fs from "fs";
-import { getToday } from "../utilities/dates";
+import { getToday } from "@/utilities/dates";
 
 type Streak = {
     startDate: number, lastMessageDate: number
