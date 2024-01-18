@@ -1,7 +1,6 @@
 FROM alpine:3.19 AS build
 RUN apk add --no-cache nodejs
 RUN apk add --no-cache npm
-RUN apk add --no-cache bash
 RUN apk add --no-cache make
 RUN apk add --no-cache g++
 RUN apk add --no-cache cmake
@@ -19,6 +18,10 @@ RUN npx tsc
 
 FROM alpine:3.19 AS runtime
 RUN apk add --no-cache nodejs npm
+RUN apk add --no-cache make
+RUN apk add --no-cache g++
+RUN apk add --no-cache cmake
+RUN apk add --no-cache python3
 WORKDIR /app/runtime
 COPY --from=build /app/build/package.json .
 RUN npm install --omit=dev
