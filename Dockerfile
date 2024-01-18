@@ -5,6 +5,7 @@ RUN apk add --no-cache bash
 RUN apk add --no-cache make
 RUN apk add --no-cache g++
 RUN apk add --no-cache cmake
+RUN apk add --no-cache python3
 WORKDIR /app/build
 COPY package.json .
 RUN npm install
