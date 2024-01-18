@@ -1,10 +1,10 @@
 FROM alpine:3.19 AS build
 RUN apk update
-RUN apk add nodejs npm make g++ cmake python3
+RUN apk add nodejs npm make g++ cmake python3 yarn
 RUN apk cache clean
 WORKDIR /app/build
 COPY package.json .
-RUN npm install
+RUN yarn install
 COPY index.ts .
 COPY tsconfig.json .
 COPY utilities/ utilities/.
@@ -12,14 +12,12 @@ COPY types/ types/.
 COPY modules/ modules/.
 COPY data/ data/.
 RUN npx tsc
+RUN cp package.json dist/package.json
+WORKDIR /app/build/dist
+RUN yarn install --omit=dev
 
 FROM alpine:3.19 AS runtime
-RUN apk update
-RUN apk add nodejs npm make g++ cmake python3
-RUN apk cache clean
 WORKDIR /app/runtime
-COPY --from=build /app/build/package.json .
-RUN npm install --omit=dev
-RUN apk del g++ cmake python3 make
+RUN apk add --no-cache nodejs
 COPY --from=build /app/build/dist .
-ENTRYPOINT [ "/bin/sh" ]
+ENTRYPOINT [ "node", "index.js" ]
