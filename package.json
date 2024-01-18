@@ -1,12 +1,13 @@
 {
-    "name": "fembot",
+    "name": "femboybot",
     "version": "1.0.0",
     "description": "",
     "main": "index.js",
     "scripts": {
         "serve": "tsc --watch",
         "start": "cd dist && nodemon -e js .",
-        "test": "echo \"Error: no test specified\" && exit 1"
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "build": "tsc"
     },
     "keywords": [],
     "author": "",

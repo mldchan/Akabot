@@ -6,8 +6,6 @@ import {
     Client,
     Emoji,
     Guild,
-    GuildBasedChannel,
-    GuildChannel,
     GuildMember,
     GuildTextBasedChannel,
     If,
@@ -34,17 +32,16 @@ interface TheTheType {
 }
 
 function readSettingsFile(guildID: string): TheTheType {
-    if (!fs.existsSync(`datastore`)) fs.mkdirSync(`datastore`);
-    if (!fs.existsSync(`datastore/chatrevive`)) fs.mkdirSync(`datastore/chatrevive`);
-    if (!fs.existsSync(`datastore/chatrevive/${guildID}.json`))
+    if (!fs.existsSync(`data/${guildID}`)) fs.mkdirSync(`data/${guildID}`);
+    if (!fs.existsSync(`data/${guildID}/revivalsettings.json`))
         fs.writeFileSync(
-            `datastore/chatrevive/${guildID}.json`,
+            `data/${guildID}/revivalsettings.json`,
             JSON.stringify({
                 roleID: "",
                 things: []
             } as TheTheType)
         );
-    return JSON.parse(fs.readFileSync(`datastore/chatrevive/${guildID}.json`, "utf-8"));
+    return JSON.parse(fs.readFileSync(`data/${guildID}/revivalsettings.json`, "utf-8"));
 }
 
 function writeSettingsFile(guildID: string, data: TheTheType) {

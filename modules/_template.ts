@@ -8,7 +8,8 @@ import {
     GuildMember,
     Guild,
     Emoji,
-    Sticker, Client
+    Sticker,
+    Client
 } from "discord.js";
 import { AllCommands, Module } from "./type";
 

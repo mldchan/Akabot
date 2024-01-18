@@ -2,7 +2,8 @@ import {
     ButtonInteraction,
     CacheType,
     Channel,
-    ChatInputCommandInteraction, Client,
+    ChatInputCommandInteraction,
+    Client,
     Emoji,
     Guild,
     GuildMember,
@@ -41,7 +42,9 @@ export class Suggestions implements Module {
                 subcommand
                     .setName("bug")
                     .setDescription("Create a bug report")
-                    .addStringOption((option) => option.setName("bug").setDescription("The bug you want to report").setRequired(true))
+                    .addStringOption((option) =>
+                        option.setName("bug").setDescription("The bug you want to report").setRequired(true)
+                    )
             )
     ];
     selfMemberId: string = "";
