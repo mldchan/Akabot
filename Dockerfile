@@ -29,5 +29,9 @@ RUN apk cache clean
 WORKDIR /app/runtime
 COPY --from=build /app/build/package.json .
 RUN npm install --omit=dev
+RUN apk del g++
+RUN apk del cmake
+RUN apk del python3
+RUN apk del make
 COPY --from=build /app/build/dist .
 ENTRYPOINT [ "/bin/sh" ]
