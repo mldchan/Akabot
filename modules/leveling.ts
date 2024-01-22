@@ -33,7 +33,7 @@ async function handleLevelUp(
     xpAfter: number
 ) {
     console.log("leveling", "onMessage", "level up");
-    const levelingChannelId = getSetting(msg.guild!.id, "levelingChannel", "");
+    const levelingChannelId = getSetting(msg.guild!.id, "levelingChannel");
     const levelingChannel = msg.guild!.channels.cache.get(levelingChannelId);
     if (!levelingChannel) return;
     if (!levelingChannel.isTextBased()) return;

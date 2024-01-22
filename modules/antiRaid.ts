@@ -19,7 +19,7 @@ import { ViolationCounters } from "../utilities/violationCounters";
 import { fetchAuditLog, getLogChannel, getSelfMember } from "../utilities/useful";
 
 async function handleNoPfp(member: GuildMember) {
-    const kickNoPfp = getSetting(member.guild.id, "AntiRaidNoPFP", "no");
+    const kickNoPfp = getSetting(member.guild.id, "AntiRaidNoPFP");
     if (kickNoPfp !== "yes") return;
     if (member.user.avatar) return;
     const selfMember = getSelfMember(member.guild);
@@ -90,7 +90,7 @@ async function handleNoPfp(member: GuildMember) {
 }
 
 async function handleNewAccount(member: GuildMember) {
-    const kickNewAccounts = getSetting(member.guild.id, "AntiRaidNewMembers", "0");
+    const kickNewAccounts = getSetting(member.guild.id, "AntiRaidNewMembers");
     if (kickNewAccounts === "0" || isNaN(Number(kickNewAccounts))) return;
     const days = Number(kickNewAccounts);
     const daysAgo = new Date(new Date().getTime() - days * 24 * 60 * 60 * 1000);

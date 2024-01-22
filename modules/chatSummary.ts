@@ -167,8 +167,8 @@ async function checkDailyChatSummary(client: Client) {
             if (!selfMember) continue;
             if (!selfMember.permissionsIn(channel).has("SendMessages")) continue;
 
-            const includeSpecial = getSetting(guild.id, "chatSummarySpecial", "Yes") == "Yes";
-            const howManyTopChatters = getSetting(guild.id, "chatSummaryTopUsers", "5");
+            const includeSpecial = getSetting(guild.id, "chatSummarySpecial") == "Yes";
+            const howManyTopChatters = getSetting(guild.id, "chatSummaryTopUsers");
 
             if (isNaN(parseInt(howManyTopChatters))) {
                 console.warn("warning: chatSummaryTopUsers is not a number");

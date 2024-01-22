@@ -31,7 +31,7 @@ export class WelcomeModule implements Module {
     async onMessageDelete(msg: Message<boolean>): Promise<void> {}
     async onMessageEdit(before: Message<boolean>, after: Message<boolean>): Promise<void> {}
     async onMemberJoin(member: GuildMember): Promise<void> {
-        const channel = getSetting(member.guild.id, "welcomeChannel", "");
+        const channel = getSetting(member.guild.id, "welcomeChannel");
         if (channel === "") return;
         const channelRes = member.guild.channels.cache.get(channel);
         if (!channelRes) return;
@@ -41,15 +41,15 @@ export class WelcomeModule implements Module {
         if (!selfMember) return;
         if (!selfMember.permissionsIn(channelRes).has("SendMessages")) return;
 
-        const memberNameType = getSetting(member.guild.id, "welcomeNameType", "nickname");
+        const memberNameType = getSetting(member.guild.id, "welcomeNameType");
         const memberName = memberNameType === "nickname" ? member.user.displayName : member.user.username;
 
-        let welcomeTitle = getSetting(member.guild.id, "welcomeTitle", "Welcome");
+        let welcomeTitle = getSetting(member.guild.id, "welcomeTitle");
         welcomeTitle = welcomeTitle.replace("{user}", memberName);
         welcomeTitle = welcomeTitle.replace("{server}", member.guild.name);
         welcomeTitle = welcomeTitle.replace("{memberCount}", member.guild.memberCount.toString());
 
-        let welcomeMessage = getSetting(member.guild.id, "welcomeMessage", "Welcome to the server {user}!");
+        let welcomeMessage = getSetting(member.guild.id, "welcomeMessage");
         welcomeMessage = welcomeMessage.replace("{user}", memberName);
         welcomeMessage = welcomeMessage.replace("{server}", member.guild.name);
         welcomeMessage = welcomeMessage.replace("{memberCount}", member.guild.memberCount.toString());
