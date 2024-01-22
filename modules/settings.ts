@@ -43,14 +43,25 @@ export class SettingsModule implements Module {
                             [
                                 { display: "Username", value: "username" },
                                 { display: "Nickname", value: "nickname" }
-                            ]
+                            ],
+                            "nickname"
                         )
                     )
                     .addStringSetting(
-                        new StringSetting("embed-title", "welcomeEmbedTitle", "The title of the welcome embed.")
+                        new StringSetting(
+                            "embed-title",
+                            "welcomeEmbedTitle",
+                            "The title of the welcome embed.",
+                            "Welcome, {user}"
+                        )
                     )
                     .addStringSetting(
-                        new StringSetting("embed-message", "welcomeEmbedMessage", "The message of the welcome embed.")
+                        new StringSetting(
+                            "embed-message",
+                            "welcomeEmbedMessage",
+                            "The message of the welcome embed.",
+                            "Welcome {user} to this server!"
+                        )
                     )
             )
             .addSettingsGroup(
@@ -64,27 +75,40 @@ export class SettingsModule implements Module {
                             [
                                 { display: "Username", value: "username" },
                                 { display: "Nickname", value: "nickname" }
-                            ]
+                            ],
+                            "nickname"
                         )
                     )
                     .addStringSetting(
-                        new StringSetting("embed-title", "goodbyeEmbedTitle", "The title of the goodbye embed.")
+                        new StringSetting(
+                            "embed-title",
+                            "goodbyeEmbedTitle",
+                            "The title of the goodbye embed.",
+                            "Goodbye {user}"
+                        )
                     )
                     .addStringSetting(
-                        new StringSetting("embed-message", "goodbyeEmbedMessage", "The message of the goodbye embed.")
+                        new StringSetting(
+                            "embed-message",
+                            "goodbyeEmbedMessage",
+                            "The message of the goodbye embed.",
+                            "Goodbye {user}, hope you enjoyed being in this server."
+                        )
                     )
                     .addStringSetting(
                         new StringSetting(
                             "embed-message-kick",
                             "goodbyeEmbedMessageKick",
-                            "Customized message for kicked people."
+                            "Customized message for kicked people.",
+                            "Goodbye {user}, you were kicked from this server for {reason}"
                         )
                     )
                     .addStringSetting(
                         new StringSetting(
                             "embed-message-ban",
                             "goodbyeEmbedMessageBan",
-                            "Customized message for banned people."
+                            "Customized message for banned people.",
+                            "Goodbye {user}, you were banned from this server for {reason}"
                         )
                     )
             )
@@ -112,6 +136,17 @@ export class SettingsModule implements Module {
                             .addNumberOption((level) =>
                                 level.setName("level").setDescription("The level to remove at").setRequired(true)
                             )
+                    )
+                    .addToggleSetting(
+                        new ToggleSetting("weekend-boost", "levelingWeekendBoost", "Double points on weekend", true)
+                    )
+                    .addToggleSetting(
+                        new ToggleSetting(
+                            "christmas-boost",
+                            "levelingChristmasBoost",
+                            "Quadruple points on Christmas",
+                            true
+                        )
                     )
             )
             .addSettingsGroup(
@@ -165,20 +200,31 @@ export class SettingsModule implements Module {
                                 { display: "Auto-kick members younger than 7 days", value: "7" },
                                 { display: "Auto-kick members younger than 14 days", value: "14" },
                                 { display: "Auto-kick members younger than 30 days", value: "30" }
-                            ]
+                            ],
+                            "0"
                         )
                     )
                     .addToggleSetting(
-                        new ToggleSetting("nopfp", "AntiRaidNoPFP", "Kick members with no profile picture")
+                        new ToggleSetting("nopfp", "AntiRaidNoPFP", "Kick members with no profile picture", false)
                     )
                     .addToggleSetting(
-                        new ToggleSetting("spamdelete", "AntiRaidSpamDelete", "Delete messages from spammers")
+                        new ToggleSetting("spamdelete", "AntiRaidSpamDelete", "Delete messages from spammers", false)
                     )
                     .addToggleSetting(
-                        new ToggleSetting("spamtimeout", "AntiRaidSpamTimeout", "Timeout spammers for a short period")
+                        new ToggleSetting(
+                            "spamtimeout",
+                            "AntiRaidSpamTimeout",
+                            "Timeout spammers for a short period",
+                            false
+                        )
                     )
                     .addToggleSetting(
-                        new ToggleSetting("spamalert", "AntiRaidSpamSendAlert", "Tell the spammer to stop spamming")
+                        new ToggleSetting(
+                            "spamalert",
+                            "AntiRaidSpamSendAlert",
+                            "Tell the spammer to stop spamming",
+                            false
+                        )
                     )
             )
             .addSettingsGroup(
@@ -274,11 +320,12 @@ export class SettingsModule implements Module {
                                     display: "No",
                                     value: "No"
                                 }
-                            ]
+                            ],
+                            "No"
                         )
                     )
                     .addIntegerSetting(
-                        new IntegerSetting("top-users", "chatSummaryTopUsers", "How many top users to show", {
+                        new IntegerSetting("top-users", "chatSummaryTopUsers", "How many top users to show", 5, {
                             maximum: 10,
                             minimum: 0
                         })
@@ -329,7 +376,7 @@ export class SettingsModule implements Module {
             case "channel": {
                 const newValue = interaction.options.getChannel("newvalue");
                 if (newValue === null || newValue === undefined) {
-                    const current = getSetting(interaction.guild.id, settingsKey, "");
+                    const current = getSetting(interaction.guild.id, settingsKey);
                     const currentChannel = interaction.guild.channels.cache.get(current);
                     await interaction.reply({
                         content: `\`${settingDesc}\` is currently set to \`${currentChannel?.name ?? current}\``,
@@ -349,8 +396,7 @@ export class SettingsModule implements Module {
                     await interaction.reply({
                         content: `\`${settingDesc}\` is currently set to \`${getSetting(
                             interaction.guild.id,
-                            settingsKey,
-                            ""
+                            settingsKey
                         )}\``,
                         ephemeral: true
                     });
@@ -366,7 +412,7 @@ export class SettingsModule implements Module {
             case "toggle": {
                 const value = interaction.options.getBoolean("newvalue");
                 if (value === null || value === undefined) {
-                    const current = getSetting(interaction.guild.id, settingsKey, "no");
+                    const current = getSetting(interaction.guild.id, settingsKey);
                     await interaction.reply({
                         content: `\`${settingDesc}\` is currently set to \`${current}\``,
                         ephemeral: true
@@ -383,7 +429,7 @@ export class SettingsModule implements Module {
             case "integer": {
                 const value = interaction.options.getInteger("newvalue");
                 if (value === null || value === undefined) {
-                    const current = getSetting(interaction.guild.id, settingsKey, "0");
+                    const current = getSetting(interaction.guild.id, settingsKey);
                     await interaction.reply({
                         content: `\`${settingDesc}\` is currently set to \`${current}\``,
                         ephemeral: true

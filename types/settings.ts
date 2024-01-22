@@ -8,7 +8,7 @@ import {
     SlashCommandSubcommandBuilder,
     SlashCommandSubcommandGroupBuilder
 } from "discord.js";
-import { getSetting, setSetting } from "../data/settings";
+import { defaultSetting, getSetting, setSetting } from "../data/settings";
 
 export class SettingsCommandBuilder extends SlashCommandBuilder {
     groups: SettingsGroupBuilder[] = [];
@@ -79,12 +79,13 @@ export class StringSetting extends SlashCommandSubcommandBuilder implements Base
     }
 
     settingsKey: string;
-    constructor(name: string, settingsKey: string, description: string) {
+    constructor(name: string, settingsKey: string, description: string, defa: string) {
         super();
         this.settingsKey = settingsKey;
         this.setName(name)
             .setDescription(description)
             .addStringOption((newValue) => newValue.setName("newvalue").setDescription(description));
+        defaultSetting(settingsKey, defa);
     }
 }
 export class StringChoiceSetting extends SlashCommandSubcommandBuilder implements BaseOption {
@@ -93,7 +94,13 @@ export class StringChoiceSetting extends SlashCommandSubcommandBuilder implement
     }
 
     settingsKey: string;
-    constructor(name: string, settingsKey: string, description: string, choices: { display: string; value: string }[]) {
+    constructor(
+        name: string,
+        settingsKey: string,
+        description: string,
+        choices: { display: string; value: string }[],
+        defa: string
+    ) {
         super();
         this.settingsKey = settingsKey;
         let newChoices = choices.map((x) => {
@@ -110,6 +117,7 @@ export class StringChoiceSetting extends SlashCommandSubcommandBuilder implement
                     .setDescription(description)
                     .setChoices(...newChoices)
             );
+        defaultSetting(settingsKey, defa);
     }
 }
 
@@ -119,12 +127,13 @@ export class ToggleSetting extends SlashCommandSubcommandBuilder implements Base
     }
 
     settingsKey: string;
-    constructor(name: string, settingsKey: string, desc: string) {
+    constructor(name: string, settingsKey: string, desc: string, defa: boolean) {
         super();
         this.settingsKey = settingsKey;
         this.setName(name)
             .setDescription(desc)
             .addBooleanOption((newValue) => newValue.setName("newvalue").setDescription(desc));
+        defaultSetting(settingsKey, defa.toString());
     }
 }
 
@@ -147,6 +156,7 @@ export class ChannelSetting extends SlashCommandSubcommandBuilder implements Bas
             .addChannelOption((newValue) =>
                 newValue.setName("newvalue").setDescription(`Change ${name} to something different`)
             );
+        defaultSetting(settingsKey, "");
     }
 }
 
@@ -169,7 +179,7 @@ export class IntegerSetting extends SlashCommandSubcommandBuilder implements Bas
      */
     settingsKey: string;
     integerSettingOptions: IntegerSettingOptions = {};
-    constructor(name: string, settingsKey: string, description: string, options?: IntegerSettingOptions) {
+    constructor(name: string, settingsKey: string, description: string, defa: number, options?: IntegerSettingOptions) {
         super();
         if (options) {
             this.integerSettingOptions = options;
@@ -178,6 +188,7 @@ export class IntegerSetting extends SlashCommandSubcommandBuilder implements Bas
         this.setName(name)
             .setDescription(description)
             .addIntegerOption((newValue) => newValue.setName("newvalue").setDescription(description));
+        defaultSetting(settingsKey, defa.toString());
     }
 }
 
@@ -234,7 +245,7 @@ export async function setChannel(
     if (!interaction.options) return;
 
     const newChannel = interaction.options.getChannel("newvalue");
-    const currentChannel = getSetting(interaction.guild.id, key, "");
+    const currentChannel = getSetting(interaction.guild.id, key);
     if (!newChannel) {
         if (currentChannel === "") {
             await interaction.reply({

@@ -98,7 +98,7 @@ export class AntiSpamModule implements Module {
 }
 
 async function handleMemberAlert(msg: Message) {
-    const spamSendAlert = getSetting(msg.guild!.id, "AntiRaidSpamSendAlert", "no");
+    const spamSendAlert = getSetting(msg.guild!.id, "AntiRaidSpamSendAlert");
     if (spamSendAlert === "yes") {
         await msg.channel.send(`<@${msg.author.id}>, You are sending messages too fast!`);
     }
@@ -115,7 +115,7 @@ async function handleDeletion(
     extraData: ViolationCountersMessageData
 ): Promise<"Deleted" | "Missing Permissions" | "Disabled"> {
     if (msg.channel.isDMBased()) return "Disabled";
-    if (getSetting(msg.guild!.id, "AntiRaidSpamDelete", "no") === "no") return "Disabled";
+    if (getSetting(msg.guild!.id, "AntiRaidSpamDelete") === "no") return "Disabled";
 
     const selfMember = getSelfMember(msg.guild!);
     if (!selfMember?.permissionsIn(msg.channel).has("ManageMessages")) {
@@ -134,7 +134,7 @@ async function handleDeletion(
 async function handleTimeout(msg: Message): Promise<"10 seconds" | "Missing Permissions" | "Disabled"> {
     if (msg.channel.isDMBased()) return "Disabled";
     if (!msg.member) return "Disabled";
-    if (getSetting(msg.guild!.id, "AntiRaidSpamTimeout", "no") === "no") return "Disabled";
+    if (getSetting(msg.guild!.id, "AntiRaidSpamTimeout") === "no") return "Disabled";
     const selfMember = getSelfMember(msg.guild!);
     if (!selfMember) return "Disabled";
     if (!selfMember.permissionsIn(msg.channel).has("ManageRoles")) {

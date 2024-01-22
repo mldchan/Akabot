@@ -26,28 +26,29 @@ function setLocalFile(serverId: string, data: SettingsType) {
     fs.writeFileSync(`datastore/settings/${serverId}.json`, JSON.stringify(data));
 }
 
-function getGlobalSettings() {
+function getDefaultsFile(): { [key: string]: string | undefined } {
     if (!fs.existsSync("datastore")) {
         fs.mkdirSync("datastore");
     }
     if (!fs.existsSync("datastore/settings")) {
         fs.mkdirSync("datastore/settings");
     }
-    if (!fs.existsSync(`datastore/settings/global.json`)) {
-        fs.writeFileSync(`datastore/settings/global.json`, "{}");
+    if (!fs.existsSync("datastore/settings/default.json")) {
+        fs.writeFileSync("datastore/settings/default.json", "{}");
     }
-    const file = fs.readFileSync(`datastore/settings/global.json`, "utf-8");
-    return JSON.parse(file) as SettingsType;
+    return JSON.parse(fs.readFileSync("datastore/settings/default.json", "utf-8")) as {
+        [key: string]: string | undefined;
+    };
 }
 
-function setGlobalSettings(data: SettingsType) {
+function setDefaultsFile(data: { [key: string]: string | undefined }) {
     if (!fs.existsSync("datastore")) {
         fs.mkdirSync("datastore");
     }
     if (!fs.existsSync("datastore/settings")) {
         fs.mkdirSync("datastore/settings");
     }
-    fs.writeFileSync(`datastore/settings/global.json`, JSON.stringify(data));
+    fs.writeFileSync("datastore/settings/default.json", JSON.stringify(data));
 }
 
 export function setSetting(serverId: string, key: string, value: string, defa: string = "") {
@@ -56,26 +57,18 @@ export function setSetting(serverId: string, key: string, value: string, defa: s
     setLocalFile(serverId, settings);
 }
 
-export function getSetting(serverId: string, key: string, defaul: string): string {
+export function getSetting(serverId: string, key: string): string {
     const settings = getLocalFile(serverId);
     if (!settings[key]) {
-        settings[key] = defaul;
+        const defaults = getDefaultsFile();
+        settings[key] = defaults[key] ?? "";
         setLocalFile(serverId, settings);
     }
     return settings[key];
 }
 
-export function setGlobalSetting(key: string, value: string) {
-    const settings = getGlobalSettings();
-    settings[key] = value;
-    setGlobalSettings(settings);
-}
-
-export function getGlobalSetting(key: string, defaul: string): string {
-    const settings = getGlobalSettings();
-    if (!settings[key]) {
-        settings[key] = defaul;
-        setGlobalSettings(settings);
-    }
-    return settings[key];
+export function defaultSetting(key: string, defaul: string) {
+    const settings = getDefaultsFile();
+    settings[key] = defaul;
+    setDefaultsFile(settings);
 }

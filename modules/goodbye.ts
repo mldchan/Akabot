@@ -56,7 +56,7 @@ export class GoodbyeModule implements Module {
     async onMemberLeave(member: GuildMember): Promise<void> {
         const selfMember = getSelfMember(member.guild);
         if (!selfMember) return;
-        const channel = getSetting(member.guild.id, "goodbyeChannel", "");
+        const channel = getSetting(member.guild.id, "goodbyeChannel");
         if (channel === "") return;
         const channelRes = member.guild.channels.cache.get(channel);
         if (!channelRes) return;
@@ -77,26 +77,26 @@ export class GoodbyeModule implements Module {
         }
         const embed = new EmbedBuilder();
 
-        const memberNameType = getSetting(member.guild.id, "goodbyeNameType", "nickname");
+        const memberNameType = getSetting(member.guild.id, "goodbyeNameType");
         const memberName = memberNameType === "nickname" ? member.user.displayName : member.user.username;
 
-        let goodbyeTitle = getSetting(member.guild.id, "goodbyeTitle", "Goodbye");
+        let goodbyeTitle = getSetting(member.guild.id, "goodbyeTitle");
         goodbyeTitle = goodbyeTitle.replace("{user}", memberName);
         goodbyeTitle = goodbyeTitle.replace("{server}", member.guild.name);
         goodbyeTitle = goodbyeTitle.replace("{memberCount}", member.guild.memberCount.toString());
 
-        let goodbyeMessage = getSetting(member.guild.id, "goodbyeMessage", "Goodbye {user} :(");
+        let goodbyeMessage = getSetting(member.guild.id, "goodbyeMessage");
         goodbyeMessage = goodbyeMessage.replace("{user}", memberName);
         goodbyeMessage = goodbyeMessage.replace("{server}", member.guild.name);
         goodbyeMessage = goodbyeMessage.replace("{memberCount}", member.guild.memberCount.toString());
 
-        let goodbyeMessageKick = getSetting(member.guild.id, "goodbyeMessageKick", "{user} was kicked");
+        let goodbyeMessageKick = getSetting(member.guild.id, "goodbyeMessageKick");
         goodbyeMessageKick = goodbyeMessageKick.replace("{user}", memberName);
         goodbyeMessageKick = goodbyeMessageKick.replace("{reason}", reason);
         goodbyeMessageKick = goodbyeMessageKick.replace("{server}", member.guild.name);
         goodbyeMessageKick = goodbyeMessageKick.replace("{memberCount}", member.guild.memberCount.toString());
 
-        let goodbyeMessageBan = getSetting(member.guild.id, "goodbyeMessageBan", "{user} was banned");
+        let goodbyeMessageBan = getSetting(member.guild.id, "goodbyeMessageBan");
         goodbyeMessageBan = goodbyeMessageBan.replace("{user}", memberName);
         goodbyeMessageBan = goodbyeMessageBan.replace("{reason}", reason);
         goodbyeMessageBan = goodbyeMessageBan.replace("{server}", member.guild.name);
