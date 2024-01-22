@@ -20,6 +20,8 @@ import { ChatStreakModule } from "./modules/chatStreak";
 import { ChatReviveModule } from "./modules/chatRevive";
 import { DailyChatSummary } from "./modules/chatSummary";
 
+const BOT_VERSION = "1.2";
+
 dotenv.config();
 
 if (process.env.DEV !== "true" && process.env.SENTRY) {
@@ -126,13 +128,13 @@ client.on("ready", async () => {
     }
 
     client.user?.setActivity({
-        name: `v1.1 | ${client.guilds.cache.size} guilds`,
+        name: `v${BOT_VERSION} | ${client.guilds.cache.size} guilds`,
         type: ActivityType.Playing
     });
 
     setInterval(() => {
         client.user?.setActivity({
-            name: `v1.1 | ${client.guilds.cache.size} guilds`,
+            name: `v${BOT_VERSION} | ${client.guilds.cache.size} guilds`,
             type: ActivityType.Playing
         });
     }, 300 * 1000);
