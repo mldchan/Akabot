@@ -1,4 +1,4 @@
-import { ActivityType, Client, ClientOptions, REST, Routes } from "discord.js";
+import { ActivityType, Client, ClientOptions, Colors, EmbedBuilder, REST, Routes } from "discord.js";
 import { AllCommands, Module } from "./modules/type";
 import { Suggestions } from "./modules/suggestions";
 import * as dotenv from "dotenv";
@@ -138,7 +138,7 @@ client.on("ready", async () => {
     }, 300 * 1000);
 
     console.log("Readying modules...");
-    modules.forEach(x => {
+    modules.forEach((x) => {
         x.onReady(client);
     });
 });
@@ -146,7 +146,29 @@ client.on("ready", async () => {
 client.on("messageCreate", async (message) => {
     if (!message.guild) return;
 
-    if (isServerBlocked(message.guild.id) || isUserBlocked(message.author.id)) return;
+    const serverBlock = isServerBlocked(message.guild.id);
+    if (typeof serverBlock === "string") {
+        console.log("blocked");
+        return;
+    }
+
+    const memberBlock = isUserBlocked(message.author.id);
+    if (typeof memberBlock === "string") {
+        console.log("blocked");
+        if (message.mentions.has(client.user?.id ?? "0")) {
+            const msg = await message.reply({
+                embeds: [
+                    new EmbedBuilder()
+                        .setTitle("You are blocked from this bot")
+                        .setDescription(`Reason: ${memberBlock}`)
+                        .setColor(Colors.Red)
+                ]
+            });
+            await new Promise((resolve) => setTimeout(resolve, 5000));
+            await msg.delete();
+        }
+        return;
+    }
 
     modules.forEach((module) => {
         module.onMessage(message);
@@ -156,14 +178,35 @@ client.on("messageCreate", async (message) => {
 client.on("interactionCreate", async (interaction) => {
     if (interaction.isButton()) {
         if (!interaction.guild) return;
-        if (isServerBlocked(interaction.guild.id) || isUserBlocked(interaction.user.id)) {
+
+        const serverBlock = isServerBlocked(interaction.guild.id);
+        if (typeof serverBlock === "string") {
             await interaction.reply({
-                content:
-                    "Internal Server Error: Database reported server or user is blocked from using this bot. No further information...",
+                embeds: [
+                    new EmbedBuilder()
+                        .setTitle("Sorry, this server is blocked")
+                        .setDescription(`Reason: ${serverBlock}`)
+                        .setColor(Colors.Red)
+                ],
                 ephemeral: true
             });
             return;
         }
+
+        const memberBlock = isUserBlocked(interaction.user.id);
+        if (typeof memberBlock === "string") {
+            await interaction.reply({
+                embeds: [
+                    new EmbedBuilder()
+                        .setTitle("You are blocked from this bot")
+                        .setDescription(`Reason: ${memberBlock}`)
+                        .setColor(Colors.Red)
+                ],
+                ephemeral: true
+            });
+            return;
+        }
+
         modules.forEach((module) => {
             module.onButtonClick(interaction);
         });
@@ -171,14 +214,35 @@ client.on("interactionCreate", async (interaction) => {
 
     if (interaction.isChatInputCommand()) {
         if (!interaction.guild) return;
-        if (isServerBlocked(interaction.guild.id) || isUserBlocked(interaction.user.id)) {
+
+        const serverBlock = isServerBlocked(interaction.guild.id);
+        if (typeof serverBlock === "string") {
             await interaction.reply({
-                content:
-                    "Internal Server Error: Database reported server or user is blocked from using this bot. No further information...",
+                embeds: [
+                    new EmbedBuilder()
+                        .setTitle("Sorry, this server is blocked")
+                        .setDescription(`Reason: ${serverBlock}`)
+                        .setColor(Colors.Red)
+                ],
                 ephemeral: true
             });
             return;
         }
+
+        const memberBlock = isUserBlocked(interaction.user.id);
+        if (typeof memberBlock === "string") {
+            await interaction.reply({
+                embeds: [
+                    new EmbedBuilder()
+                        .setTitle("You are blocked from this bot")
+                        .setDescription(`Reason: ${memberBlock}`)
+                        .setColor(Colors.Red)
+                ],
+                ephemeral: true
+            });
+            return;
+        }
+
         modules.forEach((module) => {
             module.onSlashCommand(interaction);
         });
@@ -187,7 +251,17 @@ client.on("interactionCreate", async (interaction) => {
 
 client.on("guildMemberAdd", async (member) => {
     if (!member.guild) return;
-    if (isServerBlocked(member.guild.id) || isUserBlocked(member.user.id)) return;
+
+    const serverBlock = isServerBlocked(member.guild.id);
+    if (typeof serverBlock === "string") {
+        return;
+    }
+
+    const memberBlock = isUserBlocked(member.id);
+    if (typeof memberBlock === "string") {
+        return;
+    }
+
     modules.forEach((module) => {
         module.onMemberJoin(member);
     });
@@ -195,7 +269,17 @@ client.on("guildMemberAdd", async (member) => {
 
 client.on("guildMemberRemove", async (member) => {
     if (!member.guild) return;
-    if (isServerBlocked(member.guild.id) || isUserBlocked(member.user.id)) return;
+
+    const serverBlock = isServerBlocked(member.guild.id);
+    if (typeof serverBlock === "string") {
+        return;
+    }
+
+    const memberBlock = isUserBlocked(member.id);
+    if (typeof memberBlock === "string") {
+        return;
+    }
+
     modules.forEach((module) => {
         module.onMemberLeave(member);
     });
@@ -203,7 +287,17 @@ client.on("guildMemberRemove", async (member) => {
 
 client.on("guildMemberUpdate", async (before, after) => {
     if (!after.guild) return;
-    if (isServerBlocked(after.guild.id) || isUserBlocked(after.user.id)) return;
+
+    const serverBlock = isServerBlocked(after.guild.id);
+    if (typeof serverBlock === "string") {
+        return;
+    }
+
+    const memberBlock = isUserBlocked(after.id);
+    if (typeof memberBlock === "string") {
+        return;
+    }
+
     modules.forEach((module) => {
         module.onMemberEdit(before, after);
     });
@@ -211,7 +305,12 @@ client.on("guildMemberUpdate", async (before, after) => {
 
 client.on("messageDelete", async (message) => {
     if (!message.guild) return;
-    if (isServerBlocked(message.guild.id)) return;
+
+    const serverBlock = isServerBlocked(message.guild.id);
+    if (typeof serverBlock === "string") {
+        return;
+    }
+
     modules.forEach((module) => {
         module.onMessageDelete(message);
     });
@@ -219,7 +318,17 @@ client.on("messageDelete", async (message) => {
 
 client.on("messageUpdate", async (before, after) => {
     if (!after.guild) return;
-    if (isServerBlocked(after.guild.id)) return;
+
+    const serverBlock = isServerBlocked(after.guild.id);
+    if (typeof serverBlock === "string") {
+        return;
+    }
+
+    const memberBlock = isUserBlocked(after.author?.id ?? after.member?.id ?? "0");
+    if (typeof memberBlock === "string") {
+        return;
+    }
+
     modules.forEach((module) => {
         module.onMessageEdit(before, after);
     });
@@ -227,7 +336,12 @@ client.on("messageUpdate", async (before, after) => {
 
 client.on("channelCreate", async (channel) => {
     if (!channel.guild) return;
-    if (isServerBlocked(channel.guild.id)) return;
+
+    const serverBlock = isServerBlocked(channel.guild.id);
+    if (typeof serverBlock === "string") {
+        return;
+    }
+
     modules.forEach((module) => {
         module.onChannelCreate(channel);
     });
@@ -236,7 +350,12 @@ client.on("channelCreate", async (channel) => {
 client.on("channelDelete", async (channel) => {
     if (channel.isDMBased()) return;
     if (!channel.guild) return;
-    if (isServerBlocked(channel.guild.id)) return;
+
+    const serverBlock = isServerBlocked(channel.guild.id);
+    if (typeof serverBlock === "string") {
+        return;
+    }
+
     modules.forEach((module) => {
         module.onChannelDelete(channel);
     });
@@ -245,7 +364,12 @@ client.on("channelDelete", async (channel) => {
 client.on("channelUpdate", async (before, after) => {
     if (after.isDMBased()) return;
     if (!after.guild) return;
-    if (isServerBlocked(after.guild.id)) return;
+
+    const serverBlock = isServerBlocked(after.guild.id);
+    if (typeof serverBlock === "string") {
+        return;
+    }
+
     modules.forEach((module) => {
         module.onChannelEdit(before, after);
     });
@@ -253,7 +377,12 @@ client.on("channelUpdate", async (before, after) => {
 
 client.on("roleCreate", async (role) => {
     if (!role.guild) return;
-    if (isServerBlocked(role.guild.id)) return;
+
+    const serverBlock = isServerBlocked(role.guild.id);
+    if (typeof serverBlock === "string") {
+        return;
+    }
+
     modules.forEach((module) => {
         module.onRoleCreate(role);
     });
@@ -261,7 +390,12 @@ client.on("roleCreate", async (role) => {
 
 client.on("roleDelete", async (role) => {
     if (!role.guild) return;
-    if (isServerBlocked(role.guild.id)) return;
+
+    const serverBlock = isServerBlocked(role.guild.id);
+    if (typeof serverBlock === "string") {
+        return;
+    }
+
     modules.forEach((module) => {
         module.onRoleDelete(role);
     });
@@ -269,28 +403,45 @@ client.on("roleDelete", async (role) => {
 
 client.on("roleUpdate", async (before, after) => {
     if (!after.guild) return;
-    if (isServerBlocked(after.guild.id)) return;
+
+    const serverBlock = isServerBlocked(after.guild.id);
+    if (typeof serverBlock === "string") {
+        return;
+    }
+
     modules.forEach((module) => {
         module.onRoleEdit(before, after);
     });
 });
 
 client.on("guildCreate", async (guild) => {
-    if (isServerBlocked(guild.id)) return;
+    const serverBlock = isServerBlocked(guild.id);
+    if (typeof serverBlock === "string") {
+        return;
+    }
+
     modules.forEach((module) => {
         module.onGuildAdd(guild);
     });
 });
 
 client.on("guildDelete", async (guild) => {
-    if (isServerBlocked(guild.id)) return;
+    const serverBlock = isServerBlocked(guild.id);
+    if (typeof serverBlock === "string") {
+        return;
+    }
+
     modules.forEach((module) => {
         module.onGuildRemove(guild);
     });
 });
 
 client.on("guildUpdate", async (before, after) => {
-    if (isServerBlocked(after.id)) return;
+    const serverBlock = isServerBlocked(after.id);
+    if (typeof serverBlock === "string") {
+        return;
+    }
+
     modules.forEach((module) => {
         module.onGuildEdit(before, after);
     });
@@ -298,7 +449,11 @@ client.on("guildUpdate", async (before, after) => {
 
 client.on("emojiCreate", async (emoji) => {
     if (!emoji.guild) return;
-    if (isServerBlocked(emoji.guild.id)) return;
+    const serverBlock = isServerBlocked(emoji.guild.id);
+    if (typeof serverBlock === "string") {
+        return;
+    }
+
     modules.forEach((module) => {
         module.onEmojiCreate(emoji);
     });
@@ -306,7 +461,11 @@ client.on("emojiCreate", async (emoji) => {
 
 client.on("emojiDelete", async (emoji) => {
     if (!emoji.guild) return;
-    if (isServerBlocked(emoji.guild.id)) return;
+    const serverBlock = isServerBlocked(emoji.guild.id);
+    if (typeof serverBlock === "string") {
+        return;
+    }
+
     modules.forEach((module) => {
         module.onEmojiDelete(emoji);
     });
@@ -314,7 +473,11 @@ client.on("emojiDelete", async (emoji) => {
 
 client.on("emojiUpdate", async (before, after) => {
     if (!after.guild) return;
-    if (isServerBlocked(after.guild.id)) return;
+    const serverBlock = isServerBlocked(after.guild.id);
+    if (typeof serverBlock === "string") {
+        return;
+    }
+
     modules.forEach((module) => {
         module.onEmojiEdit(before, after);
     });
@@ -322,7 +485,11 @@ client.on("emojiUpdate", async (before, after) => {
 
 client.on("stickerCreate", async (sticker) => {
     if (!sticker.guild) return;
-    if (isServerBlocked(sticker.guild.id)) return;
+    const serverBlock = isServerBlocked(sticker.guild.id);
+    if (typeof serverBlock === "string") {
+        return;
+    }
+
     modules.forEach((module) => {
         module.onStickerCreate(sticker);
     });
@@ -330,7 +497,10 @@ client.on("stickerCreate", async (sticker) => {
 
 client.on("stickerDelete", async (sticker) => {
     if (!sticker.guild) return;
-    if (isServerBlocked(sticker.guild.id)) return;
+    const serverBlock = isServerBlocked(sticker.guild.id);
+    if (typeof serverBlock === "string") {
+        return;
+    }
     modules.forEach((module) => {
         module.onStickerDelete(sticker);
     });
@@ -338,7 +508,10 @@ client.on("stickerDelete", async (sticker) => {
 
 client.on("stickerUpdate", async (before, after) => {
     if (!after.guild) return;
-    if (isServerBlocked(after.guild.id)) return;
+    const serverBlock = isServerBlocked(after.guild.id);
+    if (typeof serverBlock === "string") {
+        return;
+    }
     modules.forEach((module) => {
         module.onStickerEdit(before, after);
     });
