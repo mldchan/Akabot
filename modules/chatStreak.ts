@@ -16,6 +16,7 @@ import {
 import { AllCommands, Module } from "./type";
 import * as fs from "fs";
 import { getToday } from "../utilities/dates";
+import { isMemberPremium } from "../utilities/premiumMembers";
 
 type Streak = {
     startDate: number;
@@ -44,12 +45,8 @@ function streakWriteFile(guildID: string, memberID: string, data: Streak) {
 
 function updateStreak(msg: Message<boolean>) {
     if (!msg.guild) return;
-    const d = new Date();
-    d.setUTCHours(0);
-    d.setUTCMinutes(0);
-    d.setUTCSeconds(0);
     const data = streakReadFile(msg.guild.id, msg.author.id);
-    if (getToday().getTime() - data.lastMessageDate > 48 * 3600 * 1000) {
+    if (getToday().getTime() - data.lastMessageDate > 48 * 3600 * 1000 && !isMemberPremium(msg.author.id)) {
         data.startDate = getToday().getTime();
     }
     data.lastMessageDate = getToday().getTime();
@@ -58,6 +55,15 @@ function updateStreak(msg: Message<boolean>) {
 
 function getStreakStatus(guildID: string, memberID: string) {
     const data = streakReadFile(guildID, memberID);
+
+    if (isMemberPremium(memberID)) {
+        return {
+            expired: false,
+            days: Math.floor((getToday().getTime() - data.startDate) / (24 * 3600 * 1000)) + 1,
+            messageTimeDiff: getToday().getTime() - data.lastMessageDate
+        };
+    }
+
     return {
         expired: getToday().getTime() - data.lastMessageDate > 48 * 3600 * 1000,
         days: Math.floor((getToday().getTime() - data.startDate) / (24 * 3600 * 1000)) + 1,
@@ -123,10 +129,7 @@ export class ChatStreakModule implements Module {
             msg.channel.send(
                 `Your streak of ${streakStatus.days} consecutive days of sending a message has expired :c\nYou now have 1 day streak.`
             );
-        } else if (
-            streakStatus.messageTimeDiff > 24 * 3600 * 1000 &&
-            streakStatusAfter.messageTimeDiff < 48 * 3600 * 1000
-        ) {
+        } else if (streakStatus.messageTimeDiff > 24 * 3600 * 1000) {
             msg.channel.send(`${streakStatusAfter.days} consecutive days of you sending a message! Keep it going :3`);
         }
     }

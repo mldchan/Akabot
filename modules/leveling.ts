@@ -198,12 +198,12 @@ export class LevelingModule implements Module {
         if (msg.author.bot) return;
         const xpBefore = getUserPoints(msg.guild.id, msg.author.id);
         const levelBefore = getUserLevel(xpBefore);
-        console.log("leveling", "onMessage", "xpBefore", xpBefore, "levelBefore", levelBefore);
+
         addPointsToUser(msg.guild.id, msg.author.id, msg.content.length);
-        console.log("leveling", "onMessage", "added points", msg.content.length);
+
         const xpAfter = getUserPoints(msg.guild.id, msg.author.id);
         const levelAfter = getUserLevel(xpAfter);
-        console.log("leveling", "onMessage", "xpAfter", xpAfter, "levelAfter", levelAfter);
+
         if (levelBefore !== levelAfter) {
             await handleLevelUp(msg, selfMember, levelBefore, xpBefore, levelAfter, xpAfter);
             await updateMemberRoles(msg);

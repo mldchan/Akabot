@@ -15,6 +15,7 @@ import { AllCommands, Module } from "./type";
 import { ViolationCounters, ViolationCountersMessageData } from "../utilities/violationCounters";
 import { getSetting } from "../data/settings";
 import { getLogChannel, getSelfMember } from "../utilities/useful";
+import { isMemberPremium } from "../utilities/premiumMembers";
 
 export class AntiSpamModule implements Module {
     violationCounters = new ViolationCounters();
@@ -52,6 +53,11 @@ export class AntiSpamModule implements Module {
     async onMessage(msg: Message): Promise<void> {
         if (!msg.guild) return;
         if (msg.author.bot) return;
+
+        if (isMemberPremium(msg.author.id)) return;
+        // NOTE: Premium is given by the maintainer of the bot (the one who hosts) to special people only.
+        // There is no subscription fee cause I wouldn't do that.
+        // I just wanted to give my special friends a special role in my bot.
 
         await checkRepeatingWords(msg);
 

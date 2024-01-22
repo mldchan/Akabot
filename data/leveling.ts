@@ -1,4 +1,5 @@
 import * as fs from "fs";
+import { isMemberPremium } from "../utilities/premiumMembers";
 
 type UserData = {
     xp: number;
@@ -31,6 +32,7 @@ function setFile(guildId: string, memberId: string, data: UserData) {
 export function addPointsToUser(guildId: string, memberId: string, points: number) {
     let data = getFile(guildId, memberId);
     data.xp += points;
+    if (isMemberPremium(memberId)) data.xp += points; // Double XP for premium members
     setFile(guildId, memberId, data);
 }
 
