@@ -284,6 +284,14 @@ export class SettingsModule implements Module {
                         })
                     )
             )
+            .addSettingsGroup(
+                new SettingsGroupBuilder("chatstreak").addSubcommand(
+                    new SlashCommandSubcommandBuilder()
+                        .setName("status-message")
+                        .setDescription("Set whether or not to show a message when you achieve a streak")
+                        .addBooleanOption((x) => x.setName("enabled").setDescription("Enabled").setRequired(true))
+                )
+            )
     ];
     settingsMaps = [];
     selfMemberId: string = "";

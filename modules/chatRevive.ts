@@ -239,7 +239,6 @@ export class ChatReviveModule implements Module {
     async onReady(client: Client): Promise<void> {
         setInterval(() => {
             for (const guild of client.guilds.cache.values()) {
-                console.log("chatRevive tick checking", guild.name);
                 const data = readSettingsFile(guild.id);
                 if (!hasSetPingRole(guild)) continue;
                 for (const item of data.things) {

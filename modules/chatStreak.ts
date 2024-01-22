@@ -15,8 +15,8 @@ import {
 } from "discord.js";
 import { AllCommands, Module } from "./type";
 import * as fs from "fs";
-import { getToday } from "../utilities/dates";
 import { isMemberPremium } from "../utilities/premiumMembers";
+import { getToday } from "../utilities/dates";
 
 type Streak = {
     startDate: number;
@@ -24,16 +24,18 @@ type Streak = {
 };
 
 function streakReadFile(guildID: string, userID: string): Streak {
-    if (!fs.existsSync(`data/${guildID}`)) fs.mkdirSync(`data/${guildID}`);
-    if (!fs.existsSync(`data/${guildID}/${userID}streak.json`))
+    if (!fs.existsSync(`datastore`)) fs.mkdirSync(`datastore`);
+    if (!fs.existsSync(`datastore/chatstreak`)) fs.mkdirSync(`datastore/chatstreak`);
+    if (!fs.existsSync(`datastore/chatstreak/${guildID}`)) fs.mkdirSync(`datastore/chatstreak/${guildID}`);
+    if (!fs.existsSync(`datastore/chatstreak/${guildID}/${userID}.json`))
         fs.writeFileSync(
-            `data/${guildID}/${userID}streak.json`,
+            `datastore/chatstreak/${guildID}/${userID}.json`,
             JSON.stringify({
                 startDate: getToday().getTime(),
-                lastMessageDate: getToday().getTime()
+                lastMessageDate: new Date().getTime()
             })
         );
-    return JSON.parse(fs.readFileSync(`data/${guildID}/${userID}streak.json`, "utf-8"));
+    return JSON.parse(fs.readFileSync(`datastore/chatstreak/${guildID}/${userID}.json`, "utf-8"));
 }
 
 function streakWriteFile(guildID: string, memberID: string, data: Streak) {
@@ -45,11 +47,11 @@ function streakWriteFile(guildID: string, memberID: string, data: Streak) {
 
 function updateStreak(msg: Message<boolean>) {
     if (!msg.guild) return;
-    const data = streakReadFile(msg.guild.id, msg.author.id);
-    if (getToday().getTime() - data.lastMessageDate > 48 * 3600 * 1000 && !isMemberPremium(msg.author.id)) {
+    let data = streakReadFile(msg.guild.id, msg.author.id);
+    if (new Date().getTime() - data.lastMessageDate > 48 * 3600000 && !isMemberPremium(msg.author.id)) {
         data.startDate = getToday().getTime();
     }
-    data.lastMessageDate = getToday().getTime();
+    data.lastMessageDate = new Date().getTime();
     streakWriteFile(msg.guild.id, msg.author.id, data);
 }
 
@@ -60,15 +62,36 @@ function getStreakStatus(guildID: string, memberID: string) {
         return {
             expired: false,
             days: Math.floor((getToday().getTime() - data.startDate) / (24 * 3600 * 1000)) + 1,
-            messageTimeDiff: getToday().getTime() - data.lastMessageDate
+            messageTimeDiff: new Date().getTime() - data.lastMessageDate,
+            lastMessageDate: data.lastMessageDate
         };
     }
 
     return {
-        expired: getToday().getTime() - data.lastMessageDate > 48 * 3600 * 1000,
-        days: Math.floor((getToday().getTime() - data.startDate) / (24 * 3600 * 1000)) + 1,
-        messageTimeDiff: getToday().getTime() - data.lastMessageDate
+        expired: new Date().getTime() - data.lastMessageDate > 48 * 3600 * 1000,
+        days: Math.floor((new Date().getTime() - data.startDate) / (24 * 3600 * 1000)) + 1,
+        messageTimeDiff: new Date().getTime() - data.lastMessageDate,
+        lastMessageDate: data.lastMessageDate
     };
+}
+
+function getMemberSilenceStatus(memberId: string) {
+    if (!fs.existsSync(`datastore`)) fs.mkdirSync(`datastore`);
+    if (!fs.existsSync(`datastore/chatstreak`)) fs.mkdirSync(`datastore/chatstreak`);
+    if (!fs.existsSync(`datastore/chatstreak/silence.json`))
+        fs.writeFileSync(`datastore/chatstreak/silence.json`, "{}");
+    const data = JSON.parse(fs.readFileSync(`datastore/chatstreak/silence.json`, "utf-8"));
+    return data[memberId] ? data[memberId] : false;
+}
+
+function setMemberSilenceStatus(memberId: string, status: boolean) {
+    if (!fs.existsSync(`datastore`)) fs.mkdirSync(`datastore`);
+    if (!fs.existsSync(`datastore/chatstreak`)) fs.mkdirSync(`datastore/chatstreak`);
+    if (!fs.existsSync(`datastore/chatstreak/silence.json`))
+        fs.writeFileSync(`datastore/chatstreak/silence.json`, "{}");
+    const data = JSON.parse(fs.readFileSync(`datastore/chatstreak/silence.json`, "utf-8"));
+    data[memberId] = status;
+    fs.writeFileSync(`datastore/chatstreak/silence.json`, JSON.stringify(data));
 }
 
 export class ChatStreakModule implements Module {
@@ -90,16 +113,34 @@ export class ChatStreakModule implements Module {
     async onStickerEdit(before: Sticker, after: Sticker): Promise<void> {}
 
     async onSlashCommand(interaction: ChatInputCommandInteraction<CacheType>): Promise<void> {
-        if (interaction.commandName !== "streak") return;
-        if (!interaction.guild) return;
-        const streakStatus = getStreakStatus(interaction.guild.id, interaction.user.id);
-        const plural = streakStatus.days == 1 ? "" : "s";
+        switch (interaction.commandName) {
+            case "streak": {
+                if (!interaction.guild) return;
+                const streakStatus = getStreakStatus(interaction.guild.id, interaction.user.id);
+                const plural = streakStatus.days == 1 ? "" : "s";
 
-        const embed = new EmbedBuilder()
-            .setTitle("Streak Status")
-            .setFields([{ name: "Current", value: `${streakStatus.days} day${plural}` }]);
+                const embed = new EmbedBuilder()
+                    .setTitle("Streak Status")
+                    .setFields([{ name: "Current", value: `${streakStatus.days} day${plural}` }]);
 
-        await interaction.reply({ embeds: [embed], ephemeral: true });
+                await interaction.reply({ embeds: [embed], ephemeral: true });
+                break;
+            }
+            case "settings": {
+                const subCommandGroup = interaction.options.getSubcommandGroup(false);
+                if (subCommandGroup !== "chatstreak") break;
+                const subCommand = interaction.options.getSubcommand(false);
+                if (subCommand !== "status-message") break;
+                const newStatus = interaction.options.getBoolean("enabled", true);
+                setMemberSilenceStatus(interaction.user.id, newStatus);
+
+                await interaction.reply({
+                    content: newStatus ? "Streak messages are now unsilenced." : "Streak messages are now silenced.",
+                    ephemeral: true
+                });
+                break;
+            }
+        }
     }
 
     async onButtonClick(interaction: ButtonInteraction<CacheType>): Promise<void> {}
@@ -117,20 +158,24 @@ export class ChatStreakModule implements Module {
     async onChannelDelete(role: Channel): Promise<void> {}
 
     async onMessage(msg: Message<boolean>): Promise<void> {
+        if (!msg.guild) return;
         if (msg.author.bot) return;
-        const streakStatus = getStreakStatus(msg.guild!.id, msg.author.id);
-        console.log("streakMessage days", streakStatus.days);
-        console.log("streakMessage timeDiff", streakStatus.messageTimeDiff);
+        const streakStatus = getStreakStatus(msg.guild.id, msg.author.id);
+
         updateStreak(msg);
-        const streakStatusAfter = getStreakStatus(msg.guild!.id, msg.author.id);
-        console.log("streakMessage afterDays", streakStatusAfter.days);
+
+        const streakStatusAfter = getStreakStatus(msg.guild.id, msg.author.id);
 
         if (streakStatus.expired) {
             msg.channel.send(
                 `Your streak of ${streakStatus.days} consecutive days of sending a message has expired :c\nYou now have 1 day streak.`
             );
-        } else if (streakStatus.messageTimeDiff > 24 * 3600 * 1000) {
-            msg.channel.send(`${streakStatusAfter.days} consecutive days of you sending a message! Keep it going :3`);
+        } else if (streakStatus.messageTimeDiff > 43200000) {
+            if (getMemberSilenceStatus(msg.author.id)) {
+                msg.channel.send(
+                    `${streakStatusAfter.days} consecutive days of you sending a message! Keep it going :3`
+                );
+            }
         }
     }
 
