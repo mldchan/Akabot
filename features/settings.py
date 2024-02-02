@@ -1,5 +1,9 @@
 import discord
+from discord import commands as discord_commands
+from discord.ext import commands as discord_commands_ext
 import pymongo
+import uuid
+from datetime import datetime
 
 class Settings(discord.Cog):
 
@@ -8,6 +12,23 @@ class Settings(discord.Cog):
         self.db = db
         super().__init__()
 
-    @discord.Cog.listener()
-    async def on_ready(self):
-        print('Settings are ready!')
+    @discord.slash_command()
+    @discord_commands.guild_only()
+    @discord_commands_ext.has_guild_permissions(manage_guild=True)
+    @discord_commands_ext.cooldown(1, 120, discord_commands_ext.BucketType.guild)
+    async def settings(self, ctx: discord.Interaction):
+        unix_timestamp = (datetime.now() - datetime(1970, 1, 1)).total_seconds()
+        token = uuid.uuid4().hex
+
+        self.db \
+            .get_database('FemboyBot') \
+            .get_collection('WebTokens') \
+            .insert_one({
+            'user_name': ctx.user.name,
+            'user_id': ctx.user.id,
+            'guild_name': ctx.guild.name,
+            'token': token,
+            'expires': unix_timestamp + 3600
+        })
+
+        await ctx.response.send_message(content=f'You can edit server settings here: http://localhost:3000/settings/{token} .\nThis link will expire in 1 hour.', ephemeral=True)
