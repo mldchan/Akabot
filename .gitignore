@@ -2,4 +2,7 @@
 venv/
 
 # configuration file
-config.json
+./config.json
+
+# pycache folders
+__pycache__
