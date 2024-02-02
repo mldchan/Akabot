@@ -1,0 +1,4 @@
+{
+    "token": "MTE3NzkxNDE1NDk2Nzg5MjA0OQ.Geql9w.GYQcaEDnURLMU2Tx0Umn9WBesWeBJz_DyQd8fw",
+    "conn_string": "mongodb://mldkyt:1234@localhost/?retryWrites=true&w=majority"
+}

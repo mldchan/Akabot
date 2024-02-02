@@ -1,8 +1,1 @@
-node_modules
-dist
-.env
-
-# the files below is used by mldkyt to sync the files exactly between his devices
-sync.ffs_db
-SyncSettings.ffs_gui
-Server\ Sync.ffs_gui
+venv/
