@@ -1,2 +1,5 @@
+# virtual enviroment folder
 venv/
+
+# configuration file
 config.json
