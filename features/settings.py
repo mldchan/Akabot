@@ -4,6 +4,7 @@ from discord.ext import commands as discord_commands_ext
 import pymongo
 import uuid
 from datetime import datetime
+import math
 
 class Settings(discord.Cog):
 
@@ -17,8 +18,13 @@ class Settings(discord.Cog):
     @discord_commands_ext.has_guild_permissions(manage_guild=True)
     @discord_commands_ext.cooldown(1, 120, discord_commands_ext.BucketType.guild)
     async def settings(self, ctx: discord.Interaction):
-        unix_timestamp = (datetime.now() - datetime(1970, 1, 1)).total_seconds()
+        unix_timestamp = int(round((datetime.now() - datetime(1970, 1, 1)).total_seconds(), 0))
         token = uuid.uuid4().hex
+
+        self.db\
+            .get_database('FemboyBot')\
+            .get_collection('WebTokens')\
+            .delete_many({'expires': {'$lt': unix_timestamp}}) # This deletes expired tokens, I love this database
 
         self.db \
             .get_database('FemboyBot') \
