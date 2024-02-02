@@ -23,9 +23,11 @@ class Welcoming(discord.Cog):
         
         message_title = message_title.replace('{user}', member.display_name)
         message_title = message_title.replace('{server}', member.guild.name)
+        message_title = message_title.replace('{memberCount}', member.guild.member_count)
         
         message_text = message_text.replace('{user}', member.display_name)
         message_text = message_text.replace('{server}', member.guild.name)
+        message_text = message_text.replace('{memberCount}', member.guild.member_count)
 
         if message_type == 'embed':
             embed = discord.Embed(title=message_title, description=message_text) # Create the embed
@@ -33,4 +35,5 @@ class Welcoming(discord.Cog):
 
     @discord.Cog.listener()
     async def on_member_remove(self, member: discord.Member):
+        # TODO: Write this (duh)
         pass
