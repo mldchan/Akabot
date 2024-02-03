@@ -1,10 +1,9 @@
 import discord
 from discord import commands as discord_commands
 from discord.ext import commands as discord_commands_ext
+from discord.ext import pages as pages_ext
 import pymongo
-import uuid
-from datetime import datetime
-import math
+
 
 class Settings(discord.Cog):
 
@@ -12,29 +11,15 @@ class Settings(discord.Cog):
         self.bot = bot
         self.db = db
         super().__init__()
+        
+    string_keys = ['welcome_title', 'welcome_message', 'goodbye_message', 'goodbye_title']
+    channel_keys = ['welcome_channel', 'goodbye_channel']
+    boolean_keys = ['welcome_enabled', 'goodbye_enabled']
 
-    @discord.slash_command()
-    @discord_commands.guild_only()
-    @discord_commands_ext.has_guild_permissions(manage_guild=True)
-    @discord_commands_ext.cooldown(1, 120, discord_commands_ext.BucketType.guild)
-    async def settings(self, ctx: discord.Interaction):
-        unix_timestamp = int(round((datetime.now() - datetime(1970, 1, 1)).total_seconds(), 0))
-        token = uuid.uuid4().hex
-
-        self.db\
-            .get_database('FemboyBot')\
-            .get_collection('WebTokens')\
-            .delete_many({'expires': {'$lt': unix_timestamp}}) # This deletes expired tokens, I love this database
-
-        self.db \
-            .get_database('FemboyBot') \
-            .get_collection('WebTokens') \
-            .insert_one({
-            'user_name': ctx.user.name,
-            'user_id': ctx.user.id,
-            'guild_name': ctx.guild.name,
-            'token': token,
-            'expires': unix_timestamp + 3600
-        })
-
-        await ctx.response.send_message(content=f'You can edit server settings here: http://localhost:3000/settings/{token} .\nThis link will expire in 1 hour.', ephemeral=True)
+    settings = discord_commands.SlashCommandGroup(name='settings', description='Manage the settings of the bot')
+    
+    @settings.sub_command(name='get', description='Get a setting')
+    async def _get_setting(self, ctx: discord_commands.Context, key: str) -> None:
+        server_id = ctx.guild.id
+        value = await self.get_setting(server_id, key, 'None')
+        await ctx.send(f'The value of {key} is {value}')

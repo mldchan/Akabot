@@ -1,8 +1,5 @@
 import discord
-import os
-import logging
 import pymongo
-import bson
 import json
 from features import settings, welcoming
 from discord.ext import commands as discord_commands_ext
@@ -12,7 +9,7 @@ with open('config.json', 'r') as f:
 
 db_client = pymongo.MongoClient(data['conn_string'])
 
-bot = discord.Bot()
+bot = discord.Bot(intents=discord.Intents.all())
 
 @bot.event
 async def on_application_command_error(ctx: discord.Interaction, error):
