@@ -19,7 +19,7 @@ class Settings(discord.Cog):
     settings = discord_commands.SlashCommandGroup(name='settings', description='Manage the settings of the bot')
     
     @settings.sub_command(name='get', description='Get a setting')
-    async def _get_setting(self, ctx: discord_commands.Context, key: str) -> None:
+    async def get_setting(self, ctx: discord_commands.Context, key: str) -> None:
         server_id = ctx.guild.id
         value = await self.get_setting(server_id, key, 'None')
         await ctx.send(f'The value of {key} is {value}')
