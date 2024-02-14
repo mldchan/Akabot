@@ -1,21 +1,36 @@
-import pymongo
-import bson
+"""Settings module"""
 
-def get_setting(db: pymongo.MongoClient, server_id: int, key: str, default: str) -> str | None:
-    femboybot_db = db.get_database('FemboyBot')
-    settings_coll = femboybot_db.get_collection('Settings')
-    settings_serv = settings_coll.find_one({ 'server_id': server_id })
-    if settings_serv is None:
-        insert_result = settings_coll.insert_one({ 'server_id': server_id, 'settings': {key: default} })
-        settings_serv = settings_coll.find_one({ '_id': bson.ObjectId(insert_result.inserted_id) })
+import os
+import json
 
-    if key not in settings_serv['settings']:
-        settings_coll.update_one({ 'server_id': server_id }, { '$set': { f'settings.{key}': default }})
-        settings_serv = settings_coll.find_one({ 'server_id': server_id })
+def read_file(server_id: int):
+    if not os.path.exists('data'):
+        os.mkdir('data')
+    if not os.path.exists('data/settings'):
+        os.mkdir('data/settings')
+    if not os.path.exists(f'data/settings/{str(server_id)}.json'):
+        with open(f'data/settings/{str(server_id)}.json', 'w', encoding='utf8') as f:
+            json.dump({}, f)
+    with open(f'data/settings/{str(server_id)}.json', 'r', encoding='utf8') as f:
+        settings = json.load(f)
+    return settings
 
-    return settings_serv['settings'][key]
+def write_file(server_id: int, settings):
+    if not os.path.exists('data'):
+        os.mkdir('data')
+    if not os.path.exists('data/settings'):
+        os.mkdir('data/settings')
+    if os.path.exists(f'data/settings/{str(server_id)}.json'):
+        os.remove(f'data/settings/{str(server_id)}.json')
+    with open(f'data/settings/{str(server_id)}.json', 'w', encoding='utf8') as f:
+        json.dump(settings, f)
 
-def set_setting(db: pymongo.MongoClient, server_id: int, key: str, value: str) -> None:
-    femboybot_db = db.get_database('FemboyBot')
-    settings_coll = femboybot_db.get_collection('Settings')
-    settings_coll.update_one({ 'server_id': server_id }, { '$set': { f'settings.{key}': value }})
+def get_setting(server_id: int, key: str, default: str) -> str:
+    settings = read_file(server_id)
+    return settings[key] if key in settings else default
+
+def set_setting(server_id: int, key: str, value: str) -> None:
+    settings = read_file(server_id)
+    settings[key] = value
+    write_file(server_id, settings)
+    

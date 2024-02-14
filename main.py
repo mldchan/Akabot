@@ -1,13 +1,10 @@
 import discord
-import pymongo
 import json
-from features import settings, welcoming
+from features import welcoming
 from discord.ext import commands as discord_commands_ext
 
-with open('config.json', 'r') as f:
+with open('config.json', 'r', encoding='utf8') as f:
     data = json.load(f)
-
-db_client = pymongo.MongoClient(data['conn_string'])
 
 bot = discord.Bot(intents=discord.Intents.all())
 
@@ -23,7 +20,6 @@ async def on_application_command_error(ctx: discord.Interaction, error):
 
     raise error
 
-bot.add_cog(settings.Settings(bot, db_client))
-bot.add_cog(welcoming.Welcoming(bot, db_client))
+bot.add_cog(welcoming.Welcoming(bot))
 
 bot.run(data['token'])
