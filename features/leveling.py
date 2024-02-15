@@ -1,5 +1,6 @@
 import os
 import json
+import asyncio
 import discord
 from discord.ext import commands as commands_ext
 
@@ -29,6 +30,48 @@ def write_file(guild_id: int, user_id: int, data: dict) -> None:
         os.remove(f'data/leveling/{str(guild_id)}/{str(user_id)}.json')
     with open(f'data/leveling/{str(guild_id)}/{str(user_id)}.json', 'w', encoding='utf8') as f:
         json.dump(data, f)
+        
+def get_xp_for_level(level: int):
+    current = 0
+    xp = 500
+    itera = 0
+    while current < level:
+        if itera >= 10000:
+            raise OverflowError('Iteration limit reached.')
+        xp *= 2
+        current += 1
+        itera += 1
+        
+    return xp
+
+def get_level_for_xp(xp: int):
+    current = 0
+    level = 0
+    itera = 0
+    while current < xp:
+        if itera >= 10000:
+            raise OverflowError('Iteration limit reached.')
+        current += 500 * (2 ** level)
+        level += 1
+        itera += 1
+        
+    return level
+
+async def update_roles_for_member(guild: discord.Guild, member: discord.Member):
+    data = get_file(guild.id, member.id)
+    level = get_level_for_xp(data['xp'])
+    for i in range(1, level + 1):
+        role_id = get_setting(guild.id, f'leveling_reward_{i}', '0')
+        if role_id != '0':
+            role = guild.get_role(int(role_id))
+            if role not in member.roles:
+                await member.add_roles(role)
+    for i in range(level + 1, 100):
+        role_id = get_setting(guild.id, f'leveling_reward_{i}', '0')
+        if role_id != '0':
+            role = guild.get_role(int(role_id))
+            if role in member.roles:
+                await member.remove_roles(role)
 
 class Leveling(discord.Cog):
     def __init__(self, bot: discord.Bot) -> None:
@@ -48,7 +91,16 @@ class Leveling(discord.Cog):
                 multiplier = str(int(multiplier) * int(weekend_event_multiplier))
         
         data = get_file(msg.guild.id, msg.author.id)
+        before_level = get_level_for_xp(data['xp'])
         data['xp'] += len(msg.content) * multiplier
+        after_level = get_level_for_xp(data['xp'])
+        
+        if before_level != after_level:
+            msg2 = await msg.channel.send(f'Congratulations, {msg.author.mention}! You have reached level {after_level}!')
+            await asyncio.sleep(5)
+            await msg2.delete()
+            await update_roles_for_member(msg.guild, msg.author)
+        
         write_file(msg.guild.id, msg.author.id, data)
     
     leveling_subcommand = discord.SlashCommandGroup(name='leveling', description='Leveling settings')
@@ -59,7 +111,7 @@ class Leveling(discord.Cog):
     @discord.option(name="multiplier", description="The multiplier to set", type=int)
     async def set_multiplier(self, ctx: discord.Interaction, multiplier: int):
         set_setting(ctx.guild.id, 'leveling_xp_multiplier', str(multiplier))
-        await ctx.response.send_message(f'Successfully set the leveling multiplier to {multiplier}.')
+        await ctx.response.send_message(f'Successfully set the leveling multiplier to {multiplier}.', ephemeral=True)
 
     @leveling_subcommand.command(name='weekend_event', description='Set the weekend event')
     @commands_ext.has_permissions(manage_guild=True)
@@ -67,7 +119,7 @@ class Leveling(discord.Cog):
     @discord.option(name="enabled", description="Whether the weekend event is enabled", type=bool)
     async def set_weekend_event(self, ctx: discord.Interaction, enabled: bool):
         set_setting(ctx.guild.id, 'weekend_event_enabled', str(enabled).lower())
-        await ctx.response.send_message(f'Successfully set the weekend event to {enabled}.')
+        await ctx.response.send_message(f'Successfully set the weekend event to {enabled}.', ephemeral=True)
     
     @leveling_subcommand.command(name='weekend_event_multiplier', description='Set the weekend event multiplier')
     @commands_ext.has_permissions(manage_guild=True)
@@ -75,5 +127,21 @@ class Leveling(discord.Cog):
     @discord.option(name="weekend_event_multiplier", description="The multiplier to set", type=int)
     async def set_weekend_event_multiplier(self, ctx: discord.Interaction, weekend_event_multiplier: int):
         set_setting(ctx.guild.id, 'weekend_event_multiplier', str(weekend_event_multiplier))
-        await ctx.response.send_message(f'Successfully set the weekend event multiplier to {weekend_event_multiplier}.')
+        await ctx.response.send_message(f'Successfully set the weekend event multiplier to {weekend_event_multiplier}.', ephemeral=True)
     
+    @leveling_subcommand.command(name='set_reward', description='Set a role for a level')
+    @commands_ext.has_permissions(manage_guild=True)
+    @commands_ext.guild_only()
+    @discord.option(name="level", description="The level to set the reward for", type=int)
+    @discord.option(name='role', description='The role to set', type=discord.Role)
+    async def set_reward(self, ctx: discord.Interaction, level: int, role: discord.Role):
+        set_setting(ctx.guild.id, f'leveling_reward_{level}', str(role.id))
+        await ctx.response.send_message(f'Successfully set the reward for level {level} to {role.mention}.', ephemeral=True)
+        
+    @leveling_subcommand.command(name='remove_reward', description='Remove a role for a level')
+    @commands_ext.has_permissions(manage_guild=True)
+    @commands_ext.guild_only()
+    @discord.option(name="level", description="The level to remove the reward for", type=int)
+    async def remove_reward(self, ctx: discord.Interaction, level: int):
+        set_setting(ctx.guild.id, f'leveling_reward_{level}', '0')
+        await ctx.response.send_message(f'Successfully removed the reward for level {level}.', ephemeral=True)
