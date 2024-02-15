@@ -1,6 +1,7 @@
 import os
 import json
 import asyncio
+import datetime
 import discord
 from discord.ext import commands as commands_ext
 
@@ -60,13 +61,15 @@ def get_level_for_xp(xp: int):
 async def update_roles_for_member(guild: discord.Guild, member: discord.Member):
     data = get_file(guild.id, member.id)
     level = get_level_for_xp(data['xp'])
-    for i in range(1, level + 1):
+    
+    for i in range(1, level + 1): # Add missing roles
         role_id = get_setting(guild.id, f'leveling_reward_{i}', '0')
         if role_id != '0':
             role = guild.get_role(int(role_id))
             if role not in member.roles:
                 await member.add_roles(role)
-    for i in range(level + 1, 100):
+                
+    for i in range(level + 1, 100): # Remove excess roles
         role_id = get_setting(guild.id, f'leveling_reward_{i}', '0')
         if role_id != '0':
             role = guild.get_role(int(role_id))
@@ -87,23 +90,57 @@ class Leveling(discord.Cog):
         weekend_event = get_setting(msg.guild.id, 'weekend_event_enabled', 'false')
         weekend_event_multiplier = get_setting(msg.guild.id, 'weekend_event_multiplier', '2')
         if weekend_event == 'true':
-            if msg.created_at.weekday() in [5, 6]:
+            if datetime.datetime.now().weekday() in [5, 6]:
                 multiplier = str(int(multiplier) * int(weekend_event_multiplier))
         
         data = get_file(msg.guild.id, msg.author.id)
         before_level = get_level_for_xp(data['xp'])
-        data['xp'] += len(msg.content) * multiplier
+        data['xp'] += len(msg.content) * int(multiplier)
         after_level = get_level_for_xp(data['xp'])
+        
+        write_file(msg.guild.id, msg.author.id, data)
+        await update_roles_for_member(msg.guild, msg.author)
         
         if before_level != after_level:
             msg2 = await msg.channel.send(f'Congratulations, {msg.author.mention}! You have reached level {after_level}!')
             await asyncio.sleep(5)
             await msg2.delete()
-            await update_roles_for_member(msg.guild, msg.author)
         
-        write_file(msg.guild.id, msg.author.id, data)
+        
+    @discord.slash_command(name='level', description='Get the level of a user')
+    @commands_ext.guild_only()
+    async def get_level(self, ctx: discord.Interaction, user: discord.User = None):
+        user = user or ctx.user
+        data = get_file(ctx.guild.id, user.id)
+        level = get_level_for_xp(data['xp'])
+        
+        multiplier = get_setting(ctx.guild.id, 'leveling_xp_multiplier', '1')
+        weekend_event = get_setting(ctx.guild.id, 'weekend_event_enabled', 'false')
+        weekend_event_multiplier = get_setting(ctx.guild.id, 'weekend_event_multiplier', '2')
+        
+        final_multiplier = multiplier
+        if weekend_event == 'true':
+            if datetime.datetime.now().weekday() in [5, 6]:
+                final_multiplier = str(int(multiplier) * int(weekend_event_multiplier))
+        
+        await ctx.response.send_message(f'{user.mention} is level {level}.\nThe multiplier is currently `{str(final_multiplier)}x`.', ephemeral=True)
     
     leveling_subcommand = discord.SlashCommandGroup(name='leveling', description='Leveling settings')
+    
+    @leveling_subcommand.command(name="list", description="List the leveling settings")
+    @commands_ext.has_permissions(manage_guild=True)
+    @commands_ext.guild_only()
+    async def list_settings(self, ctx: discord.Interaction):
+        leveling_xp_multiplier = get_setting(ctx.guild.id, 'leveling_xp_multiplier', '1')
+        weekend_event_enabled = get_setting(ctx.guild.id, 'weekend_event_enabled', 'false')
+        weekend_event_multiplier = get_setting(ctx.guild.id, 'weekend_event_multiplier', '2')
+        
+        embed = discord.Embed(title='Leveling settings', color=discord.Color.blurple())
+        embed.add_field(name='Leveling multiplier', value=f'`{leveling_xp_multiplier}x`')
+        embed.add_field(name='Weekend event', value=weekend_event_enabled)
+        embed.add_field(name='Weekend event multiplier', value=f'`{weekend_event_multiplier}x`')
+        
+        await ctx.response.send_message(embed=embed, ephemeral=True)
     
     @leveling_subcommand.command(name='multiplier', description='Set the leveling multiplier')
     @commands_ext.has_permissions(manage_guild=True)
