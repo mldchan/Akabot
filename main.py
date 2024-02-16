@@ -1,6 +1,6 @@
 import discord
 import json
-from features import welcoming, leveling, antiraid, chat_streaks, chat_revive, chat_summary
+from features import welcoming, leveling, antiraid, chat_streaks, chat_revive, chat_summary, reaction_roles
 from discord.ext import commands as discord_commands_ext
 
 with open('config.json', 'r', encoding='utf8') as f:
@@ -30,5 +30,6 @@ bot.add_cog(antiraid.AntiRaid(bot))
 bot.add_cog(chat_streaks.ChatStreaks(bot))
 bot.add_cog(chat_revive.ChatRevive(bot))
 bot.add_cog(chat_summary.ChatSummary(bot))
+bot.add_cog(reaction_roles.ReactionRoles(bot))
 
 bot.run(data['token'])
