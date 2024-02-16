@@ -1,6 +1,6 @@
 import discord
 import json
-from features import welcoming, leveling
+from features import welcoming, leveling, antiraid
 from discord.ext import commands as discord_commands_ext
 
 with open('config.json', 'r', encoding='utf8') as f:
@@ -22,5 +22,6 @@ async def on_application_command_error(ctx: discord.Interaction, error):
 
 bot.add_cog(welcoming.Welcoming(bot))
 bot.add_cog(leveling.Leveling(bot))
+bot.add_cog(antiraid.AntiRaid(bot))
 
 bot.run(data['token'])

@@ -150,5 +150,3 @@ class Moderation(discord.Cog):
         
         await user.remove_timeout(user, reason=reason)
         await ctx.response.send_message(f'Successfully banned {user.mention} for {reason}.', ephemeral=True)
-
-    
