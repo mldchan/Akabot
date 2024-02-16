@@ -2,6 +2,7 @@ import discord
 import json
 from features import welcoming, leveling, antiraid, chat_streaks, chat_revive, chat_summary, reaction_roles
 from discord.ext import commands as discord_commands_ext
+from utils.blocked import BlockedUserError, BlockedServerError
 
 with open('config.json', 'r', encoding='utf8') as f:
     data = json.load(f)
@@ -20,6 +21,14 @@ async def on_application_command_error(ctx: discord.Interaction, error):
     
     if isinstance(error, discord_commands_ext.NoPrivateMessage):
         await ctx.response.send_message('This command cannot be used in private messages.', ephemeral=True)
+        return
+    
+    if isinstance(error, BlockedUserError):
+        await ctx.response.send_message(error.reason, ephemeral=True)
+        return
+    
+    if isinstance(error, BlockedServerError):
+        await ctx.response.send_message(error.reason, ephemeral=True)
         return
 
     raise error

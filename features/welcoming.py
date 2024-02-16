@@ -3,6 +3,7 @@ import discord
 from discord.ext import commands as commands_ext
 
 from utils.settings import get_setting, set_setting
+from utils.blocked import is_blocked
 
 class Welcoming(discord.Cog):
     def __init__(self, bot: discord.Bot) -> None:
@@ -67,7 +68,8 @@ class Welcoming(discord.Cog):
     @welcome_subcommands.command(name="list", description="List the welcoming settings")
     @commands_ext.has_permissions(manage_guild=True)
     @commands_ext.guild_only()
-    async def list_settings(self, ctx: discord.Interaction):
+    @is_blocked()
+    async def welcome_list_settings(self, ctx: discord.Interaction):
         welcome_channel = get_setting(ctx.guild.id, 'welcome_channel', '0')
         welcome_type = get_setting(ctx.guild.id, 'welcome_type', 'embed')
         welcome_title = get_setting(ctx.guild.id, 'welcome_title', 'Welcome')
@@ -84,6 +86,7 @@ class Welcoming(discord.Cog):
     @welcome_subcommands.command(name='channel', description="Set the welcoming channel")
     @commands_ext.has_permissions(manage_guild=True)
     @commands_ext.guild_only()
+    @is_blocked()
     async def welcome_channel(self, ctx: discord.Interaction, channel: discord.TextChannel):
         set_setting(ctx.guild.id, 'welcome_channel', str(channel.id))
         await ctx.response.send_message(f'Welcoming channel set to {channel.mention}!', ephemeral=True)
@@ -92,6 +95,7 @@ class Welcoming(discord.Cog):
     @commands_ext.has_permissions(manage_guild=True)
     @commands_ext.guild_only()
     @discord.option(name="message_type", description="The type of the message (embed or text)", choices=['embed', 'text'])
+    @is_blocked()
     async def welcome_type(self, ctx: discord.Interaction, message_type: str):
         set_setting(ctx.guild.id, 'welcome_type', message_type)
         await ctx.response.send_message(f'Welcoming message type set to {message_type}!', ephemeral=True)
@@ -100,6 +104,7 @@ class Welcoming(discord.Cog):
     @commands_ext.has_permissions(manage_guild=True)
     @commands_ext.guild_only()
     @discord.option(name="title", description="The title of the message")
+    @is_blocked()
     async def welcome_title(self, ctx: discord.Interaction, title: str):
         set_setting(ctx.guild.id, 'welcome_title', title)
         await ctx.response.send_message(f'Welcoming message title set to {title}!', ephemeral=True)
@@ -108,6 +113,7 @@ class Welcoming(discord.Cog):
     @commands_ext.has_permissions(manage_guild=True)
     @commands_ext.guild_only()
     @discord.option(name="text", description="The content of the message or description of the embed")
+    @is_blocked()
     async def welcome_text(self, ctx: discord.Interaction, text: str):
         set_setting(ctx.guild.id, 'welcome_text', text)
         await ctx.response.send_message(f'Welcoming message text set to {text}!', ephemeral=True)
@@ -117,7 +123,8 @@ class Welcoming(discord.Cog):
     @goodbye_subcommands.command(name="list", description="List the goodbye settings")
     @commands_ext.has_permissions(manage_guild=True)
     @commands_ext.guild_only()
-    async def list_settings(self, ctx: discord.Interaction):
+    @is_blocked()
+    async def goodbye_list_settings(self, ctx: discord.Interaction):
         goodbye_channel = get_setting(ctx.guild.id, 'goodbye_channel', '0')
         goodbye_type = get_setting(ctx.guild.id, 'goodbye_type', 'embed')
         goodbye_title = get_setting(ctx.guild.id, 'goodbye_title', 'Welcome')
@@ -134,6 +141,7 @@ class Welcoming(discord.Cog):
     @goodbye_subcommands.command(name='channel', description="Set the goodbye channel")
     @commands_ext.has_permissions(manage_guild=True)
     @commands_ext.guild_only()
+    @is_blocked()
     async def goodbye_channel(self, ctx: discord.Interaction, channel: discord.TextChannel):
         set_setting(ctx.guild.id, 'goodbye_channel', str(channel.id))
         await ctx.response.send_message(f'Goodbye channel set to {channel.mention}!', ephemeral=True)
@@ -142,6 +150,7 @@ class Welcoming(discord.Cog):
     @commands_ext.has_permissions(manage_guild=True)
     @commands_ext.guild_only()
     @discord.option(name="message_type", description="The type of the message (embed or text)", choices=['embed', 'text'])
+    @is_blocked()
     async def goodbye_type(self, ctx: discord.Interaction, message_type: str):
         set_setting(ctx.guild.id, 'goodbye_type', message_type)
         await ctx.response.send_message(f'Goodbye message type set to {message_type}!', ephemeral=True)
@@ -150,6 +159,7 @@ class Welcoming(discord.Cog):
     @commands_ext.has_permissions(manage_guild=True)
     @commands_ext.guild_only()
     @discord.option(name="title", description="The title of the message")
+    @is_blocked()
     async def goodbye_title(self, ctx: discord.Interaction, title: str):
         set_setting(ctx.guild.id, 'goodbye_title', title)
         await ctx.response.send_message(f'Goodbye message title set to {title}!', ephemeral=True)
@@ -158,6 +168,7 @@ class Welcoming(discord.Cog):
     @commands_ext.has_permissions(manage_guild=True)
     @commands_ext.guild_only()
     @discord.option(name="text", description="The content of the message or description of the embed")
+    @is_blocked()
     async def goodbye_text(self, ctx: discord.Interaction, text: str):
         set_setting(ctx.guild.id, 'goodbye_text', text)
         await ctx.response.send_message(f'Goodbye message text set to {text}!', ephemeral=True)

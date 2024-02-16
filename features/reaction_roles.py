@@ -1,6 +1,6 @@
 import discord
 from discord.ext import commands as commands_ext
-
+from utils.blocked import is_blocked
 
 def get_roles(msg: discord.Message):
     roles = []
@@ -48,6 +48,7 @@ class ReactionRoles(discord.Cog):
     @create_reaction_role_subcommand.command(name="normal", description="Create a normal reaction role")
     @commands_ext.has_permissions(manage_roles=True)
     @commands_ext.guild_only()
+    @is_blocked()
     async def create_reaction_role_normal(self, interaction: discord.Interaction, message: str, role: discord.Role, role_2: discord.Role = None, role_3: discord.Role = None, role_4: discord.Role = None, role_5: discord.Role = None) -> None:
         view = discord.ui.View()
         view.add_item(discord.ui.Button(style=discord.ButtonStyle.primary, label=role.name, custom_id=f"rrn-{role.id}"))
@@ -67,6 +68,7 @@ class ReactionRoles(discord.Cog):
     @create_reaction_role_subcommand.command(name="add_only", description="Create an add only reaction role")
     @commands_ext.has_permissions(manage_roles=True)
     @commands_ext.guild_only()
+    @is_blocked()
     async def create_reaction_role_add(self, interaction: discord.Interaction, message: str, role: discord.Role, role_2: discord.Role = None, role_3: discord.Role = None, role_4: discord.Role = None, role_5: discord.Role = None) -> None:
         view = discord.ui.View()
         view.add_item(discord.ui.Button(style=discord.ButtonStyle.primary, label=role.name, custom_id=f"rra-{role.id}"))
@@ -85,6 +87,7 @@ class ReactionRoles(discord.Cog):
     @create_reaction_role_subcommand.command(name="remove_only", description="Create a remove only reaction role")
     @commands_ext.has_permissions(manage_roles=True)
     @commands_ext.guild_only()
+    @is_blocked()
     async def create_reaction_role_remove(self, interaction: discord.Interaction, message: str, role: discord.Role, role_2: discord.Role = None, role_3: discord.Role = None, role_4: discord.Role = None, role_5: discord.Role = None) -> None:
         view = discord.ui.View()
         view.add_item(discord.ui.Button(style=discord.ButtonStyle.primary, label=role.name, custom_id=f"rrr-{role.id}"))
@@ -104,6 +107,7 @@ class ReactionRoles(discord.Cog):
     @create_reaction_role_subcommand.command(name="single", description="Create a single choice only reaction role")
     @commands_ext.has_permissions(manage_roles=True)
     @commands_ext.guild_only()
+    @is_blocked()
     async def create_reaction_role_single(self, interaction: discord.Interaction, message: str, role: discord.Role, role_2: discord.Role = None, role_3: discord.Role = None, role_4: discord.Role = None, role_5: discord.Role = None) -> None:
         view = discord.ui.View()
         view.add_item(discord.ui.Button(style=discord.ButtonStyle.primary, label=role.name, custom_id=f"rrs-{role.id}"))

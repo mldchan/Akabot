@@ -1,6 +1,7 @@
 import datetime
 import discord
 from discord.ext import commands as commands_ext
+from utils.blocked import is_blocked
 
 
 def pretty_time_delta(seconds: int):
@@ -28,6 +29,7 @@ class Moderation(discord.Cog):
     @discord.option(name='user', description='The user to kick', type=discord.Member)
     @discord.option(name='reason', description='The reason for kicking', type=str)
     @discord.option(name='send_dm', description='Send a DM to the user', type=bool, required=False, default=True)
+    @is_blocked()
     async def kick_user(self, ctx: discord.Interaction, user: discord.Member, reason: str, send_dm: bool = True):
         
         if user == ctx.bot.user: # Check if the user is the bot
@@ -58,6 +60,7 @@ class Moderation(discord.Cog):
     @discord.option(name='user', description='The user to ban', type=discord.Member)
     @discord.option(name='reason', description='The reason for banning', type=str)
     @discord.option(name='send_dm', description='Send a DM to the user', type=bool)
+    @is_blocked()
     async def ban_user(self, ctx: discord.Interaction, user: discord.Member, reason: str, send_dm: bool = True):
         
         if user == ctx.bot.user: # Check if the user is the bot
@@ -91,6 +94,7 @@ class Moderation(discord.Cog):
     @discord.option(name='days', description='The number of days to time out', type=int)
     @discord.option(name='hours', description='The number of hours to time out', type=int)
     @discord.option(name='minutes', description='The number of minutes to time out', type=int)
+    @is_blocked()
     async def timeout_user(self, ctx: discord.Interaction, user: discord.Member, reason: str, days: int, send_dm: bool = True, hours: int = 0, minutes: int = 0):
         
         if user == ctx.bot.user: # Check if the user is the bot
@@ -127,6 +131,7 @@ class Moderation(discord.Cog):
     @discord.option(name='user', description='The user to remove the timeout from', type=discord.Member)
     @discord.option(name='reason', description='The reason for removing', type=str)
     @discord.option(name='send_dm', description='Send a DM to the user', type=bool)
+    @is_blocked()
     async def remove_timeout_user(self, ctx: discord.Interaction, user: discord.Member, reason: str, send_dm: bool = True):
         
         if user == ctx.bot.user: # Check if the user is the bot

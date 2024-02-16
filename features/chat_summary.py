@@ -4,6 +4,7 @@ import json
 import datetime
 from discord.ext import commands as commands_ext
 from discord.ext import tasks
+from utils.blocked import is_blocked
 
 def read_file(guild_id: str, channel_id: str) -> dict | None:
     if not os.path.exists('data'):
@@ -45,6 +46,7 @@ class ChatSummary(discord.Cog):
         self.bot = bot
         
     @discord.Cog.listener()
+    @is_blocked()
     async def on_message(self, message: discord.Message):
         if message.guild is None:
             return
@@ -115,6 +117,7 @@ class ChatSummary(discord.Cog):
     @chat_summary_subcommand.command(name="add", description="Add a channel to count to chat summary")
     @commands_ext.guild_only()
     @commands_ext.has_permissions(manage_guild=True)
+    @is_blocked()
     async def command_add(self, ctx: discord.Interaction, channel: discord.TextChannel):
         data = read_file(ctx.guild.id, channel.id)
         if data is None:
@@ -127,6 +130,7 @@ class ChatSummary(discord.Cog):
     @chat_summary_subcommand.command(name="remove", description="Remove a channel from being counted to chat summary")
     @commands_ext.guild_only()
     @commands_ext.has_permissions(manage_guild=True)
+    @is_blocked()
     async def command_remove(self, ctx: discord.Interaction, channel: discord.TextChannel):
         data = read_file(ctx.guild.id, channel.id)
         if data is not None:

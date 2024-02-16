@@ -4,6 +4,7 @@ import time
 import discord
 from discord.ext import commands as commands_ext
 from discord.ext import tasks
+from utils.blocked import is_blocked
 
 def read_file(server_id: int):
     if not os.path.exists('data'):
@@ -70,6 +71,7 @@ class ChatRevive(discord.Cog):
     @chat_revive_subcommand.command(name="set", description="Set revive settings for a channel")
     @commands_ext.guild_only()
     @commands_ext.has_permissions(manage_guild=True)
+    @is_blocked()
     async def set_revive_settings(self, ctx: discord.Interaction, channel: discord.TextChannel, revival_minutes: int, revival_role: discord.Role):
         settings = read_file(ctx.guild.id)
         settings[str(channel.id)] = {'last_message': time.time(), 'revived': False, 'role': revival_role.id, 'revival_time': revival_minutes * 60}
@@ -79,6 +81,7 @@ class ChatRevive(discord.Cog):
     @chat_revive_subcommand.command(name="remove", description="List the revive settings")
     @commands_ext.guild_only()
     @commands_ext.has_permissions(manage_guild=True)
+    @is_blocked()
     async def remove_revive_settings(self, ctx: discord.Interaction, channel: discord.TextChannel):
         settings = read_file(ctx.guild.id)
         del settings[str(channel.id)]
@@ -88,6 +91,7 @@ class ChatRevive(discord.Cog):
     @chat_revive_subcommand.command(name="list", description="List the revive settings")
     @commands_ext.guild_only()
     @commands_ext.has_permissions(manage_guild=True)
+    @is_blocked()
     async def list_revive_settings(self, ctx: discord.Interaction, channel: discord.TextChannel):
         settings = read_file(ctx.guild.id)
         

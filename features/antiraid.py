@@ -3,6 +3,7 @@ import time
 import discord
 from discord.ext import commands as commands_ext
 from utils.settings import get_setting, set_setting
+from utils.blocked import is_blocked
 
 class ViolationCounters():
     past_actions = []
@@ -45,6 +46,7 @@ class AntiRaid(discord.Cog):
     @commands_ext.guild_only()
     @discord.option(name='people', description='The number of people joining...', type=int)
     @discord.option(name='per', description='...per the number of seconds to check', type=int)
+    @is_blocked()
     async def set_join_threshold(self, ctx: discord.Interaction, people: int, per: int):
         set_setting(ctx.guild.id, 'antiraid_join_threshold', people)
         set_setting(ctx.guild.id, 'antiraid_join_threshold_per', per)
@@ -54,6 +56,7 @@ class AntiRaid(discord.Cog):
     @antiraid_subcommand.command(name="list", description="List the antiraid settings")
     @commands_ext.has_permissions(manage_guild=True)
     @commands_ext.guild_only()
+    @is_blocked()
     async def list_settings(self, ctx: discord.Interaction):
         join_threshold = get_setting(ctx.guild.id, 'antiraid_join_threshold', 5)
         join_threshold_per = get_setting(ctx.guild.id, 'antiraid_join_threshold_per', 60)
