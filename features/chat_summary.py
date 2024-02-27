@@ -1,142 +1,215 @@
-import discord
-import os
-import json
 import datetime
+
+import discord
 from discord.ext import commands as commands_ext
 from discord.ext import tasks
+
+from database import conn as db
 from utils.blocked import is_blocked
 
-def read_file(guild_id: str, channel_id: str) -> dict | None:
-    if not os.path.exists('data'):
-        os.mkdir('data')
-    if not os.path.exists('data/chatsummary'):
-        os.mkdir('data/chatsummary')
-    if not os.path.exists(f'data/chatsummary/{guild_id}'):
-        os.mkdir(f'data/chatsummary/{guild_id}')
-    if not os.path.exists(f'data/chatsummary/{guild_id}/{channel_id}.json'):
-        return None
-    
-    with open(f'data/chatsummary/{guild_id}/{channel_id}.json', 'r') as f:
-        return json.load(f)
-    
-def write_file(guild_id: str, channel_id: str, data: dict):
-    if not os.path.exists('data'):
-        os.mkdir('data')
-    if not os.path.exists('data/chatsummary'):
-        os.mkdir('data/chatsummary')
-    if not os.path.exists(f'data/chatsummary/{guild_id}'):
-        os.mkdir(f'data/chatsummary/{guild_id}')
-    with open(f'data/chatsummary/{guild_id}/{channel_id}.json', 'w') as f:
-        json.dump(data, f)
-        
-def delete_file(guild_id: str, channel_id: str):
-    if not os.path.exists('data'):
-        os.mkdir('data')
-    if not os.path.exists('data/chatsummary'):
-        os.mkdir('data/chatsummary')
-    if not os.path.exists(f'data/chatsummary/{guild_id}'):
-        os.mkdir(f'data/chatsummary/{guild_id}')
-    if os.path.exists(f'data/chatsummary/{guild_id}/{channel_id}.json'):
-        os.unlink(f'data/chatsummary/{guild_id}/{channel_id}.json')
-        
 
 class ChatSummary(discord.Cog):
     def __init__(self, bot: discord.Bot) -> None:
         super().__init__()
+        cur = db.cursor()
+        cur.execute(
+            'CREATE TABLE IF NOT EXISTS chat_summary(guild_id INTEGER, channel_id INTEGER, enabled INTEGER, messages INTEGER, owos INTEGER, nyas INTEGER, cats INTEGER)')
+        cur.execute('CREATE INDEX IF NOT EXISTS chat_summary_i ON chat_summary(guild_id, channel_id)')
+        cur.execute(
+            'CREATE TABLE IF NOT EXISTS chat_summary_members(guild_id INTEGER, channel_id INTEGER, member_id INTEGER, messages INTEGER)')
+        cur.execute(
+            'CREATE INDEX IF NOT EXISTS chat_summary_members_i ON chat_summary_members(guild_id, channel_id, member_id)')
+        cur.close()
+        db.commit()
         self.bot = bot
-        
+
     @discord.Cog.listener()
     @is_blocked()
     async def on_message(self, message: discord.Message):
         if message.guild is None:
             return
-        data = read_file(str(message.guild.id), str(message.channel.id))
-        
-        if data is None:
-            return
-        
-        data['messages'] += 1
-        data['owo'] += len(message.content.split('owo')) - 1
-        data['owo'] += len(message.content.split('uwu')) - 1
-        
-        data['nya'] += len(message.content.split('meow')) - 1
-        data['nya'] += len(message.content.split('nya')) - 1
-        
-        data[':3'] += len(message.content.split(':3')) - 1
-        
-        if str(message.author.id) not in data['members']:
-            data['members'][str(message.author.id)] = 0
-        
-        data['members'][str(message.author.id)] += 1
-        
-        write_file(message.guild.id, message.channel.id, data)
-        
+        cur = db.cursor()
+        cur.execute('SELECT * FROM chat_summary WHERE guild_id = ? AND channel_id = ?',
+                    (message.guild.id, message.channel.id))
+        if not cur.fetchone():
+            cur.execute(
+                'INSERT INTO chat_summary(guild_id, channel_id, enabled, messages, owos, nyas, cats) VALUES (?, ?, ?, ?, ?, ?, ?)',
+                (message.guild.id, message.channel.id, 0, 0, 0, 0, 0))
+
+        cur.execute('UPDATE chat_summary SET messages = messages + 1 WHERE guild_id = ? AND channel_id = ?',
+                    (message.guild.id, message.channel.id))
+        owos = len(message.content.split('owo')) - 1
+        owos += len(message.content.split('uwu')) - 1
+        cur.execute('UPDATE chat_summary SET owos = owos + ? WHERE guild_id = ? AND channel_id = ?',
+                    (owos, message.guild.id, message.channel.id))
+        nyas = len(message.content.split('meow')) - 1
+        nyas += len(message.content.split('nya')) - 1
+        cur.execute('UPDATE chat_summary SET nyas = nyas + ? WHERE guild_id = ? AND channel_id = ?',
+                    (nyas, message.guild.id, message.channel.id))
+        cur.execute('UPDATE chat_summary SET cats = cats + ? WHERE guild_id = ? AND channel_id = ?',
+                    (len(message.content.split(':3')) - 1, message.guild.id, message.channel.id))
+
+        cur.execute('SELECT * FROM chat_summary_members WHERE guild_id = ? AND channel_id = ? AND member_id = ?',
+                    (message.guild.id, message.channel.id, message.author.id))
+        if not cur.fetchone():
+            cur.execute(
+                'INSERT INTO chat_summary_members(guild_id, channel_id, member_id, messages) VALUES (?, ?, ?, ?)',
+                (message.guild.id, message.channel.id, message.author.id, 0))
+
+        cur.execute(
+            'UPDATE chat_summary_members SET messages = messages + 1 WHERE guild_id = ? AND channel_id = ? AND member_id = ?',
+            (message.guild.id, message.channel.id, message.author.id))
+
+        cur.close()
+        db.commit()
+
     @tasks.loop(minutes=1)
     async def summarize(self):
         now = datetime.datetime.utcnow()
         if now.hour != 0 or now.minute != 0:
             return
-        
-        for i in os.listdir('data/chatsummary'):
-            guild = self.bot.get_guild(int(i))
-            for j in os.listdir(f'data/chatsummary/{i}'):
-                j = int(j.split('.')[0])
-                data = read_file(i, j)
-                if data is None:
-                    continue
-                
-                channel = guild.get_channel(j)
-                if channel is None:
-                    continue
-                
-                embed = discord.Embed(title="Chat Summary")
-                embed.add_field(name="Messages", value=str(data['messages']))
-                embed.add_field(name="OwOs", value=str(data['owo']))
-                embed.add_field(name="Nya~'s", value=str(data['nya']))
-                embed.add_field(name=":3's", value=str(data[':3']))
-                
-                desc = ""
-                
-                for k in range(max(len(data['members']), 5)):
-                    members = sorted(data['members'].items(), key=lambda item: item[1])
-                    member = guild.get_member(members[0])
-                    if member is None:
-                        continue
-                    
-                    desc += f"{k + 1}. {member.display_name} with {members[1]} messages\n"
-                    
-                embed.description = desc
-                
-                await channel.send(embed=embed)
-                
-                write_file(i, str(j), {'messages': 0, 'members': {}, 'owo': 0, 'nya': 0, ':3': 0})
-                    
-        
+
+        cur = db.cursor()
+        cur.execute('SELECT guild_id, channel_id, messages, owos, nyas, cats FROM chat_summary WHERE enabled = 1')
+        for i in cur.fetchall():
+            guild = self.bot.get_guild(i[0])
+            if guild is None:
+                continue
+
+            channel = guild.get_channel(i[1])
+            if channel is None:
+                continue
+
+            now = datetime.datetime.now(datetime.timezone.utc)
+            chat_summary_message = f'# Chat Summary for {now.month}/{now.day}/{now.year}:\n'
+            chat_summary_message += '\n'
+            chat_summary_message += f'**Messages**: {i[2]}\n'
+            chat_summary_message += f'OwOs: {i[3]}\n'
+            chat_summary_message += f'Nya~\'s: {i[4]}\n'
+            chat_summary_message += f':3\'s: {i[5]}\n\n**Top members:**\n'
+
+            cur.execute(
+                'SELECT member_id, messages FROM chat_summary_members WHERE guild_id = ? AND channel_id = ? ORDER BY '
+                'messages DESC LIMIT 5', (i[0], i[1]))
+
+            jndex = 0
+            for j in cur.fetchall():
+                jndex += 1
+                member = guild.get_member(j[0])
+                if member is not None:
+                    chat_summary_message += f'{jndex}. {member.display_name} at {j[1]} messages\n'
+                else:
+                    chat_summary_message += f'{jndex}. User({j[0]}) at {j[1]} messages\n'
+
+            await channel.send(chat_summary_message)
+
+            cur.execute('UPDATE chat_summary SET messages = 0, owos = 0, nyas = 0, cats = 0 WHERE guild_id = ? AND'
+                        ' channel_id = ?', (i[0], i[1]))
+            cur.execute('DELETE FROM chat_summary_members WHERE guild_id = ? AND channel_id = ?', (i[0], i[1]))
+
+        cur.close()
+        db.commit()
+
     chat_summary_subcommand = discord.SlashCommandGroup(name='chatsummary', description='Chat summary')
-    
+
     @chat_summary_subcommand.command(name="add", description="Add a channel to count to chat summary")
     @commands_ext.guild_only()
     @commands_ext.has_permissions(manage_guild=True)
     @is_blocked()
     async def command_add(self, ctx: discord.Interaction, channel: discord.TextChannel):
-        data = read_file(ctx.guild.id, channel.id)
-        if data is None:
-            write_file(ctx.guild.id, channel.id, {'messages': 0, 'members': {}, 'owo': 0, 'nya': 0, ':3': 0})
-            await ctx.response.send_message('Added channel to counting, from now.', ephemeral=True)
+        cur = db.cursor()
+        cur.execute('SELECT * FROM chat_summary WHERE guild_id = ? AND channel_id = ?',
+                    (ctx.guild.id, channel.id))
+        if not cur.fetchone():
+            cur.execute(
+                'INSERT INTO chat_summary(guild_id, channel_id, enabled, messages, owos, nyas, cats) VALUES (?, ?, ?, ?, ?, ?, ?)',
+                (ctx.guild.id, channel.id, 0, 0, 0, 0, 0))
+
+        cur.execute('SELECT enabled FROM chat_summary WHERE guild_id = ? AND channel_id = ?',
+                    (ctx.guild.id, channel.id))
+        data = cur.fetchone()
+        if data is not None and data[0] == 1:
+            await ctx.response.send_message("This channel is already being counted.", ephemeral=True)
             return
-        
-        await ctx.response.send_message('This channel is already being counted. To remove it, run `/chatsummary remove`.', ephemeral=True)
-        
+
+        cur.execute('UPDATE chat_summary SET enabled = 1 WHERE guild_id = ? AND channel_id = ?',
+                    (ctx.guild.id, channel.id))
+        cur.close()
+        db.commit()
+
+        await ctx.response.send_message('Added channel to counting.', ephemeral=True)
+
     @chat_summary_subcommand.command(name="remove", description="Remove a channel from being counted to chat summary")
     @commands_ext.guild_only()
     @commands_ext.has_permissions(manage_guild=True)
     @is_blocked()
     async def command_remove(self, ctx: discord.Interaction, channel: discord.TextChannel):
-        data = read_file(ctx.guild.id, channel.id)
-        if data is not None:
-            delete_file(ctx.guild.id, channel.id)
-            await ctx.response.send_message('Removed channel from counting, along with the data.', ephemeral=True)
+        cur = db.cursor()
+        cur.execute('SELECT * FROM chat_summary WHERE guild_id = ? AND channel_id = ?',
+                    (ctx.guild.id, channel.id))
+        if not cur.fetchone():
+            cur.execute(
+                'INSERT INTO chat_summary(guild_id, channel_id, enabled, messages, owos, nyas, cats) VALUES (?, ?, ?, '
+                '?, ?, ?, ?)',
+                (ctx.guild.id, channel.id, 0, 0, 0, 0, 0))
+        cur.execute('SELECT enabled FROM chat_summary WHERE guild_id = ? AND channel_id = ?',
+                    (ctx.guild.id, channel.id))
+        data = cur.fetchone()
+        if data is not None and data[0] == 0:
+            await ctx.response.send_message("This channel is already not being counted.", ephemeral=True)
             return
-        
-        await ctx.response.send_message('This channel is already not being counted.', ephemeral=True)
-        
+
+        cur.execute('UPDATE chat_summary SET enabled = 0 WHERE guild_id = ? AND channel_id = ?',
+                    (ctx.guild.id, channel.id))
+        cur.close()
+        db.commit()
+
+        await ctx.response.send_message('Removed channel from being counted.', ephemeral=True)
+
+    # The commented code below is for testing purposes
+    # @chat_summary_subcommand.command(name="test", description="Test command for testing purposes")
+    # @commands_ext.guild_only()
+    # @commands_ext.has_permissions(manage_guild=True)
+    # async def test_summarize(self, ctx: discord.Interaction):
+    #     cur = db.cursor()
+    #     cur.execute('SELECT guild_id, channel_id, messages, owos, nyas, cats FROM chat_summary WHERE enabled = 1')
+    #     for i in cur.fetchall():
+    #         guild = self.bot.get_guild(i[0])
+    #         if guild is None:
+    #             continue
+    #
+    #         channel = guild.get_channel(i[1])
+    #         if channel is None:
+    #             continue
+    #
+    #         now = datetime.datetime.now(datetime.timezone.utc)
+    #         chat_summary_message = f'# Chat Summary for {now.month}/{now.day}/{now.year}:\n'
+    #         chat_summary_message += '\n'
+    #         chat_summary_message += f'**Messages**: {i[2]}\n'
+    #         chat_summary_message += f'OwOs: {i[3]}\n'
+    #         chat_summary_message += f'Nya~\'s: {i[4]}\n'
+    #         chat_summary_message += f':3\'s: {i[5]}\n\n**Top members:**\n'
+    #
+    #         cur.execute(
+    #             'SELECT member_id, messages FROM chat_summary_members WHERE guild_id = ? AND channel_id = ? ORDER BY '
+    #             'messages DESC LIMIT 5', (i[0], i[1]))
+    #
+    #         jndex = 0
+    #         for j in cur.fetchall():
+    #             jndex += 1
+    #             member = guild.get_member(j[0])
+    #             if member is not None:
+    #                 chat_summary_message += f'{jndex}. {member.display_name} at {j[1]} messages\n'
+    #             else:
+    #                 chat_summary_message += f'{jndex}. User({j[0]}) at {j[1]} messages\n'
+    #
+    #         await channel.send(chat_summary_message)
+    #
+    #         cur.execute('UPDATE chat_summary SET messages = 0, owos = 0, nyas = 0, cats = 0 WHERE guild_id = ? AND'
+    #                     ' channel_id = ?', (i[0], i[1]))
+    #         cur.execute('DELETE FROM chat_summary_members WHERE guild_id = ? AND channel_id = ?', (i[0], i[1]))
+    #
+    #     cur.close()
+    #     db.commit()
+    #
+    #     await ctx.response.send_message('InDev', ephemeral=True)

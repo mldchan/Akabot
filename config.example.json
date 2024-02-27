@@ -1,0 +1,18 @@
+{
+    "token": "token",
+    "features": {
+        "welcoming": true,
+        "leveling": true,
+        "antiraid": true,
+        "chatstreaks": true,
+        "chatrevive": true,
+        "chatsummary": true,
+        "reactionroles": true,
+        "polls": true,
+        "feedback": true
+    },
+    "middlewares": {
+        "blocklist": true,
+        "premium": true
+    }
+}

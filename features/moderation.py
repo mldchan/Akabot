@@ -19,8 +19,9 @@ def pretty_time_delta(seconds: int):
     else:
         return '%s%d seconds' % (sign_string, seconds)
 
+
 class Moderation(discord.Cog):
-    def __init__(self, bot):
+    def __init__(self, bot: discord.Bot):
         self.bot = bot
 
     @discord.slash_command(name='kick', description='Kick a user from the server')
@@ -31,26 +32,27 @@ class Moderation(discord.Cog):
     @discord.option(name='send_dm', description='Send a DM to the user', type=bool, required=False, default=True)
     @is_blocked()
     async def kick_user(self, ctx: discord.Interaction, user: discord.Member, reason: str, send_dm: bool = True):
-        
-        if user == ctx.bot.user: # Check if the user is the bot
+
+        if user.id == self.bot.user.id:  # Check if the user is the bot
             await ctx.response.send_message('I cannot kick myself.', ephemeral=True)
             return
-            
-        if user == ctx.author: # Check if the user is the author
+
+        if user.id == ctx.user.id:  # Check if the user is the author
             await ctx.response.send_message('You cannot kick yourself.', ephemeral=True)
             return
-            
-        if user.top_role >= ctx.author.top_role: # Check if the user has a higher role
+
+        if user.top_role >= ctx.user.top_role:  # Check if the user has a higher role
             await ctx.response.send_message('You cannot kick a user with a higher or equal role.', ephemeral=True)
             return
-        
-        if not ctx.guild.me.top_role.permissions.kick_members: # Check if the bot has the permissions to kick members
+
+        # Check if the bot has the permissions to kick members
+        if not ctx.guild.me.top_role.permissions.kick_members:
             await ctx.response.send_message('I do not have the permissions to kick members.', ephemeral=True)
             return
-        
-        if send_dm:
+
+        if send_dm and user.can_send():
             await user.send(f'You have been kicked from {ctx.guild.name} for {reason} by {ctx.user.display_name}.')
-        
+
         await user.kick(user, reason=reason)
         await ctx.response.send_message(f'Successfully kicked {user.mention} for {reason}.', ephemeral=True)
 
@@ -62,26 +64,27 @@ class Moderation(discord.Cog):
     @discord.option(name='send_dm', description='Send a DM to the user', type=bool)
     @is_blocked()
     async def ban_user(self, ctx: discord.Interaction, user: discord.Member, reason: str, send_dm: bool = True):
-        
-        if user == ctx.bot.user: # Check if the user is the bot
+
+        if user.id == self.bot.user.id:  # Check if the user is the bot
             await ctx.response.send_message('I cannot ban myself.', ephemeral=True)
             return
-            
-        if user == ctx.author: # Check if the user is the author
+
+        if user.id == ctx.user.id:  # Check if the user is the author
             await ctx.response.send_message('You cannot ban yourself.', ephemeral=True)
             return
-            
-        if user.top_role >= ctx.author.top_role: # Check if the user has a higher role
+
+        if user.top_role >= ctx.user.top_role:  # Check if the user has a higher role
             await ctx.response.send_message('You cannot ban a user with a higher or equal role.', ephemeral=True)
             return
-        
-        if not ctx.guild.me.top_role.permissions.ban_members: # Check if the bot has the permissions to ban members
+
+        # Check if the bot has the permissions to ban members
+        if not ctx.guild.me.top_role.permissions.ban_members:
             await ctx.response.send_message('I do not have the permissions to ban members.', ephemeral=True)
             return
-        
-        if send_dm:
+
+        if send_dm and user.can_send():
             await user.send(f'You have been banned from {ctx.guild.name} for {reason} by {ctx.user.display_name}.')
-        
+
         await user.ban(user, reason=reason)
         await ctx.response.send_message(f'Successfully banned {user.mention} for {reason}.', ephemeral=True)
 
@@ -96,35 +99,35 @@ class Moderation(discord.Cog):
     @discord.option(name='minutes', description='The number of minutes to time out', type=int)
     @is_blocked()
     async def timeout_user(self, ctx: discord.Interaction, user: discord.Member, reason: str, days: int, send_dm: bool = True, hours: int = 0, minutes: int = 0):
-        
-        if user == ctx.bot.user: # Check if the user is the bot
+
+        if user.id == self.bot.user.id:  # Check if the user is the bot
             await ctx.response.send_message('I cannot time out myself.', ephemeral=True)
             return
-            
-        if user == ctx.author: # Check if the user is the author
+
+        if user.id == ctx.user.id:  # Check if the user is the author
             await ctx.response.send_message('You cannot time out yourself.', ephemeral=True)
             return
-            
-        if user.top_role >= ctx.author.top_role: # Check if the user has a higher role
+
+        if user.top_role >= ctx.user.top_role:  # Check if the user has a higher role
             await ctx.response.send_message('You cannot time out a user with a higher or equal role.', ephemeral=True)
             return
-        
-        if not ctx.guild.me.top_role.permissions.mute_members: # Check if the bot has the permissions to mute members
+
+        # Check if the bot has the permissions to mute members
+        if not ctx.guild.me.top_role.permissions.mute_members:
             await ctx.response.send_message('I do not have the permissions to time out members.', ephemeral=True)
             return
-        
+
         total_seconds = days * 86400 + hours * 3600 + minutes * 60
         if total_seconds > 604800:
             await ctx.response.send_message('The maximum timeout duration is 7 days, this is a limitation by Discord.', ephemeral=True)
             return
-            
-        if send_dm:
+
+        if send_dm and user.can_send():
             await user.send(f'You have been timed out from {ctx.guild.name} for {reason} by {ctx.user.display_name} for {pretty_time_delta(total_seconds)}.')
-        
+
         await user.timeout_for(datetime.timedelta(seconds=total_seconds), reason=reason)
         await ctx.response.send_message(f'Successfully banned {user.mention} for {reason} for {pretty_time_delta(total_seconds)}.', ephemeral=True)
-        
-    
+
     @discord.slash_command(name='remove_timeout', description='Remove a timeout from a user on the server')
     @commands_ext.guild_only()
     @commands_ext.has_permissions(ban_members=True)
@@ -133,25 +136,26 @@ class Moderation(discord.Cog):
     @discord.option(name='send_dm', description='Send a DM to the user', type=bool)
     @is_blocked()
     async def remove_timeout_user(self, ctx: discord.Interaction, user: discord.Member, reason: str, send_dm: bool = True):
-        
-        if user == ctx.bot.user: # Check if the user is the bot
+
+        if user.id == self.bot.user.id:  # Check if the user is the bot
             await ctx.response.send_message('I cannot ban myself.', ephemeral=True)
             return
-            
-        if user == ctx.author: # Check if the user is the author
+
+        if user.id == ctx.user.id:  # Check if the user is the author
             await ctx.response.send_message('You cannot ban yourself.', ephemeral=True)
             return
-            
-        if user.top_role >= ctx.author.top_role: # Check if the user has a higher role
+
+        if user.top_role >= ctx.user.top_role:  # Check if the user has a higher role
             await ctx.response.send_message('You cannot ban a user with a higher or equal role.', ephemeral=True)
             return
-        
-        if not ctx.guild.me.top_role.permissions.kick_members: # Check if the bot has the permissions to kick members
+
+        # Check if the bot has the permissions to kick members
+        if not ctx.guild.me.top_role.permissions.kick_members:
             await ctx.response.send_message('I do not have the permissions to ban members.', ephemeral=True)
             return
-        
-        if send_dm:
+
+        if send_dm and user.can_send():
             await user.send(f'Your timeout in {ctx.guild.name} has been removed for {reason} by {ctx.user.display_name}.')
-        
+
         await user.remove_timeout(user, reason=reason)
         await ctx.response.send_message(f'Successfully banned {user.mention} for {reason}.', ephemeral=True)
