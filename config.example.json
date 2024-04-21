@@ -1,0 +1,22 @@
+{
+    "token": "token",
+    "features": {
+        "welcoming": true,
+        "leveling": true,
+        "antiraid": true,
+        "chatstreaks": true,
+        "chatrevive": true,
+        "chatsummary": true,
+        "reactionroles": true,
+        "polls": true,
+        "feedback": true,
+        "logging": true,
+        "admin_cmds": false
+    },
+    "middlewares": {
+        "blocklist": true,
+        "premium": true
+    },
+    "owner_id": 0,
+    "admin_guild": 0
+}
