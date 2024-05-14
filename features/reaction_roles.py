@@ -63,7 +63,7 @@ class ReactionRoles(discord.Cog):
     @commands_ext.guild_only()
     @is_blocked()
     @analytics("create_reaction_role normal")
-    async def create_reaction_role_normal(self, interaction: discord.Interaction, message: str, role: discord.Role,
+    async def create_reaction_role_normal(self, interaction: discord.ApplicationContext, message: str, role: discord.Role,
                                           role_2: discord.Role = None, role_3: discord.Role = None,
                                           role_4: discord.Role = None, role_5: discord.Role = None) -> None:
         view = self.create_view('n', [role, role_2, role_3, role_4, role_5])
@@ -76,7 +76,7 @@ class ReactionRoles(discord.Cog):
     @commands_ext.guild_only()
     @is_blocked()
     @analytics("create_reaction_role add_only")
-    async def create_reaction_role_add(self, interaction: discord.Interaction, message: str, role: discord.Role,
+    async def create_reaction_role_add(self, interaction: discord.ApplicationContext, message: str, role: discord.Role,
                                        role_2: discord.Role = None, role_3: discord.Role = None,
                                        role_4: discord.Role = None, role_5: discord.Role = None) -> None:
         view = self.create_view('a', [role, role_2, role_3, role_4, role_5])
@@ -89,7 +89,7 @@ class ReactionRoles(discord.Cog):
     @commands_ext.guild_only()
     @is_blocked()
     @analytics("create_reaction_role remove_only")
-    async def create_reaction_role_remove(self, interaction: discord.Interaction, message: str, role: discord.Role,
+    async def create_reaction_role_remove(self, interaction: discord.ApplicationContext, message: str, role: discord.Role,
                                           role_2: discord.Role = None, role_3: discord.Role = None,
                                           role_4: discord.Role = None, role_5: discord.Role = None) -> None:
         view = self.create_view('r', [role, role_2, role_3, role_4, role_5])
@@ -102,7 +102,7 @@ class ReactionRoles(discord.Cog):
     @commands_ext.guild_only()
     @is_blocked()
     @analytics("create_reaction_role single")
-    async def create_reaction_role_single(self, interaction: discord.Interaction, message: str, role: discord.Role,
+    async def create_reaction_role_single(self, interaction: discord.ApplicationContext, message: str, role: discord.Role,
                                           role_2: discord.Role = None, role_3: discord.Role = None,
                                           role_4: discord.Role = None, role_5: discord.Role = None) -> None:
         view = self.create_view('s', [role, role_2, role_3, role_4, role_5])
@@ -112,7 +112,7 @@ class ReactionRoles(discord.Cog):
 
     @discord.Cog.listener()
     @is_blocked()
-    async def on_interaction(self, interaction: discord.Interaction) -> None:
+    async def on_interaction(self, interaction: discord.ApplicationContext) -> None:
         if interaction.type != discord.InteractionType.component:
             return
 

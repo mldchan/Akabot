@@ -122,7 +122,7 @@ class ChatSummary(discord.Cog):
     @commands_ext.has_permissions(manage_guild=True)
     @is_blocked()
     @analytics("chatsummary add")
-    async def command_add(self, ctx: discord.Interaction, channel: discord.TextChannel):
+    async def command_add(self, ctx: discord.ApplicationContext, channel: discord.TextChannel):
         cur = db.cursor()
         cur.execute('SELECT * FROM chat_summary WHERE guild_id = ? AND channel_id = ?',
                     (ctx.guild.id, channel.id))
@@ -150,7 +150,7 @@ class ChatSummary(discord.Cog):
     @commands_ext.has_permissions(manage_guild=True)
     @is_blocked()
     @analytics("chatsummary remove")
-    async def command_remove(self, ctx: discord.Interaction, channel: discord.TextChannel):
+    async def command_remove(self, ctx: discord.ApplicationContext, channel: discord.TextChannel):
         cur = db.cursor()
         cur.execute('SELECT * FROM chat_summary WHERE guild_id = ? AND channel_id = ?',
                     (ctx.guild.id, channel.id))
@@ -178,7 +178,7 @@ class ChatSummary(discord.Cog):
     # @commands_ext.guild_only()
     # @commands_ext.has_permissions(manage_guild=True)
     # @is_blocked()
-    # async def test_summarize(self, ctx: discord.Interaction):
+    # async def test_summarize(self, ctx: discord.ApplicationContext):
     #     cur = db.cursor()
     #     cur.execute('SELECT guild_id, channel_id, messages, owos, nyas, cats FROM chat_summary WHERE enabled = 1')
     #     for i in cur.fetchall():

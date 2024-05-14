@@ -52,7 +52,7 @@ class AntiRaid(discord.Cog):
     @discord.option(name='per', description='...per the number of seconds to check', type=int)
     @is_blocked()
     @analytics("antiraid join threshold")
-    async def set_join_threshold(self, ctx: discord.Interaction, people: int, per: int):
+    async def set_join_threshold(self, ctx: discord.ApplicationContext, people: int, per: int):
         set_setting(ctx.guild.id, 'antiraid_join_threshold', str(people))
         set_setting(ctx.guild.id, 'antiraid_join_threshold_per', str(per))
         await ctx.response.send_message(f'Successfully set the join threshold to {people} per {per}.', ephemeral=True)
@@ -62,7 +62,7 @@ class AntiRaid(discord.Cog):
     @commands_ext.guild_only()
     @is_blocked()
     @analytics("antiraid list")
-    async def list_settings(self, ctx: discord.Interaction):
+    async def list_settings(self, ctx: discord.ApplicationContext):
         join_threshold = get_setting(ctx.guild.id, 'antiraid_join_threshold', 5)
         join_threshold_per = get_setting(ctx.guild.id, 'antiraid_join_threshold_per', 60)
 

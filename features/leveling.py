@@ -123,7 +123,7 @@ class Leveling(discord.Cog):
     @commands_ext.guild_only()
     @is_blocked()
     @analytics("level")
-    async def get_level(self, ctx: discord.Interaction, user: discord.User = None):
+    async def get_level(self, ctx: discord.ApplicationContext, user: discord.User = None):
         user = user or ctx.user
 
         level = get_level_for_xp(db_get_user_xp(ctx.guild.id, user.id))
@@ -139,7 +139,7 @@ class Leveling(discord.Cog):
     @commands_ext.guild_only()
     @is_blocked()
     @analytics("leveling list")
-    async def list_settings(self, ctx: discord.Interaction):
+    async def list_settings(self, ctx: discord.ApplicationContext):
         leveling_xp_multiplier = get_setting(ctx.guild.id, 'leveling_xp_multiplier', '1')
         weekend_event_enabled = get_setting(ctx.guild.id, 'weekend_event_enabled', 'false')
         weekend_event_multiplier = get_setting(ctx.guild.id, 'weekend_event_multiplier', '2')
@@ -157,7 +157,7 @@ class Leveling(discord.Cog):
     @discord.option(name="multiplier", description="The multiplier to set", type=int)
     @is_blocked()
     @analytics("leveling multiplier")
-    async def set_multiplier(self, ctx: discord.Interaction, multiplier: int):
+    async def set_multiplier(self, ctx: discord.ApplicationContext, multiplier: int):
         set_setting(ctx.guild.id, 'leveling_xp_multiplier', str(multiplier))
         await ctx.response.send_message(f'Successfully set the leveling multiplier to {multiplier}.', ephemeral=True)
 
@@ -167,7 +167,7 @@ class Leveling(discord.Cog):
     @discord.option(name="enabled", description="Whether the weekend event is enabled", type=bool)
     @is_blocked()
     @analytics("leveling weekend event")
-    async def set_weekend_event(self, ctx: discord.Interaction, enabled: bool):
+    async def set_weekend_event(self, ctx: discord.ApplicationContext, enabled: bool):
         set_setting(ctx.guild.id, 'weekend_event_enabled', str(enabled).lower())
         await ctx.response.send_message(f'Successfully set the weekend event to {enabled}.', ephemeral=True)
 
@@ -177,7 +177,7 @@ class Leveling(discord.Cog):
     @discord.option(name="weekend_event_multiplier", description="The multiplier to set", type=int)
     @is_blocked()
     @analytics("leveling weekend event multiplier")
-    async def set_weekend_event_multiplier(self, ctx: discord.Interaction, weekend_event_multiplier: int):
+    async def set_weekend_event_multiplier(self, ctx: discord.ApplicationContext, weekend_event_multiplier: int):
         set_setting(ctx.guild.id, 'weekend_event_multiplier', str(weekend_event_multiplier))
         await ctx.response.send_message(f'Successfully set the weekend event multiplier to {weekend_event_multiplier}.',
                                         ephemeral=True)
@@ -189,7 +189,7 @@ class Leveling(discord.Cog):
     @discord.option(name='role', description='The role to set', type=discord.Role)
     @is_blocked()
     @analytics("leveling set reward")
-    async def set_reward(self, ctx: discord.Interaction, level: int, role: discord.Role):
+    async def set_reward(self, ctx: discord.ApplicationContext, level: int, role: discord.Role):
         set_setting(ctx.guild.id, f'leveling_reward_{level}', str(role.id))
         await ctx.response.send_message(f'Successfully set the reward for level {level} to {role.mention}.',
                                         ephemeral=True)
@@ -200,6 +200,6 @@ class Leveling(discord.Cog):
     @discord.option(name="level", description="The level to remove the reward for", type=int)
     @is_blocked()
     @analytics("leveling remove reward")
-    async def remove_reward(self, ctx: discord.Interaction, level: int):
+    async def remove_reward(self, ctx: discord.ApplicationContext, level: int):
         set_setting(ctx.guild.id, f'leveling_reward_{level}', '0')
         await ctx.response.send_message(f'Successfully removed the reward for level {level}.', ephemeral=True)

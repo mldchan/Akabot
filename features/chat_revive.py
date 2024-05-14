@@ -68,7 +68,7 @@ class ChatRevive(discord.Cog):
     @commands_ext.has_permissions(manage_guild=True)
     @is_blocked()
     @analytics("chatrevive set")
-    async def set_revive_settings(self, ctx: discord.Interaction, channel: discord.TextChannel, revival_minutes: int,
+    async def set_revive_settings(self, ctx: discord.ApplicationContext, channel: discord.TextChannel, revival_minutes: int,
                                   revival_role: discord.Role):
         cur = db.cursor()
         cur.execute('DELETE FROM chat_revive WHERE guild_id = ? AND channel_id = ?', (ctx.guild.id, channel.id))
@@ -84,7 +84,7 @@ class ChatRevive(discord.Cog):
     @commands_ext.has_permissions(manage_guild=True)
     @is_blocked()
     @analytics("chatrevive remove")
-    async def remove_revive_settings(self, ctx: discord.Interaction, channel: discord.TextChannel):
+    async def remove_revive_settings(self, ctx: discord.ApplicationContext, channel: discord.TextChannel):
         cur = db.cursor()
         cur.execute('DELETE FROM chat_revive WHERE guild_id = ? AND channel_id = ?', (ctx.guild.id, channel.id))
         cur.close()
@@ -96,7 +96,7 @@ class ChatRevive(discord.Cog):
     @commands_ext.has_permissions(manage_guild=True)
     @is_blocked()
     @analytics("chatrevive list")
-    async def list_revive_settings(self, ctx: discord.Interaction, channel: discord.TextChannel):
+    async def list_revive_settings(self, ctx: discord.ApplicationContext, channel: discord.TextChannel):
         cur = db.cursor()
         cur.execute('SELECT role_id, revival_time FROM chat_revive WHERE guild_id = ? AND channel_id = ?',
                     (ctx.guild.id, channel.id))

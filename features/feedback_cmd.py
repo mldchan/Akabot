@@ -28,7 +28,7 @@ class SupportCmd(discord.Cog):
     @discord.slash_command(name="support", help="Get support for the bot")
     @is_blocked()
     @analytics("support")
-    async def feedback(self, ctx: discord.Interaction):
+    async def feedback(self, ctx: discord.ApplicationContext):
         await ctx.response.send_message(
             "You can get support [here](<https://mldkyt.com/forumsrules?go=https://mldkyt.com/forums/viewforum.php?f"
             "=15>)")
@@ -36,7 +36,7 @@ class SupportCmd(discord.Cog):
     @discord.slash_command(name="website", help="Get the website link")
     @is_blocked()
     @analytics("website")
-    async def website(self, ctx: discord.Interaction):
+    async def website(self, ctx: discord.ApplicationContext):
         await ctx.response.send_message("You can visit the website [here](<https://mldkyt.com/project/femboybot>)")
 
     feedback_subcommand = discord.SlashCommandGroup(name="feedback", description="Give feedback for the bot")
@@ -44,13 +44,13 @@ class SupportCmd(discord.Cog):
     @feedback_subcommand.command(name="bug", description="Report a bug")
     @is_blocked()
     @analytics("feedback bug")
-    async def report_bug(self, ctx: discord.Interaction, bug: str):
+    async def report_bug(self, ctx: discord.ApplicationContext, bug: str):
         add_feature_report('bug', ctx.user.id, bug)
         await ctx.response.send_message("Thank you for reporting the bug!")
 
     @feedback_subcommand.command(name="feature", description="Suggest a feature")
     @is_blocked()
     @analytics("feedback feature")
-    async def suggest_feature(self, ctx: discord.Interaction, feature: str):
+    async def suggest_feature(self, ctx: discord.ApplicationContext, feature: str):
         add_feature_report('feature', ctx.user.id, feature)
         await ctx.response.send_message("Thank you for suggesting the feature!")

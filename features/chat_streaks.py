@@ -144,7 +144,7 @@ class ChatStreaks(discord.Cog):
     @commands_ext.has_permissions(manage_guild=True)
     @is_blocked()
     @analytics("streaks alerts")
-    async def toggle_alerts(self, ctx: discord.Interaction, value: bool):
+    async def toggle_alerts(self, ctx: discord.ApplicationContext, value: bool):
         set_setting(ctx.guild.id, 'chat_streak_alerts', str(value))
         await ctx.response.send_message(
             'Succcessfully turned on chat streaks' if value else 'Successfully turned off chat streaks', ephemeral=True)
@@ -154,7 +154,7 @@ class ChatStreaks(discord.Cog):
     @commands_ext.has_permissions(manage_guild=True)
     @is_blocked()
     @analytics("streaks list")
-    async def list_settings(self, ctx: discord.Interaction):
+    async def list_settings(self, ctx: discord.ApplicationContext):
         alerts = get_setting(ctx.guild.id, 'chat_streak_alerts', 'true')
 
         embed = discord.Embed(title='Chat Streak settings',
@@ -169,7 +169,7 @@ class ChatStreaks(discord.Cog):
     @discord.option(name='user', description='The user to reset the streak for', type=discord.Member)
     @is_blocked()
     @analytics("streaks reset")
-    async def reset_streak_command(self, ctx: discord.Interaction, user: discord.Member):
+    async def reset_streak_command(self, ctx: discord.ApplicationContext, user: discord.Member):
         self.streak_storage.reset_streak(ctx.guild.id, user.id)
         await ctx.response.send_message(f'Successfully reset the streak for {user.mention}.', ephemeral=True)
 
@@ -179,13 +179,13 @@ class ChatStreaks(discord.Cog):
     @discord.option(name='user', description='The user to get the streak for', type=discord.Member)
     @is_blocked()
     @analytics("streaks streak")
-    async def get_user_streak(self, ctx: discord.Interaction, user: discord.Member):
+    async def get_user_streak(self, ctx: discord.ApplicationContext, user: discord.Member):
         (_, streak, _) = self.streak_storage.set_streak(ctx.guild.id, user.id)
         await ctx.response.send_message(f'{user.mention}\'s current streak is {streak} days.', ephemeral=True)
 
     @discord.slash_command(name='streak', description='Get your current streak')
     @is_blocked()
     @analytics("streak")
-    async def get_streak_command(self, ctx: discord.Interaction):
+    async def get_streak_command(self, ctx: discord.ApplicationContext):
         (_, _, new_day) = self.streak_storage.set_streak(ctx.guild.id, ctx.user.id)
         await ctx.response.send_message(f'Your current streak is {new_day} days.', ephemeral=True)

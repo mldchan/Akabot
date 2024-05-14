@@ -490,7 +490,7 @@ class Logging(discord.Cog):
     @commands_ext.has_permissions(manage_guild=True)
     @commands_ext.guild_only()
     @is_blocked()
-    async def list_settings(self, ctx: discord.Interaction):
+    async def list_settings(self, ctx: discord.ApplicationContext):
         logging_channel = get_setting(ctx.guild.id, 'logging_channel', '0')
         embed = discord.Embed(title='Logging settings', color=discord.Color.blurple())
         if logging_channel == '0':
@@ -507,6 +507,6 @@ class Logging(discord.Cog):
     @commands_ext.guild_only()
     @commands_ext.has_guild_permissions(manage_guild=True)
     @is_blocked()
-    async def set_logging_channel(self, ctx: discord.Interaction, channel: discord.TextChannel):
+    async def set_logging_channel(self, ctx: discord.ApplicationContext, channel: discord.TextChannel):
         set_setting(ctx.guild.id, 'logging_channel', str(channel.id))
         await ctx.response.send_message(f"Logging channel was set to {channel.mention}", ephemeral=True)

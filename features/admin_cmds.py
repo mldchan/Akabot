@@ -23,7 +23,7 @@ class AdminCommands(discord.Cog):
         guild_ids=[ADMIN_GUILD])
 
     @blocklist_subcommand.command(name="add_user", description="Add a user to the blocklist", guild_ids=[ADMIN_GUILD])
-    async def blocklist_add_user(self, ctx: discord.Interaction, user: discord.User, reason: str):
+    async def blocklist_add_user(self, ctx: discord.ApplicationContext, user: discord.User, reason: str):
         if ctx.user.id != int(OWNER_ID):
             await ctx.response.send_message("You do not have permission", ephemeral=True)
             return
@@ -31,7 +31,7 @@ class AdminCommands(discord.Cog):
         await ctx.response.send_message(f"User {user.mention} has been added to the blocklist", guild_ids=[ADMIN_GUILD])
 
     @blocklist_subcommand.command(name="remove_user", description="Remove a user from the blocklist")
-    async def blocklist_remove_user(self, ctx: discord.Interaction, user: discord.User):
+    async def blocklist_remove_user(self, ctx: discord.ApplicationContext, user: discord.User):
         if ctx.user.id != int(OWNER_ID):
             await ctx.response.send_message("You do not have permission", ephemeral=True)
             return
@@ -40,7 +40,7 @@ class AdminCommands(discord.Cog):
                                         guild_ids=[ADMIN_GUILD])
 
     @blocklist_subcommand.command(name="add_guild", description="Add a guild to the blocklist")
-    async def blocklist_add_guild(self, ctx: discord.Interaction, guild: discord.Guild, reason: str):
+    async def blocklist_add_guild(self, ctx: discord.ApplicationContext, guild: discord.Guild, reason: str):
         if ctx.user.id != int(OWNER_ID):
             await ctx.response.send_message("You do not have permission", ephemeral=True)
             return
@@ -48,7 +48,7 @@ class AdminCommands(discord.Cog):
         await ctx.response.send_message(f"Guild {guild.name} has been added to the blocklist", guild_ids=[ADMIN_GUILD])
 
     @blocklist_subcommand.command(name="remove_guild", description="Remove a guild from the blocklist")
-    async def blocklist_remove_guild(self, ctx: discord.Interaction, guild: discord.Guild):
+    async def blocklist_remove_guild(self, ctx: discord.ApplicationContext, guild: discord.Guild):
         if ctx.user.id != int(OWNER_ID):
             await ctx.response.send_message("You do not have permission", ephemeral=True)
             return
@@ -56,7 +56,7 @@ class AdminCommands(discord.Cog):
         await ctx.response.send_message(f"Guild {guild.name} has been removed from the blocklist")
 
     @admin_subcommand.command(name="servercount", description="How many servers is the bot in?")
-    async def admin_servercount(self, ctx: discord.Interaction):
+    async def admin_servercount(self, ctx: discord.ApplicationContext):
         servers = len(self.bot.guilds)
         channels = len([channel for channel in self.bot.get_all_channels()])
         members = len(set([member for member in self.bot.get_all_members()]))

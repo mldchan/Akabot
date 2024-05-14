@@ -35,7 +35,7 @@ class Moderation(discord.Cog):
     @discord.option(name='send_dm', description='Send a DM to the user', type=bool, required=False, default=True)
     @is_blocked()
     @analytics("kick")
-    async def kick_user(self, ctx: discord.Interaction, user: discord.Member, reason: str, send_dm: bool = True):
+    async def kick_user(self, ctx: discord.ApplicationContext, user: discord.Member, reason: str, send_dm: bool = True):
 
         if user.id == self.bot.user.id:  # Check if the user is the bot
             await ctx.response.send_message('I cannot kick myself.', ephemeral=True)
@@ -68,7 +68,7 @@ class Moderation(discord.Cog):
     @discord.option(name='send_dm', description='Send a DM to the user', type=bool)
     @is_blocked()
     @analytics("ban")
-    async def ban_user(self, ctx: discord.Interaction, user: discord.Member, reason: str, send_dm: bool = True):
+    async def ban_user(self, ctx: discord.ApplicationContext, user: discord.Member, reason: str, send_dm: bool = True):
 
         if user.id == self.bot.user.id:  # Check if the user is the bot
             await ctx.response.send_message('I cannot ban myself.', ephemeral=True)
@@ -104,7 +104,7 @@ class Moderation(discord.Cog):
     @discord.option(name='minutes', description='The number of minutes to time out', type=int)
     @is_blocked()
     @analytics("timeout")
-    async def timeout_user(self, ctx: discord.Interaction, user: discord.Member, reason: str, days: int,
+    async def timeout_user(self, ctx: discord.ApplicationContext, user: discord.Member, reason: str, days: int,
                            send_dm: bool = True, hours: int = 0, minutes: int = 0):
 
         if user.id == self.bot.user.id:  # Check if the user is the bot
@@ -146,7 +146,7 @@ class Moderation(discord.Cog):
     @discord.option(name='send_dm', description='Send a DM to the user', type=bool)
     @is_blocked()
     @analytics("remove_timeout")
-    async def remove_timeout_user(self, ctx: discord.Interaction, user: discord.Member, reason: str,
+    async def remove_timeout_user(self, ctx: discord.ApplicationContext, user: discord.Member, reason: str,
                                   send_dm: bool = True):
 
         if user.id == self.bot.user.id:  # Check if the user is the bot
