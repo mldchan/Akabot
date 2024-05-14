@@ -3,14 +3,14 @@ import json
 import discord
 from discord.ext import commands as discord_commands_ext
 
-from features import welcoming, leveling, antiraid, chat_streaks, chat_revive, chat_summary, reaction_roles, polls, \
+from features import welcoming, leveling, antiraid, chat_streaks, chat_revive, chat_summary, reaction_roles, \
     feedback_cmd, logging, admin_cmds
 from utils.blocked import BlockedUserError, BlockedServerError
 
 with open('config.json', 'r', encoding='utf8') as f:
     data = json.load(f)
 
-bot = discord.Bot(intents=discord.Intents.all())
+bot = discord.Bot(intents=discord.Intents.default())
 
 
 @bot.event
@@ -66,9 +66,6 @@ if data["features"]["chatsummary"]:
 
 if data["features"]["reactionroles"]:
     bot.add_cog(reaction_roles.ReactionRoles(bot))
-
-if data["features"]["polls"]:
-    bot.add_cog(polls.Polls(bot))
 
 if data["features"]["feedback"]:
     bot.add_cog(feedback_cmd.SupportCmd(bot))

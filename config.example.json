@@ -8,7 +8,6 @@
         "chatrevive": true,
         "chatsummary": true,
         "reactionroles": true,
-        "polls": true,
         "feedback": true,
         "logging": true,
         "admin_cmds": false
