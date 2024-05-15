@@ -68,8 +68,19 @@ class ChatRevive(discord.Cog):
     @commands_ext.has_permissions(manage_guild=True)
     @is_blocked()
     @analytics("chatrevive set")
-    async def set_revive_settings(self, ctx: discord.ApplicationContext, channel: discord.TextChannel, revival_minutes: int,
+    async def set_revive_settings(self, ctx: discord.ApplicationContext, channel: discord.TextChannel,
+                                  revival_minutes: int,
                                   revival_role: discord.Role):
+        if not revival_role.mentionable and not ctx.guild.me.guild_permissions.manage_roles:
+            await ctx.response.send_message('The role must be mentionable in order to continue.',
+                                            ephemeral=True)
+            return
+
+        if not ctx.channel.permissions_for(ctx.guild.me).send_messages:
+            await ctx.response.send_message('I do not have the permissions to send messages in this channel.',
+                                            ephemeral=True)
+            return
+
         cur = db.cursor()
         cur.execute('DELETE FROM chat_revive WHERE guild_id = ? AND channel_id = ?', (ctx.guild.id, channel.id))
         cur.execute(

@@ -11,6 +11,9 @@ async def log_into_logs(server: discord.Guild, message: discord.Embed):
     if log_chan is None:
         return
 
+    if not log_chan.permissions_for(server.me).send_messages:
+        return
+
     await log_chan.send(embed=message)
 
 
@@ -38,7 +41,6 @@ class Logging(discord.Cog):
             if before.name != after.name:
                 embed.add_field(name="Name", value=f'{before.name} -> {after.name}')
 
-            embed.description = f"An emoji named {before.name} was renamed to {after.name}"
             await log_into_logs(guild, embed)
 
     @discord.Cog.listener()
@@ -56,14 +58,13 @@ class Logging(discord.Cog):
             await log_into_logs(guild, embed)
 
         if before is not None and after is not None:
-            embed = discord.Embed(title=f"{before} Sticker Renamed", color=discord.Color.blue())
+            embed = discord.Embed(title=f"{before} Sticker Edited", color=discord.Color.blue())
             if before.name != after.name:
                 embed.add_field(name="Name", value=f'{before.name} -> {after.name}')
 
             if before.description != after.description:
                 embed.add_field(name="Description", value=f'{before.description} -> {after.description}')
 
-            embed.description = f"A sticker named {before.name} was renamed to {after.name}"
             await log_into_logs(guild, embed)
 
     @discord.Cog.listener()
@@ -101,7 +102,9 @@ class Logging(discord.Cog):
                     break
 
         embed = discord.Embed(title=f"{user} Banned", color=discord.Color.red())
-        embed.description = f"{user} was banned from the server"
+        embed.add_field(name="Victim", value=user.display_name)
+        embed.add_field(name="Victim (username)", value=user.name)
+
         embed.add_field(name="Moderator", value=moderator.mention if moderator else "Unknown")
         embed.add_field(name="Reason", value=reason if reason else "No reason provided")
         await log_into_logs(guild, embed)
@@ -120,7 +123,9 @@ class Logging(discord.Cog):
                     break
 
         embed = discord.Embed(title=f"{user} Unbanned", color=discord.Color.green())
-        embed.description = f"{user} was unbanned from the server"
+        embed.add_field(name="Victim", value=user.display_name)
+        embed.add_field(name="Victim (username)", value=user.name)
+
         embed.add_field(name="Moderator", value=moderator.mention if moderator else "Unknown")
         embed.add_field(name="Reason", value=reason if reason else "No reason provided")
         await log_into_logs(guild, embed)
@@ -131,8 +136,9 @@ class Logging(discord.Cog):
         embed = discord.Embed(title=f"#{after.name} Channel Updated", color=discord.Color.blue())
         if before.name != after.name:
             embed.add_field(name="Name", value=f'{before.name} -> {after.name}')
-        if before.topic != after.topic:
-            embed.add_field(name="Topic", value=f'{before.topic} -> {after.topic}')
+        if hasattr(before, 'topic') or hasattr(after, 'topic'):
+            if before.topic != after.topic:
+                embed.add_field(name="Topic", value=f'{before.topic} -> {after.topic}')
         if before.category != after.category:
             embed.add_field(name="Category", value=f'{before.category} -> {after.category}')
         if len(embed.fields) > 0:
@@ -142,14 +148,12 @@ class Logging(discord.Cog):
     @is_blocked()
     async def on_guild_channel_create(self, channel: discord.abc.GuildChannel):
         embed = discord.Embed(title=f"#{channel.name} Channel Created", color=discord.Color.green())
-        embed.description = f"A new channel named {channel.name} was created"
         await log_into_logs(channel.guild, embed)
 
     @discord.Cog.listener()
     @is_blocked()
     async def on_guild_channel_delete(self, channel: discord.abc.GuildChannel):
         embed = discord.Embed(title=f"#{channel.name} Channel Deleted", color=discord.Color.red())
-        embed.description = f"A channel named {channel.name} was deleted"
         await log_into_logs(channel.guild, embed)
 
     @discord.Cog.listener()
@@ -160,9 +164,9 @@ class Logging(discord.Cog):
         if before.name != after.name:
             embed.add_field(name="Name", value=f'{before.name} -> {after.name}')
         if before.icon != after.icon:
-            embed.add_field(name="Icon", value=f'Changed')
+            embed.add_field(name="Icon", value='Changed')
         if before.banner != after.banner:
-            embed.add_field(name="Banner", value=f'Changed')
+            embed.add_field(name="Banner", value='Changed')
         if before.description != after.description:
             embed.add_field(name="Description", value=f'{before.description} -> {after.description}')
         if before.afk_channel != after.afk_channel:
@@ -201,14 +205,12 @@ class Logging(discord.Cog):
     @is_blocked()
     async def on_guild_role_create(self, role: discord.Role):
         embed = discord.Embed(title=f"{role.name} Role Created", color=discord.Color.green())
-        embed.description = f"A new role named {role.name} was created"
         await log_into_logs(role.guild, embed)
 
     @discord.Cog.listener()
     @is_blocked()
     async def on_guild_role_delete(self, role: discord.Role):
         embed = discord.Embed(title=f"{role.name} Role Deleted", color=discord.Color.red())
-        embed.description = f"A role named {role.name} was deleted"
         await log_into_logs(role.guild, embed)
 
     @discord.Cog.listener()
@@ -247,46 +249,40 @@ class Logging(discord.Cog):
     @is_blocked()
     async def on_guild_role_create(self, role: discord.Role):
         embed = discord.Embed(title=f"{role.name} Role Created", color=discord.Color.green())
-        embed.description = f"A new role named {role.name} was created"
         await log_into_logs(role.guild, embed)
 
     @discord.Cog.listener()
     @is_blocked()
     async def on_guild_role_delete(self, role: discord.Role):
         embed = discord.Embed(title=f"{role.name} Role Deleted", color=discord.Color.red())
-        embed.description = f"A role named {role.name} was deleted"
         await log_into_logs(role.guild, embed)
 
     @discord.Cog.listener()
     @is_blocked()
     async def on_invite_create(self, invite: discord.Invite):
         embed = discord.Embed(title=f"{invite.url} Invite Created", color=discord.Color.green())
-        embed.description = f"A new invite was created"
         embed.add_field(name="Channel", value=invite.channel.mention)
-        embed.add_field(name="Max Uses", value=invite.max_uses)
-        embed.add_field(name="Max Age", value=invite.max_age)
-        embed.add_field(name="Temporary", value=invite.temporary)
+        embed.add_field(name="Max Uses", value=str(invite.max_uses))
+        embed.add_field(name="Max Age", value=str(invite.max_age))
+        embed.add_field(name="Temporary", value=str(invite.temporary))
         await log_into_logs(invite.guild, embed)
 
     @discord.Cog.listener()
     @is_blocked()
     async def on_invite_delete(self, invite: discord.Invite):
         embed = discord.Embed(title=f"{invite.url} Invite Deleted", color=discord.Color.red())
-        embed.description = f"An invite was deleted"
         await log_into_logs(invite.guild, embed)
 
     @discord.Cog.listener()
     @is_blocked()
     async def on_member_join(self, member: discord.Member):
         embed = discord.Embed(title=f"{member} Joined", color=discord.Color.green())
-        embed.description = f"{member} joined the server"
         await log_into_logs(member.guild, embed)
 
     @discord.Cog.listener()
     @is_blocked()
     async def on_member_leave(self, member: discord.Member):
         embed = discord.Embed(title=f"{member} Left", color=discord.Color.red())
-        embed.description = f"{member} left the server"
         await log_into_logs(member.guild, embed)
 
     @discord.Cog.listener()
@@ -323,7 +319,7 @@ class Logging(discord.Cog):
             embed.description = f"{member} left the voice channel {before.channel.name}"
             await log_into_logs(member.guild, embed)
 
-        if before is not None and after is not None and before.channel != after.channel:
+        if before is not None and after is not None:
             # moved to a different channel or was muted/deafened by admin
             if before.channel != after.channel:
                 embed = discord.Embed(title=f"{member} Moved to {after.channel.name}", color=discord.Color.blue())
@@ -340,7 +336,6 @@ class Logging(discord.Cog):
                             break
 
                 embed = discord.Embed(title=f"{member} Muted", color=discord.Color.blue())
-                embed.description = f"{member} was muted"
                 if mod:
                     embed.add_field(name="Moderator", value=mod.mention)
                 await log_into_logs(member.guild, embed)
@@ -354,47 +349,24 @@ class Logging(discord.Cog):
                             break
 
                 embed = discord.Embed(title=f"{member} Deafened", color=discord.Color.blue())
-                embed.description = f"{member} was deafened"
                 if mod:
                     embed.add_field(name="Moderator", value=mod.mention)
                 await log_into_logs(member.guild, embed)
 
     @discord.Cog.listener()
     @is_blocked()
-    async def on_message_delete(self, message: discord.Message):
-        embed = discord.Embed(title=f"Message Deleted", color=discord.Color.red())
-        embed.description = f"A message sent by {message.author} was deleted"
-        embed.add_field(name="Content", value=message.content)
-        await log_into_logs(message.guild, embed)
-
-    @discord.Cog.listener()
-    @is_blocked()
-    async def on_message_edit(self, before: discord.Message, after: discord.Message):
-        embed = discord.Embed(title=f"Message Edited", color=discord.Color.blue())
-        embed.description = f"A message sent by {before.author} was edited"
-        if before.content != after.content:
-            embed.add_field(name="Before", value=before.content)
-            embed.add_field(name="After", value=after.content)
-        if before.pinned != after.pinned:
-            embed.add_field(name="Pinned", value=f'{before.pinned} -> {after.pinned}')
-
-        if len(embed.fields) > 0:
-            await log_into_logs(before.guild, embed)
-
-    @discord.Cog.listener()
-    @is_blocked()
     async def on_reaction_add(self, reaction: discord.Reaction, user: discord.User):
-        embed = discord.Embed(title=f"Reaction Added", color=discord.Color.green())
-        embed.description = f"{user} reacted with {reaction.emoji} to a message"
-        embed.add_field(name='Message', value=reaction.message.jump_url)
+        embed = discord.Embed(title="Reaction Added", color=discord.Color.green())
+        embed.add_field(name='Message', value=f"[jump](<{reaction.message.jump_url}>)")
+        embed.add_field(name="Emoji", value=str(reaction.emoji))
         await log_into_logs(reaction.message.guild, embed)
 
     @discord.Cog.listener()
     @is_blocked()
     async def on_reaction_remove(self, reaction: discord.Reaction, user: discord.User):
-        embed = discord.Embed(title=f"Reaction Removed", color=discord.Color.red())
-        embed.description = f"{user} removed their reaction with {reaction.emoji} from a message"
-        embed.add_field(name='Message', value=reaction.message.jump_url)
+        embed = discord.Embed(title="Reaction Removed", color=discord.Color.red())
+        embed.add_field(name='Message', value=f"[jump](<{reaction.message.jump_url}>)")
+        embed.add_field(name="Emoji", value=str(reaction.emoji))
         await log_into_logs(reaction.message.guild, embed)
 
     @discord.Cog.listener()
@@ -402,36 +374,34 @@ class Logging(discord.Cog):
     async def on_reaction_clear(self, message: discord.Message, reactions: list[discord.Reaction]):
         if len(reactions) < 1:
             return
-        embed = discord.Embed(title=f"Reactions Cleared", color=discord.Color.red())
-        embed.description = f"{len(reactions)} reactions were removed from a message"
+        embed = discord.Embed(title="Reactions Cleared", color=discord.Color.red())
         embed.add_field(name='Message', value=reactions[0].message.jump_url)
+        embed.add_field(name="Total reactions removed", value=str(len(reactions)))
         await log_into_logs(message.guild, embed)
 
     @discord.Cog.listener()
     @is_blocked()
     async def on_reaction_clear_emoji(self, reaction: discord.Reaction):
-        embed = discord.Embed(title=f"Reactions Cleared", color=discord.Color.red())
-        embed.description = f"All reactions with {reaction.emoji} were removed from a message"
+        embed = discord.Embed(title="Reactions Cleared", color=discord.Color.red())
         embed.add_field(name='Message', value=reaction.message.jump_url)
+        embed.add_field(name="Removed reaction", value=str(reaction.emoji))
         await log_into_logs(reaction.message.guild, embed)
 
     @discord.Cog.listener()
     @is_blocked()
     async def on_scheduled_event_create(self, event: discord.ScheduledEvent):
-        embed = discord.Embed(title=f"Scheduled Event Created", color=discord.Color.green())
-        embed.description = f"A new scheduled event was created"
+        embed = discord.Embed(title="Scheduled Event Created", color=discord.Color.green())
         embed.add_field(name='Name', value=event.name)
         embed.add_field(name='Description', value=event.description)
         embed.add_field(name='Location', value=event.location.value)
-        embed.add_field(name='Start', value=event.start_time)
-        embed.add_field(name='End', value=event.end_time)
+        embed.add_field(name='Start', value=event.start_time.strftime("%Y/%m/%d %H:%M:%S"))
+        embed.add_field(name='End', value=event.end_time.strftime("%Y/%m/%d %H:%M:%S"))
         await log_into_logs(event.guild, embed)
 
     @discord.Cog.listener()
     @is_blocked()
     async def on_scheduled_event_update(self, before: discord.ScheduledEvent, after: discord.ScheduledEvent):
-        embed = discord.Embed(title=f"Scheduled Event Updated", color=discord.Color.blue())
-        embed.description = f"A scheduled event was updated"
+        embed = discord.Embed(title="Scheduled Event Updated", color=discord.Color.blue())
         if before.name != after.name:
             embed.add_field(name="Name", value=f'{before.name} -> {after.name}')
         if before.description != after.description:
@@ -439,36 +409,38 @@ class Logging(discord.Cog):
         if before.location != after.location:
             embed.add_field(name="Location", value=f'{before.location.value} -> {after.location.value}')
         if before.start_time != after.start_time:
-            embed.add_field(name="Start", value=f'{before.start_time} -> {after.start_time}')
+            embed.add_field(name="Start",
+                            value=f'{before.start_time.strftime("%Y/%m/%d %H:%M:%S")} -> {after.start_time.strftime("%Y/%m/%d %H:%M:%S")}')
         if before.end_time != after.end_time:
-            embed.add_field(name="End", value=f'{before.end_time} -> {after.end_time}')
+            embed.add_field(name="End",
+                            value=f'{before.end_time.strftime("%Y/%m/%d %H:%M:%S")} -> {after.end_time.strftime("%Y/%m/%d %H:%M:%S")}')
         if len(embed.fields) > 0:
             await log_into_logs(after.guild, embed)
 
     @discord.Cog.listener()
     @is_blocked()
     async def on_scheduled_event_delete(self, event: discord.ScheduledEvent):
-        embed = discord.Embed(title=f"Scheduled Event Deleted", color=discord.Color.red())
-        embed.description = f"A scheduled event was deleted"
+        embed = discord.Embed(title="Scheduled Event Deleted", color=discord.Color.red())
         embed.add_field(name='Name', value=event.name)
         embed.add_field(name='Description', value=event.description)
         embed.add_field(name='Location', value=event.location.value)
-        embed.add_field(name='Start', value=event.start_time)
-        embed.add_field(name='End', value=event.end_time)
+        embed.add_field(name='Start', value=event.start_time.strftime("%Y/%m/%d %H:%M:%S"))
+        embed.add_field(name='End', value=event.end_time.strftime("%Y/%m/%d %H:%M:%S"))
         await log_into_logs(event.guild, embed)
 
     @discord.Cog.listener()
     @is_blocked()
     async def on_thread_create(self, thread: discord.Thread):
         embed = discord.Embed(title=f"{thread.name} Thread Created", color=discord.Color.green())
-        embed.description = f"A new thread named {thread.name} was created"
+        embed.add_field(name="Jump to thread", value=f"[jump](<{thread.jump_url}>)")
+        embed.add_field(name="Name", value=thread.name)
         await log_into_logs(thread.guild, embed)
 
     @discord.Cog.listener()
     @is_blocked()
     async def on_thread_delete(self, thread: discord.Thread):
         embed = discord.Embed(title=f"{thread.name} Thread Deleted", color=discord.Color.red())
-        embed.description = f"A thread named {thread.name} was deleted"
+        embed.add_field(name="Name", value=thread.name)
         await log_into_logs(thread.guild, embed)
 
     @discord.Cog.listener()
@@ -482,6 +454,7 @@ class Logging(discord.Cog):
         if before.locked != after.locked:
             embed.add_field(name="Locked", value=f'{before.locked} -> {after.locked}')
         if len(embed.fields) > 0:
+            embed.add_field(name="Jump", value=f"[jump](<{after.jump_url}>)")
             await log_into_logs(after.guild, embed)
 
     logging_subcommand = discord.SlashCommandGroup(name='logging', description='Logging settings')
@@ -508,5 +481,15 @@ class Logging(discord.Cog):
     @commands_ext.has_guild_permissions(manage_guild=True)
     @is_blocked()
     async def set_logging_channel(self, ctx: discord.ApplicationContext, channel: discord.TextChannel):
+        perms = channel.permissions_for(ctx.guild.me)
+        if not perms.view_channel:
+            await ctx.response.send_message("The bot can't see that channel", ephemeral=True)
+            return
+
+        if not perms.send_messages:
+            await ctx.response.send_message("The bot does not have send message permissions in that channel",
+                                            ephemeral=True)
+            return
+
         set_setting(ctx.guild.id, 'logging_channel', str(channel.id))
         await ctx.response.send_message(f"Logging channel was set to {channel.mention}", ephemeral=True)

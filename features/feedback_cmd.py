@@ -25,19 +25,12 @@ class SupportCmd(discord.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @discord.slash_command(name="support", help="Get support for the bot")
-    @is_blocked()
-    @analytics("support")
-    async def feedback(self, ctx: discord.ApplicationContext):
-        await ctx.response.send_message(
-            "You can get support [here](<https://mldkyt.com/forumsrules?go=https://mldkyt.com/forums/viewforum.php?f"
-            "=15>)")
-
     @discord.slash_command(name="website", help="Get the website link")
     @is_blocked()
     @analytics("website")
     async def website(self, ctx: discord.ApplicationContext):
-        await ctx.response.send_message("You can visit the website [here](<https://mldkyt.com/project/femboybot>)")
+        await ctx.response.send_message(
+            "You can visit the website [here](<https://akatsuki.nekoweb.org/project/akabot>)")
 
     feedback_subcommand = discord.SlashCommandGroup(name="feedback", description="Give feedback for the bot")
 

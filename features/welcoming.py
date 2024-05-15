@@ -95,6 +95,15 @@ class Welcoming(discord.Cog):
     @is_blocked()
     @analytics("welcome channel")
     async def welcome_channel(self, ctx: discord.ApplicationContext, channel: discord.TextChannel):
+        perms = channel.permissions_for(ctx.guild.me)
+        if not perms.view_channel:
+            await ctx.response.send_message("I can't see that channel!", ephemeral=True)
+            return
+
+        if not perms.send_messages:
+            await ctx.response.send_message("I can't send messages in that channel!", ephemeral=True)
+            return
+
         set_setting(ctx.guild.id, 'welcome_channel', str(channel.id))
         await ctx.response.send_message(f'Welcoming channel set to {channel.mention}!', ephemeral=True)
 
@@ -156,6 +165,15 @@ class Welcoming(discord.Cog):
     @is_blocked()
     @analytics("goodbye channel")
     async def goodbye_channel(self, ctx: discord.ApplicationContext, channel: discord.TextChannel):
+        perms = channel.permissions_for(ctx.guild.me)
+        if not perms.view_channel:
+            await ctx.response.send_message("I can't see that channel!", ephemeral=True)
+            return
+
+        if not perms.send_messages:
+            await ctx.response.send_message("I can't send messages in that channel!", ephemeral=True)
+            return
+        
         set_setting(ctx.guild.id, 'goodbye_channel', str(channel.id))
         await ctx.response.send_message(f'Goodbye channel set to {channel.mention}!', ephemeral=True)
 

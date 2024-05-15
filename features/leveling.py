@@ -112,7 +112,16 @@ class Leveling(discord.Cog):
         before_level = get_level_for_xp(db_get_user_xp(msg.guild.id, msg.author.id))
         db_add_user_xp(msg.guild.id, msg.author.id, len(msg.content))
         after_level = get_level_for_xp(db_get_user_xp(msg.guild.id, msg.author.id))
-        await update_roles_for_member(msg.guild, msg.author)
+
+        if not msg.channel.permissions_for(msg.guild.me).send_messages:
+            return
+
+        if msg.guild.me.guild_permissions.manage_roles:
+            await update_roles_for_member(msg.guild, msg.author)
+        else:
+            msg2 = await msg.channel.send(
+                "Couldn't update roles for you, contact an admin in order to resolve the issue.")
+            await msg2.delete(delay=5)
 
         if before_level != after_level:
             msg2 = await msg.channel.send(

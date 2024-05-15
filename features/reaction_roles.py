@@ -66,6 +66,10 @@ class ReactionRoles(discord.Cog):
     async def create_reaction_role_normal(self, interaction: discord.ApplicationContext, message: str, role: discord.Role,
                                           role_2: discord.Role = None, role_3: discord.Role = None,
                                           role_4: discord.Role = None, role_5: discord.Role = None) -> None:
+        if not interaction.channel.permissions_for(interaction.guild.me).send_messages:
+            await interaction.response.send_message("I do not have the permissions to send messages in this channel!",
+                                                    ephemeral=True)
+            return
         view = self.create_view('n', [role, role_2, role_3, role_4, role_5])
 
         await interaction.channel.send(content=message, view=view)
@@ -79,6 +83,11 @@ class ReactionRoles(discord.Cog):
     async def create_reaction_role_add(self, interaction: discord.ApplicationContext, message: str, role: discord.Role,
                                        role_2: discord.Role = None, role_3: discord.Role = None,
                                        role_4: discord.Role = None, role_5: discord.Role = None) -> None:
+        if not interaction.channel.permissions_for(interaction.guild.me).send_messages:
+            await interaction.response.send_message("I do not have the permissions to send messages in this channel!",
+                                                    ephemeral=True)
+            return
+
         view = self.create_view('a', [role, role_2, role_3, role_4, role_5])
 
         await interaction.channel.send(content=message, view=view)
@@ -92,6 +101,10 @@ class ReactionRoles(discord.Cog):
     async def create_reaction_role_remove(self, interaction: discord.ApplicationContext, message: str, role: discord.Role,
                                           role_2: discord.Role = None, role_3: discord.Role = None,
                                           role_4: discord.Role = None, role_5: discord.Role = None) -> None:
+        if not interaction.channel.permissions_for(interaction.guild.me).send_messages:
+            await interaction.response.send_message("I do not have the permissions to send messages in this channel!",
+                                                    ephemeral=True)
+            return
         view = self.create_view('r', [role, role_2, role_3, role_4, role_5])
 
         await interaction.channel.send(content=message, view=view)
@@ -105,6 +118,10 @@ class ReactionRoles(discord.Cog):
     async def create_reaction_role_single(self, interaction: discord.ApplicationContext, message: str, role: discord.Role,
                                           role_2: discord.Role = None, role_3: discord.Role = None,
                                           role_4: discord.Role = None, role_5: discord.Role = None) -> None:
+        if not interaction.channel.permissions_for(interaction.guild.me).send_messages:
+            await interaction.response.send_message("I do not have the permissions to send messages in this channel!",
+                                                    ephemeral=True)
+            return
         view = self.create_view('s', [role, role_2, role_3, role_4, role_5])
 
         await interaction.channel.send(content=message, view=view)
@@ -114,6 +131,10 @@ class ReactionRoles(discord.Cog):
     @is_blocked()
     async def on_interaction(self, interaction: discord.ApplicationContext) -> None:
         if interaction.type != discord.InteractionType.component:
+            return
+
+        if not interaction.guild.me.guild_permissions.manage_roles:
+            await interaction.response.send_message("I do not have the permissions to manage roles!", ephemeral=True)
             return
 
         split = interaction.custom_id.split('-')
@@ -128,6 +149,10 @@ class ReactionRoles(discord.Cog):
 
         role = interaction.guild.get_role(int(split[1]))
         if role is None:
+            return
+
+        if role.position >= interaction.guild.me.top_role.position:
+            await interaction.response.send_message("I cannot assign this role!", ephemeral=True)
             return
 
         if split[0] == "rrn":

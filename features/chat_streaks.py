@@ -59,7 +59,7 @@ class ChatStreakStorage:
         last_message = datetime.datetime.fromisoformat(result[0])
         start_time = datetime.datetime.fromisoformat(result[1])
 
-        if datetime.datetime.now() - last_message > datetime.timedelta(days=1):
+        if datetime.datetime.now() - last_message > datetime.timedelta(days=2):
             print("Streak expired")
             streak = max((last_message - start_time).days, 0)
             cur.execute(
@@ -124,17 +124,19 @@ class ChatStreaks(discord.Cog):
         if message.author.bot:
             return
 
-        (state, streak, new_day) = self.streak_storage.set_streak(
+        (state, old_streak, new_streak) = self.streak_storage.set_streak(
             message.guild.id, message.author.id)
 
-        print("Set streak state", state, "streak", streak, "new_day", new_day)
+        print("Set streak state", state, "streak", old_streak, "new_day", new_streak)
 
         if get_setting(message.guild.id, 'chat_streak_alerts', 'true') == 'true':
             if state == "expired":
-                await message.channel.send(f'Your streak of {streak} days has expired :<')
+                msg = await message.channel.send(f'Your streak of {old_streak} days has expired :<')
+                await msg.delete(delay=5)
 
             if state == "updated":
-                await message.channel.send(f'You\'re now on streak {streak} -> {new_day}! Keep it up :3')
+                msg = await message.channel.send(f'You\'re now on streak {old_streak} -> {new_streak}! Keep it up :3')
+                await msg.delete(delay=5)
 
     streaks_subcommand = discord.SlashCommandGroup(
         name='streaks', description='Manage the chat streaks')
