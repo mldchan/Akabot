@@ -10,7 +10,10 @@ from utils.blocked import BlockedUserError, BlockedServerError
 with open('config.json', 'r', encoding='utf8') as f:
     data = json.load(f)
 
-bot = discord.Bot(intents=discord.Intents.default())
+intents = discord.Intents.default()
+intents.members = True
+
+bot = discord.Bot(intents=intents)
 
 
 @bot.event

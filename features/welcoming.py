@@ -173,7 +173,7 @@ class Welcoming(discord.Cog):
         if not perms.send_messages:
             await ctx.response.send_message("I can't send messages in that channel!", ephemeral=True)
             return
-        
+
         set_setting(ctx.guild.id, 'goodbye_channel', str(channel.id))
         await ctx.response.send_message(f'Goodbye channel set to {channel.mention}!', ephemeral=True)
 

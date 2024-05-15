@@ -110,7 +110,7 @@ class Leveling(discord.Cog):
             return
 
         before_level = get_level_for_xp(db_get_user_xp(msg.guild.id, msg.author.id))
-        db_add_user_xp(msg.guild.id, msg.author.id, len(msg.content))
+        db_add_user_xp(msg.guild.id, msg.author.id, 3)
         after_level = get_level_for_xp(db_get_user_xp(msg.guild.id, msg.author.id))
 
         if not msg.channel.permissions_for(msg.guild.me).send_messages:
