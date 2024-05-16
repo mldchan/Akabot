@@ -38,6 +38,10 @@ async def on_application_command_error(ctx: discord.ApplicationContext, error):
         await ctx.response.send_message('This command cannot be used in private messages.', ephemeral=True)
         return
 
+    if isinstance(error, discord_commands_ext.BotMissingPermissions):
+        await ctx.response.send_message("The bot is missing permissions to perform this action.", ephemeral=True)
+        return
+
     if isinstance(error, BlockedUserError):
         await ctx.response.send_message(error.reason, ephemeral=True)
         return

@@ -66,6 +66,7 @@ class ChatRevive(discord.Cog):
     @chat_revive_subcommand.command(name="set", description="Set revive settings for a channel")
     @commands_ext.guild_only()
     @commands_ext.has_permissions(manage_guild=True)
+    @commands_ext.bot_has_permissions(send_messages=True)
     @is_blocked()
     @analytics("chatrevive set")
     async def set_revive_settings(self, ctx: discord.ApplicationContext, channel: discord.TextChannel,
@@ -73,11 +74,6 @@ class ChatRevive(discord.Cog):
                                   revival_role: discord.Role):
         if not revival_role.mentionable and not ctx.guild.me.guild_permissions.manage_roles:
             await ctx.response.send_message('The role must be mentionable in order to continue.',
-                                            ephemeral=True)
-            return
-
-        if not ctx.channel.permissions_for(ctx.guild.me).send_messages:
-            await ctx.response.send_message('I do not have the permissions to send messages in this channel.',
                                             ephemeral=True)
             return
 

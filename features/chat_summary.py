@@ -107,13 +107,10 @@ class ChatSummary(discord.Cog):
     @chat_summary_subcommand.command(name="add", description="Add a channel to count to chat summary")
     @commands_ext.guild_only()
     @commands_ext.has_permissions(manage_guild=True)
+    @commands_ext.bot_has_permissions(send_messages=True)
     @is_blocked()
     @analytics("chatsummary add")
     async def command_add(self, ctx: discord.ApplicationContext, channel: discord.TextChannel):
-        if not channel.permissions_for(ctx.guild.me).send_messages:
-            await ctx.response.send_message("I do not have the permissions to send messages in this channel.", ephemeral=True)
-            return
-
         cur = db.cursor()
         cur.execute('SELECT * FROM chat_summary WHERE guild_id = ? AND channel_id = ?',
                     (ctx.guild.id, channel.id))

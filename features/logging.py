@@ -479,17 +479,8 @@ class Logging(discord.Cog):
     @logging_subcommand.command(name="set_channel", description="Set the logging channel")
     @commands_ext.guild_only()
     @commands_ext.has_guild_permissions(manage_guild=True)
+    @commands_ext.bot_has_permissions(send_messages=True, view_channel=True)
     @is_blocked()
     async def set_logging_channel(self, ctx: discord.ApplicationContext, channel: discord.TextChannel):
-        perms = channel.permissions_for(ctx.guild.me)
-        if not perms.view_channel:
-            await ctx.response.send_message("The bot can't see that channel", ephemeral=True)
-            return
-
-        if not perms.send_messages:
-            await ctx.response.send_message("The bot does not have send message permissions in that channel",
-                                            ephemeral=True)
-            return
-
         set_setting(ctx.guild.id, 'logging_channel', str(channel.id))
         await ctx.response.send_message(f"Logging channel was set to {channel.mention}", ephemeral=True)

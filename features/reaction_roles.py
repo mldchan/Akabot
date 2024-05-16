@@ -61,15 +61,12 @@ class ReactionRoles(discord.Cog):
     @create_reaction_role_subcommand.command(name="normal", description="Create a normal reaction role")
     @commands_ext.has_permissions(manage_roles=True)
     @commands_ext.guild_only()
+    @commands_ext.bot_has_permissions(send_messages=True)
     @is_blocked()
     @analytics("create_reaction_role normal")
     async def create_reaction_role_normal(self, interaction: discord.ApplicationContext, message: str, role: discord.Role,
                                           role_2: discord.Role = None, role_3: discord.Role = None,
                                           role_4: discord.Role = None, role_5: discord.Role = None) -> None:
-        if not interaction.channel.permissions_for(interaction.guild.me).send_messages:
-            await interaction.response.send_message("I do not have the permissions to send messages in this channel!",
-                                                    ephemeral=True)
-            return
         view = self.create_view('n', [role, role_2, role_3, role_4, role_5])
 
         await interaction.channel.send(content=message, view=view)
@@ -78,16 +75,12 @@ class ReactionRoles(discord.Cog):
     @create_reaction_role_subcommand.command(name="add_only", description="Create an add only reaction role")
     @commands_ext.has_permissions(manage_roles=True)
     @commands_ext.guild_only()
+    @commands_ext.bot_has_permissions(send_messages=True)
     @is_blocked()
     @analytics("create_reaction_role add_only")
     async def create_reaction_role_add(self, interaction: discord.ApplicationContext, message: str, role: discord.Role,
                                        role_2: discord.Role = None, role_3: discord.Role = None,
                                        role_4: discord.Role = None, role_5: discord.Role = None) -> None:
-        if not interaction.channel.permissions_for(interaction.guild.me).send_messages:
-            await interaction.response.send_message("I do not have the permissions to send messages in this channel!",
-                                                    ephemeral=True)
-            return
-
         view = self.create_view('a', [role, role_2, role_3, role_4, role_5])
 
         await interaction.channel.send(content=message, view=view)
@@ -96,15 +89,12 @@ class ReactionRoles(discord.Cog):
     @create_reaction_role_subcommand.command(name="remove_only", description="Create a remove only reaction role")
     @commands_ext.has_permissions(manage_roles=True)
     @commands_ext.guild_only()
+    @commands_ext.bot_has_permissions(send_messages=True)
     @is_blocked()
     @analytics("create_reaction_role remove_only")
     async def create_reaction_role_remove(self, interaction: discord.ApplicationContext, message: str, role: discord.Role,
                                           role_2: discord.Role = None, role_3: discord.Role = None,
                                           role_4: discord.Role = None, role_5: discord.Role = None) -> None:
-        if not interaction.channel.permissions_for(interaction.guild.me).send_messages:
-            await interaction.response.send_message("I do not have the permissions to send messages in this channel!",
-                                                    ephemeral=True)
-            return
         view = self.create_view('r', [role, role_2, role_3, role_4, role_5])
 
         await interaction.channel.send(content=message, view=view)
@@ -113,15 +103,12 @@ class ReactionRoles(discord.Cog):
     @create_reaction_role_subcommand.command(name="single", description="Create a single choice only reaction role")
     @commands_ext.has_permissions(manage_roles=True)
     @commands_ext.guild_only()
+    @commands_ext.bot_has_permissions(send_messages=True)
     @is_blocked()
     @analytics("create_reaction_role single")
     async def create_reaction_role_single(self, interaction: discord.ApplicationContext, message: str, role: discord.Role,
                                           role_2: discord.Role = None, role_3: discord.Role = None,
                                           role_4: discord.Role = None, role_5: discord.Role = None) -> None:
-        if not interaction.channel.permissions_for(interaction.guild.me).send_messages:
-            await interaction.response.send_message("I do not have the permissions to send messages in this channel!",
-                                                    ephemeral=True)
-            return
         view = self.create_view('s', [role, role_2, role_3, role_4, role_5])
 
         await interaction.channel.send(content=message, view=view)

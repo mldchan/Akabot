@@ -32,6 +32,7 @@ class AntiRaid(discord.Cog):
         self.violation_counters = ViolationCounters()
 
     @discord.Cog.listener()
+    @is_blocked()
     async def on_member_join(self, member: discord.Member):
         self.violation_counters.filter_expired_actions()
         if self.violation_counters.count_actions('join', member) > 5:
