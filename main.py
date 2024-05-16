@@ -39,7 +39,10 @@ async def on_application_command_error(ctx: discord.ApplicationContext, error):
         return
 
     if isinstance(error, discord_commands_ext.BotMissingPermissions):
-        await ctx.response.send_message("The bot is missing permissions to perform this action.", ephemeral=True)
+        await ctx.response.send_message(
+            f"The bot is missing permissions to perform this action.\n"
+            f"Missing: {', '.join(error.missing_permissions)}",
+            ephemeral=True)
         return
 
     if isinstance(error, BlockedUserError):
