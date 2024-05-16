@@ -10,7 +10,8 @@
         "reactionroles": true,
         "feedback": true,
         "logging": true,
-        "admin_cmds": false
+        "admin_cmds": false,
+        "giveaways": true
     },
     "middlewares": {
         "blocklist": true,

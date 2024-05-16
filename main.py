@@ -4,7 +4,7 @@ import discord
 from discord.ext import commands as discord_commands_ext
 
 from features import welcoming, leveling, antiraid, chat_streaks, chat_revive, chat_summary, reaction_roles, \
-    feedback_cmd, logging, admin_cmds
+    feedback_cmd, logging, admin_cmds, giveaways
 from utils.blocked import BlockedUserError, BlockedServerError
 
 with open('config.json', 'r', encoding='utf8') as f:
@@ -78,5 +78,8 @@ if data['features']['logging']:
 
 if data["features"]["admin_cmds"]:
     bot.add_cog(admin_cmds.AdminCommands(bot))
+
+if data["features"]["giveaways"]:
+    bot.add_cog(giveaways.Giveaways(bot))
 
 bot.run(data['token'])
