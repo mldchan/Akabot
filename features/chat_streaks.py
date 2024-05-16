@@ -131,11 +131,11 @@ class ChatStreaks(discord.Cog):
 
         if get_setting(message.guild.id, 'chat_streak_alerts', 'true') == 'true':
             if state == "expired":
-                msg = await message.channel.send(f'Your streak of {old_streak} days has expired :<')
+                msg = await message.channel.send(f'Your streak of {old_streak:d} days has expired :<')
                 await msg.delete(delay=5)
 
             if state == "updated":
-                msg = await message.channel.send(f'You\'re now on streak {old_streak} -> {new_streak}! Keep it up :3')
+                msg = await message.channel.send(f'You\'re now on streak {old_streak:d} -> {new_streak:d}! Keep it up :3')
                 await msg.delete(delay=5)
 
     streaks_subcommand = discord.SlashCommandGroup(
