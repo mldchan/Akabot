@@ -122,14 +122,16 @@ class Leveling(discord.Cog):
         if not msg.channel.permissions_for(msg.guild.me).send_messages:
             return
 
+        channel_perms = msg.channel.permissions_for(msg.guild.me)
+
         if msg.guild.me.guild_permissions.manage_roles:
             await update_roles_for_member(msg.guild, msg.author)
-        elif msg.channel.can_send():
+        elif msg.channel.can_send() and channel_perms.send_messages and channel_perms.view_channel:
             msg2 = await msg.channel.send(
                 "Couldn't update roles for you, contact an admin in order to resolve the issue.")
             await msg2.delete(delay=5)
 
-        if before_level != after_level and msg.channel.can_send():
+        if before_level != after_level and msg.channel.can_send() and channel_perms.send_messages and channel_perms.view_channel:
             msg2 = await msg.channel.send(
                 f'Congratulations, {msg.author.mention}! You have reached level {after_level}!')
             await msg2.delete(delay=5)
