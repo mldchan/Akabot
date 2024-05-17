@@ -18,12 +18,6 @@ file_handler.setLevel(logging.DEBUG)
 file_handler.setFormatter(logging.Formatter("%(asctime)s | %(filename)s:%(lineno)d %(funcName)s %(name)s %(levelname)s | %(message)s"))
 logger.addHandler(file_handler)
 
-logger.debug("This is a debug message")
-logger.info("This is an info message")
-logger.warning("This is a warning message")
-logger.error("This is an error message")
-logger.critical("This is a critical message")
-
 with open('config.json', 'r', encoding='utf8') as f:
     data = json.load(f)
 
