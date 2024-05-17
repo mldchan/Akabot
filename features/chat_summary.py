@@ -42,7 +42,7 @@ class ChatSummary(discord.Cog):
                     (message.guild.id, message.channel.id))
         if not cur.fetchone():
             cur.execute(
-                'INSERT INTO chat_summary(guild_id, channel_id, enabled, messages, owos, nyas, cats) VALUES (?, ?, ?, ?, ?, ?, ?)',
+                'INSERT INTO chat_summary(guild_id, channel_id, enabled, messages) VALUES (?, ?, ?, ?, ?, ?, ?)',
                 (message.guild.id, message.channel.id, 0, 0, 0, 0, 0))
 
         # Increment total message count
@@ -123,7 +123,7 @@ class ChatSummary(discord.Cog):
                     (ctx.guild.id, channel.id))
         if not cur.fetchone():
             cur.execute(
-                'INSERT INTO chat_summary(guild_id, channel_id, enabled, messages, owos, nyas, cats) VALUES (?, ?, ?, ?, ?, ?, ?)',
+                'INSERT INTO chat_summary(guild_id, channel_id, enabled, messages) VALUES (?, ?, ?, ?, ?, ?, ?)',
                 (ctx.guild.id, channel.id, 0, 0, 0, 0, 0))
 
         cur.execute('SELECT enabled FROM chat_summary WHERE guild_id = ? AND channel_id = ?',
@@ -175,7 +175,7 @@ class ChatSummary(discord.Cog):
     # @is_blocked()
     # async def test_summarize(self, ctx: discord.ApplicationContext):
     #     cur = db.cursor()
-    #     cur.execute('SELECT guild_id, channel_id, messages, owos, nyas, cats FROM chat_summary WHERE enabled = 1')
+    #     cur.execute('SELECT guild_id, channel_id, messages FROM chat_summary WHERE enabled = 1')
     #     for i in cur.fetchall():
     #         guild = self.bot.get_guild(i[0])
     #         if guild is None:
@@ -208,7 +208,7 @@ class ChatSummary(discord.Cog):
     #
     #         await channel.send(chat_summary_message)
     #
-    #         cur.execute('UPDATE chat_summary SET messages = 0, owos = 0, nyas = 0, cats = 0 WHERE guild_id = ? AND'
+    #         cur.execute('UPDATE chat_summary SET messages = 0, WHERE guild_id = ? AND'
     #                     ' channel_id = ?', (i[0], i[1]))
     #         cur.execute('DELETE FROM chat_summary_members WHERE guild_id = ? AND channel_id = ?', (i[0], i[1]))
     #
