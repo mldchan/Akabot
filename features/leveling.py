@@ -88,7 +88,7 @@ async def update_roles_for_member(guild: discord.Guild, member: discord.Member):
         role_id = get_setting(guild.id, f'leveling_reward_{i}', '0')
         if role_id != '0':
             role = guild.get_role(int(role_id))
-            if role.position > guild.self_role.position:
+            if role.position > guild.me.top_role.position:
                 return
 
             if role is not None and role not in member.roles:
@@ -98,7 +98,7 @@ async def update_roles_for_member(guild: discord.Guild, member: discord.Member):
         role_id = get_setting(guild.id, f'leveling_reward_{i}', '0')
         if role_id != '0':
             role = guild.get_role(int(role_id))
-            if role.position > guild.self_role.position:
+            if role.position > guild.me.top_role.position:
                 return
 
             if role is not None and role in member.roles:
@@ -124,12 +124,12 @@ class Leveling(discord.Cog):
 
         if msg.guild.me.guild_permissions.manage_roles:
             await update_roles_for_member(msg.guild, msg.author)
-        else:
+        elif msg.channel.permissions_for(msg.guild.me).send_messages:
             msg2 = await msg.channel.send(
                 "Couldn't update roles for you, contact an admin in order to resolve the issue.")
             await msg2.delete(delay=5)
 
-        if before_level != after_level:
+        if before_level != after_level and msg.channel.permissions_for(msg.guild.me).send_messages:
             msg2 = await msg.channel.send(
                 f'Congratulations, {msg.author.mention}! You have reached level {after_level}!')
             await msg2.delete(delay=5)
