@@ -13,6 +13,13 @@ class ChatSummary(discord.Cog):
     def __init__(self, bot: discord.Bot) -> None:
         super().__init__()
         cur = db.cursor()
+        cur.execute("PRAGMA table_info(chat_summary)")
+        # Check if the format is correct, there should be 4 columns of info, if not, delete and recreate table.
+        chat_summary_cols = len(cur.fetchall())
+        if chat_summary_cols != 4:
+            print("DEBUG recreating table chat_summary, row count", chat_summary_cols, "is not 4")
+            cur.execute("DROP TABLE chat_summary")
+
         cur.execute(
             'CREATE TABLE IF NOT EXISTS chat_summary(guild_id INTEGER, channel_id INTEGER, enabled INTEGER, messages INTEGER)')
         cur.execute(
