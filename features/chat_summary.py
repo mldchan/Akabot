@@ -17,11 +17,12 @@ class ChatSummary(discord.Cog):
         cur.execute("PRAGMA table_info(chat_summary)")
         # Check if the format is correct, there should be 4 columns of info, if not, delete and recreate table.
         chat_summary_cols = len(cur.fetchall())
+
+        cur.execute("SELECT * FROM chat_summary")
+        chat_summary_old = cur.fetchall()
         if chat_summary_cols != 4:
             print("DEBUG recreating table chat_summary, row count", chat_summary_cols, "is not 4")
-            print("Downloading records...", end='')
-            cur.execute("select * from chat_summary")
-            chat_summary_old = cur.fetchall()
+            print("Loading records...", end='')
             print(len(chat_summary_old), "records fetched.")
 
             cur.execute("DROP TABLE chat_summary")
