@@ -11,6 +11,7 @@ from utils.blocked import is_blocked
 
 class ChatSummary(discord.Cog):
     def __init__(self, bot: discord.Bot) -> None:
+        global chat_summary_old
         super().__init__()
         cur = db.cursor()
         cur.execute("PRAGMA table_info(chat_summary)")
@@ -18,12 +19,22 @@ class ChatSummary(discord.Cog):
         chat_summary_cols = len(cur.fetchall())
         if chat_summary_cols != 4:
             print("DEBUG recreating table chat_summary, row count", chat_summary_cols, "is not 4")
+            print("Downloading records...", end='')
+            cur.execute("select * from chat_summary")
+            chat_summary_old = cur.fetchall()
+            print(len(chat_summary_old), "records fetched.")
+
             cur.execute("DROP TABLE chat_summary")
 
         cur.execute(
             'CREATE TABLE IF NOT EXISTS chat_summary(guild_id INTEGER, channel_id INTEGER, enabled INTEGER, messages INTEGER)')
         cur.execute(
             'CREATE INDEX IF NOT EXISTS chat_summary_i ON chat_summary(guild_id, channel_id)')
+
+        for i in chat_summary_old:
+            cur.execute("insert into chat_summary(guild_id, channel_id, enabled, messages) values (?, ?, ?, ?)",
+                        (i[0], i[1], i[2], i[3]))
+
         cur.execute(
             'CREATE TABLE IF NOT EXISTS chat_summary_members(guild_id INTEGER, channel_id INTEGER, member_id INTEGER, messages INTEGER)')
         cur.execute(
