@@ -88,6 +88,9 @@ async def update_roles_for_member(guild: discord.Guild, member: discord.Member):
         role_id = get_setting(guild.id, f'leveling_reward_{i}', '0')
         if role_id != '0':
             role = guild.get_role(int(role_id))
+            if role.position > guild.self_role.position:
+                return
+
             if role is not None and role not in member.roles:
                 await member.add_roles(role)
 
@@ -95,6 +98,9 @@ async def update_roles_for_member(guild: discord.Guild, member: discord.Member):
         role_id = get_setting(guild.id, f'leveling_reward_{i}', '0')
         if role_id != '0':
             role = guild.get_role(int(role_id))
+            if role.position > guild.self_role.position:
+                return
+
             if role is not None and role in member.roles:
                 await member.remove_roles(role)
 
