@@ -1,3 +1,5 @@
+import logging
+
 import discord
 
 from database import conn as db
@@ -7,6 +9,8 @@ from utils.blocked import is_blocked
 
 def db_init():
     cur = db.cursor()
+    logger = logging.getLogger("Akatsuki")
+    logger.debug("Creating table for feature reports :3")
     cur.execute('create table if not exists feature_reports (type text, user_id int, feature text)')
     cur.close()
     db.commit()
@@ -14,7 +18,9 @@ def db_init():
 
 def add_feature_report(type: str, user_id: int, feature: str):
     db_init()
+    logger = logging.getLogger("Akatsuki")
     cur = db.cursor()
+    logger.debug(f"Adding {type} report from {user_id}: {feature}")
     cur.execute('create table if not exists feature_reports (type text, user_id int, feature text)')
     cur.execute('insert into feature_reports (type, user_id, feature) values (?, ?, ?)', (type, user_id, feature))
     cur.close()

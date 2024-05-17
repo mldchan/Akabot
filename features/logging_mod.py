@@ -1,3 +1,5 @@
+import logging
+
 import discord
 from discord.ext import commands as commands_ext
 
@@ -11,10 +13,18 @@ async def log_into_logs(server: discord.Guild, message: discord.Embed):
     if log_chan is None:
         return
 
-    if not log_chan.permissions_for(server.me).send_messages:
+    logger = logging.getLogger("Akatsuki")
+    logger.debug(f"Logs on {server.name} to {log_chan.name}: embed: {message.title}")
+    logger.debug(message.description)
+    for i in message.fields:
+        logger.debug(f"Field: {i.name}: {i.value}")
+
+    if not log_chan.can_send():
+        logger.warning("Tried to send to logs but no permission!")
         return
 
     await log_chan.send(embed=message)
+    logger.debug("Log was sent successfully!")
 
 
 class Logging(discord.Cog):
@@ -307,22 +317,22 @@ class Logging(discord.Cog):
     @is_blocked()
     async def on_voice_state_update(self, member: discord.Member, before: discord.VoiceState,
                                     after: discord.VoiceState):
-        if before is None and after is not None:
+        if before.channel is None and after.channel is not None:
             # joined a channel
             embed = discord.Embed(title=f"{member} Joined {after.channel.name}", color=discord.Color.green())
             embed.description = f"{member} joined the voice channel {after.channel.name}"
             await log_into_logs(member.guild, embed)
 
-        if before is not None and after is None:
+        if before.channel is not None and after.channel is None:
             # left a channel
             embed = discord.Embed(title=f"{member} Left {before.channel.name}", color=discord.Color.red())
             embed.description = f"{member} left the voice channel {before.channel.name}"
             await log_into_logs(member.guild, embed)
 
-        if before is not None and after is not None:
+        if before.channel is not None and after.channel is not None:
             # moved to a different channel or was muted/deafened by admin
             if before.channel != after.channel:
-                embed = discord.Embed(title=f"{member} Moved to {after.channel.name}", color=discord.Color.blue())
+                embed = discord.Embed(title=f"{member} Moved to {before.channel.name}", color=discord.Color.blue())
                 embed.description = f"{member} moved from {before.channel.name} to {after.channel.name}"
                 await log_into_logs(member.guild, embed)
                 return

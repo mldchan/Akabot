@@ -1,4 +1,5 @@
 import datetime
+import logging
 
 import discord
 from discord.ext import commands as commands_ext
@@ -16,15 +17,19 @@ class ChatStreakStorage:
     """
 
     def __init__(self) -> None:
+        logger = logging.getLogger("Akatsuki")
         cur = db.cursor()
+        logger.debug("Creating tables if they don't exist for Chat Streaks")
         cur.execute(
             'CREATE TABLE IF NOT EXISTS chat_streaks (guild_id INTEGER, member_id INTEGER, last_message DATETIME, start_time DATETIME)')
         cur.execute(
             'CREATE UNIQUE INDEX IF NOT EXISTS chat_streaks_index ON chat_streaks (guild_id, member_id)')
 
+        logger.debug("Checking and removing invalid entries")
         cur.execute("SELECT * FROM chat_streaks WHERE typeof(last_message) != 'text' OR typeof(start_time) != 'text'")
         invalid_rows = cur.fetchall()
         for row in invalid_rows:
+            logger.debug(f"Deleting invalid row with guild {row[0]} and member {row[1]}")
             cur.execute("DELETE FROM chat_streaks WHERE guild_id = ? AND member_id = ?", (row[0], row[1]))
 
         cur.close()
@@ -41,10 +46,14 @@ class ChatStreakStorage:
             str: The state of the streak
         """
 
+        logging.debug(f"Setting up streak for {member_id} in {guild_id}")
         cur = db.cursor()
+
+        # Check and start if not existant
         cur.execute(
             'SELECT * FROM chat_streaks WHERE guild_id = ? AND member_id = ?', (guild_id, member_id))
         if cur.fetchone() is None:
+            logging.debug("Starting new streak for this user")
             start_time = datetime.datetime.now()
             print("No streak started, starting new streak")
             cur.execute('INSERT INTO chat_streaks (guild_id, member_id, last_message, start_time) VALUES (?, ?, ?, ?)',
@@ -59,9 +68,12 @@ class ChatStreakStorage:
         last_message = datetime.datetime.fromisoformat(result[0])
         start_time = datetime.datetime.fromisoformat(result[1])
 
+        # Check for streak expiry
         if datetime.datetime.now() - last_message > datetime.timedelta(days=2):
-            print("Streak expired")
+            logging.debug("Streak expired for user")
+            logging.debug(f"Time Diff {(datetime.datetime.now() - last_message).total_seconds() / 3600} hours")
             streak = max((last_message - start_time).days, 0)
+            logging.debug(f"Their streak was {streak}")
             cur.execute(
                 'UPDATE chat_streaks SET last_message = ?, start_time = ? WHERE guild_id = ? AND member_id = ?',
                 (datetime.datetime.now(), datetime.datetime.now(), guild_id, member_id))
@@ -69,22 +81,22 @@ class ChatStreakStorage:
             db.commit()
             return "expired", streak, 0
 
+        logging.debug("Updating streak")
         before_update = (last_message - start_time).days
-        print("Before days", before_update)
-        print("Streak updated")
         cur.execute('UPDATE chat_streaks SET last_message = ? WHERE guild_id = ? AND member_id = ?',
                     (datetime.datetime.now(), guild_id, member_id))
         after_update = (datetime.datetime.now() - start_time).days
-        print("After days", after_update)
+
+        logging.debug(f"Before {before_update}, after {after_update}")
 
         cur.close()
         db.commit()
 
         if before_update != after_update:
-            print("Before update", before_update, "after", after_update, "update detected")
+            logging.debug("Change detected")
             return "updated", before_update, after_update
 
-        print("No changes detected")
+        logging.debug("No change detected")
         return "stayed", after_update, 0
 
     def reset_streak(self, guild_id: int, member_id: int) -> None:
@@ -95,6 +107,7 @@ class ChatStreakStorage:
             member_id (int): Member ID
         """
 
+        logging.debug(f"Resetting streak for {member_id} in {guild_id}")
         cur = db.cursor()
         cur.execute(
             'SELECT * FROM chat_streaks WHERE guild_id = ? AND member_id = ?', (guild_id, member_id))

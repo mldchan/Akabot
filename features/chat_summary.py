@@ -1,4 +1,5 @@
 import datetime
+import logging
 
 import discord
 from discord.ext import commands as commands_ext
@@ -11,8 +12,9 @@ from utils.blocked import is_blocked
 
 class ChatSummary(discord.Cog):
     def __init__(self, bot: discord.Bot) -> None:
-        global chat_summary_old
         super().__init__()
+        logger = logging.getLogger("Akatsuki")
+
         cur = db.cursor()
         cur.execute("PRAGMA table_info(chat_summary)")
         # Check if the format is correct, there should be 4 columns of info, if not, delete and recreate table.
@@ -21,21 +23,23 @@ class ChatSummary(discord.Cog):
         cur.execute("SELECT * FROM chat_summary")
         chat_summary_old = cur.fetchall()
         if chat_summary_cols != 4:
-            print("DEBUG recreating table chat_summary, row count", chat_summary_cols, "is not 4")
-            print("Loading records...", end='')
-            print(len(chat_summary_old), "records fetched.")
+            logger.debug(f"DEBUG recreating table chat_summary, row count{chat_summary_cols}, is not 4")
+            logger.debug(f"Loading records... {len(chat_summary_old)} records fetched.")
 
             cur.execute("DROP TABLE chat_summary")
 
+        logger.debug("Setting up tables")
         cur.execute(
             'CREATE TABLE IF NOT EXISTS chat_summary(guild_id INTEGER, channel_id INTEGER, enabled INTEGER, messages INTEGER)')
         cur.execute(
             'CREATE INDEX IF NOT EXISTS chat_summary_i ON chat_summary(guild_id, channel_id)')
 
+        logger.debug("Importing old records...")
         for i in chat_summary_old:
             cur.execute("insert into chat_summary(guild_id, channel_id, enabled, messages) values (?, ?, ?, ?)",
                         (i[0], i[1], i[2], i[3]))
 
+        logger.debug("Setting up tables 2/2")
         cur.execute(
             'CREATE TABLE IF NOT EXISTS chat_summary_members(guild_id INTEGER, channel_id INTEGER, member_id INTEGER, messages INTEGER)')
         cur.execute(
@@ -49,22 +53,31 @@ class ChatSummary(discord.Cog):
     async def on_message(self, message: discord.Message):
         if message.guild is None:
             return
+
+        logger = logging.getLogger("Akatsuki")
+
+        logger.debug(f"Chat Summary for {message.id}")
+
         cur = db.cursor()
         cur.execute('SELECT * FROM chat_summary WHERE guild_id = ? AND channel_id = ?',
                     (message.guild.id, message.channel.id))
         if not cur.fetchone():
+            logger.debug(f"Setting up chat summary for channel {message.channel.id}")
             cur.execute(
                 'INSERT INTO chat_summary(guild_id, channel_id, enabled, messages) VALUES (?, ?, ?, ?, ?, ?, ?)',
                 (message.guild.id, message.channel.id, 0, 0, 0, 0, 0))
 
         # Increment total message count
+        logger.debug("Incrementing message count")
         cur.execute('UPDATE chat_summary SET messages = messages + 1 WHERE guild_id = ? AND channel_id = ?',
                     (message.guild.id, message.channel.id))
 
         # Increment message count for specific member
+        logger.debug("Incrementing message count for specific member")
         cur.execute('SELECT * FROM chat_summary_members WHERE guild_id = ? AND channel_id = ? AND member_id = ?',
                     (message.guild.id, message.channel.id, message.author.id))
         if not cur.fetchone():
+            logger.debug("Initializing profile for specific member")
             cur.execute(
                 'INSERT INTO chat_summary_members(guild_id, channel_id, member_id, messages) VALUES (?, ?, ?, ?)',
                 (message.guild.id, message.channel.id, message.author.id, 0))
@@ -73,6 +86,7 @@ class ChatSummary(discord.Cog):
             'UPDATE chat_summary_members SET messages = messages + 1 WHERE guild_id = ? AND channel_id = ? AND member_id = ?',
             (message.guild.id, message.channel.id, message.author.id))
 
+        logger.debug("Done")
         cur.close()
         db.commit()
 
@@ -81,6 +95,9 @@ class ChatSummary(discord.Cog):
         now = datetime.datetime.now(datetime.UTC)
         if now.hour != 0 or now.minute != 0:
             return
+
+        logger = logging.getLogger("Akatsuki")
+        logger.debug("Is midnight")
 
         cur = db.cursor()
         cur.execute('SELECT guild_id, channel_id, messages FROM chat_summary WHERE enabled = 1')
@@ -111,6 +128,7 @@ class ChatSummary(discord.Cog):
                 else:
                     chat_summary_message += f'{jndex}. User({j[0]}) at {j[1]} messages\n'
 
+            logger.debug(f"Sending summary message to {i[0]}/{i[1]} with {i[2]} messages")
             await channel.send(chat_summary_message)
 
             cur.execute('UPDATE chat_summary SET messages = 0, WHERE guild_id = ? AND channel_id = ?', (i[0], i[1]))

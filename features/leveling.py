@@ -124,7 +124,7 @@ class Leveling(discord.Cog):
 
         channel_perms = msg.channel.permissions_for(msg.guild.me)
         channel_overrides = msg.channel.overwrites_for(msg.guild.me)
-        
+
         print("channel_perms.view_channel", channel_perms.view_channel)
         print("channel_overrides.view_channel", channel_overrides.view_channel)
         print("channel_perms.send_messages", channel_perms.send_messages)
