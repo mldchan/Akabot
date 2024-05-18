@@ -113,8 +113,4 @@ if data["features"]["giveaways"]:
     logger.debug("Loading module Giveaways")
     bot.add_cog(giveaways.Giveaways(bot))
 
-if data["features"]["support"]:
-    logger.debug("Loading mudule SupportCMD")
-    bot.add_cog(feedback_cmd.SupportCmd(bot))
-
 bot.run(data['token'])
