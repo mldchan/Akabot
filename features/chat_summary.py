@@ -156,8 +156,8 @@ class ChatSummary(discord.Cog):
                     (ctx.guild.id, channel.id))
         if not cur.fetchone():
             cur.execute(
-                'INSERT INTO chat_summary(guild_id, channel_id, enabled, messages) VALUES (?, ?, ?, ?, ?, ?, ?)',
-                (ctx.guild.id, channel.id, 0, 0, 0, 0, 0))
+                'INSERT INTO chat_summary(guild_id, channel_id, enabled, messages) VALUES (?, ?, ?, ?)',
+                (ctx.guild.id, channel.id, 0, 0))
 
         cur.execute('SELECT enabled FROM chat_summary WHERE guild_id = ? AND channel_id = ?',
                     (ctx.guild.id, channel.id))
