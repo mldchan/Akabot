@@ -129,6 +129,7 @@ class Leveling(discord.Cog):
 
         logger.info(f"channel_perms.view_channel {channel_perms.view_channel}")
         logger.info(f"channel_perms.send_messages {channel_perms.send_messages}")
+        logger.info(f"can_send {msg.channel.can_send()}")
 
         if msg.guild.me.guild_permissions.manage_roles:
             await update_roles_for_member(msg.guild, msg.author)
