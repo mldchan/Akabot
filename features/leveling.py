@@ -1,4 +1,5 @@
 import datetime
+import logging
 
 import discord
 from discord.ext import commands as commands_ext
@@ -115,6 +116,8 @@ class Leveling(discord.Cog):
         if msg.author.bot:
             return
 
+        logger = logging.getLogger("Akatsuki")
+
         before_level = get_level_for_xp(db_get_user_xp(msg.guild.id, msg.author.id))
         db_add_user_xp(msg.guild.id, msg.author.id, 3)
         after_level = get_level_for_xp(db_get_user_xp(msg.guild.id, msg.author.id))
@@ -124,8 +127,8 @@ class Leveling(discord.Cog):
 
         channel_perms = msg.channel.permissions_for(msg.guild.me)
 
-        print("channel_perms.view_channel", channel_perms.view_channel)
-        print("channel_perms.send_messages", channel_perms.send_messages)
+        logger.info(f"channel_perms.view_channel {channel_perms.view_channel}")
+        logger.info(f"channel_perms.send_messages {channel_perms.send_messages}")
 
         if msg.guild.me.guild_permissions.manage_roles:
             await update_roles_for_member(msg.guild, msg.author)
