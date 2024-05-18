@@ -111,7 +111,7 @@ class Leveling(discord.Cog):
         super().__init__()
 
     @discord.Cog.listener()
-    async def on_message(schanelf, msg: discord.Message):
+    async def on_message(self, msg: discord.Message):
         if msg.author.bot:
             return
 
@@ -123,22 +123,18 @@ class Leveling(discord.Cog):
             return
 
         channel_perms = msg.channel.permissions_for(msg.guild.me)
-        channel_overrides = msg.channel.overwrites_for(msg.guild.me)
 
         print("channel_perms.view_channel", channel_perms.view_channel)
-        print("channel_overrides.view_channel", channel_overrides.view_channel)
         print("channel_perms.send_messages", channel_perms.send_messages)
-        print("channel_overrides.send_messages", channel_overrides.send_messages)
-        print("can_send()", msg.channel.can_send())
 
         if msg.guild.me.guild_permissions.manage_roles:
             await update_roles_for_member(msg.guild, msg.author)
-        elif msg.channel.can_send() and channel_perms.send_messages and channel_perms.view_channel and channel_overrides.send_messages and channel_overrides.view_channel:
+        elif channel_perms.send_messages and channel_perms.view_channel:
             msg2 = await msg.channel.send(
                 "Couldn't update roles for you, contact an admin in order to resolve the issue.")
             await msg2.delete(delay=5)
 
-        if before_level != after_level and msg.channel.can_send() and channel_perms.send_messages and channel_perms.view_channel and channel_overrides.send_messages and channel_perms.view_channel:
+        if before_level != after_level and channel_perms.send_messages and channel_perms.view_channel:
             msg2 = await msg.channel.send(
                 f'Congratulations, {msg.author.mention}! You have reached level {after_level}!')
             await msg2.delete(delay=5)

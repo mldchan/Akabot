@@ -34,10 +34,13 @@ class ChatSummary(discord.Cog):
         cur.execute(
             'CREATE INDEX IF NOT EXISTS chat_summary_i ON chat_summary(guild_id, channel_id)')
 
-        logger.debug("Importing old records...")
-        for i in chat_summary_old:
-            cur.execute("insert into chat_summary(guild_id, channel_id, enabled, messages) values (?, ?, ?, ?)",
-                        (i[0], i[1], i[2], i[3]))
+        if chat_summary_cols != 4:
+            logger.debug("Importing old records...")
+            for i in chat_summary_old:
+                cur.execute("insert into chat_summary(guild_id, channel_id, enabled, messages) values (?, ?, ?, ?)",
+                            (i[0], i[1], i[2], i[3]))
+        else:
+            logger.debug("Skipping importing of old records.")
 
         logger.debug("Setting up tables 2/2")
         cur.execute(
