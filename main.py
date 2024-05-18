@@ -66,7 +66,7 @@ async def on_application_command_error(ctx: discord.ApplicationContext, error):
         await ctx.response.send_message(error.reason, ephemeral=True)
         return
 
-    raise error
+    logging.error(error)
 
 
 if data["features"]["welcoming"]:
