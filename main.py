@@ -37,6 +37,8 @@ async def on_ready():
 
 @bot.event
 async def on_application_command_error(ctx: discord.ApplicationContext, error):
+    logging.warning(error)
+
     if isinstance(error, discord_commands_ext.CommandOnCooldown):
         await ctx.response.send_message(f'Cooldown! Try again after {error.retry_after} seconds.', ephemeral=True)
         return
@@ -65,8 +67,6 @@ async def on_application_command_error(ctx: discord.ApplicationContext, error):
     if isinstance(error, BlockedServerError):
         await ctx.response.send_message(error.reason, ephemeral=True)
         return
-
-    logging.error(error)
 
 
 if data["features"]["welcoming"]:
