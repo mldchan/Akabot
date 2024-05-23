@@ -150,7 +150,7 @@ class ChatStreaks(discord.Cog):
                 await msg.delete(delay=5)
 
             if state == "updated":
-                msg = await message.channel.send(f'You\'re now on streak {old_streak:d} -> {new_streak:d}! Keep it up :3')
+                msg = await message.channel.send(f'{new_streak:d} days of consecutive  messages! Keep it up :3')
                 await msg.delete(delay=5)
 
     streaks_subcommand = discord.SlashCommandGroup(
