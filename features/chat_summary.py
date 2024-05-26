@@ -50,6 +50,7 @@ class ChatSummary(discord.Cog):
         cur.close()
         db.commit()
         self.bot = bot
+        self.summarize.start()
 
     @discord.Cog.listener()
     @is_blocked()
@@ -207,30 +208,30 @@ class ChatSummary(discord.Cog):
     # @commands_ext.has_permissions(manage_guild=True)
     # @is_blocked()
     # async def test_summarize(self, ctx: discord.ApplicationContext):
+    #     logger = logging.getLogger("Akatsuki")
+    #     logger.debug("Is midnight")
+
     #     cur = db.cursor()
     #     cur.execute('SELECT guild_id, channel_id, messages FROM chat_summary WHERE enabled = 1')
     #     for i in cur.fetchall():
     #         guild = self.bot.get_guild(i[0])
     #         if guild is None:
     #             continue
-    #
+
     #         channel = guild.get_channel(i[1])
     #         if channel is None:
     #             continue
-    #
+
     #         now = datetime.datetime.now(datetime.timezone.utc)
     #         chat_summary_message = f'# Chat Summary for {now.month}/{now.day}/{now.year}:\n'
     #         chat_summary_message += '\n'
     #         chat_summary_message += f'**Messages**: {i[2]}\n'
-    #         chat_summary_message += f'OwOs: {i[3]}\n'
-    #         chat_summary_message += f'Nya~\'s: {i[4]}\n'
-    #         chat_summary_message += f':3\'s: {i[5]}\n\n**Top members:**\n'
-    #
+
     #         cur.execute(
     #             'SELECT member_id, messages FROM chat_summary_members WHERE guild_id = ? AND channel_id = ? ORDER BY '
     #             'messages DESC LIMIT 5', (i[0], i[1]))
-    #
-    #         jndex = 0
+
+    #         jndex = 0  # idk
     #         for j in cur.fetchall():
     #             jndex += 1
     #             member = guild.get_member(j[0])
@@ -238,14 +239,15 @@ class ChatSummary(discord.Cog):
     #                 chat_summary_message += f'{jndex}. {member.display_name} at {j[1]} messages\n'
     #             else:
     #                 chat_summary_message += f'{jndex}. User({j[0]}) at {j[1]} messages\n'
-    #
+
+    #         logger.debug(f"Sending summary message to {i[0]}/{i[1]} with {i[2]} messages")
     #         await channel.send(chat_summary_message)
-    #
-    #         cur.execute('UPDATE chat_summary SET messages = 0, WHERE guild_id = ? AND'
-    #                     ' channel_id = ?', (i[0], i[1]))
-    #         cur.execute('DELETE FROM chat_summary_members WHERE guild_id = ? AND channel_id = ?', (i[0], i[1]))
-    #
+
+    #         cur.execute('UPDATE chat_summary SET messages = 0, WHERE guild_id = ? AND channel_id = ?', (i[0], i[1]))
+    #         cur.execute(
+    #             'DELETE FROM chat_summary_members WHERE guild_id = ? AND channel_id = ?', (i[0], i[1]))
+
     #     cur.close()
     #     db.commit()
-    #
-    #     await ctx.response.send_message('InDev', ephemeral=True)
+
+    #     await ctx.response.send_message("Done.", ephemeral=True)
