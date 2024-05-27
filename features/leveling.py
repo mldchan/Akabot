@@ -34,7 +34,7 @@ def db_get_user_xp(guild_id: int, user_id: int):
     cur.execute('SELECT xp FROM leveling WHERE guild_id = ? AND user_id = ?', (guild_id, user_id))
     data = cur.fetchone()
     cur.close()
-    return data[0] if data else 0
+    return data[0] if data else 1
 
 
 def db_add_user_xp(guild_id: int, user_id: int, xp: int):
