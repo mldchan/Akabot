@@ -116,8 +116,6 @@ class Leveling(discord.Cog):
         if msg.author.bot:
             return
 
-        logger = logging.getLogger("Akatsuki")
-
         before_level = get_level_for_xp(db_get_user_xp(msg.guild.id, msg.author.id))
         db_add_user_xp(msg.guild.id, msg.author.id, 3)
         after_level = get_level_for_xp(db_get_user_xp(msg.guild.id, msg.author.id))
@@ -125,20 +123,14 @@ class Leveling(discord.Cog):
         if not msg.channel.permissions_for(msg.guild.me).send_messages:
             return
 
-        channel_perms = msg.channel.permissions_for(msg.guild.me)
-
-        logger.info(f"channel_perms.view_channel {channel_perms.view_channel}")
-        logger.info(f"channel_perms.send_messages {channel_perms.send_messages}")
-        logger.info(f"can_send {msg.channel.can_send()}")
-
         if msg.guild.me.guild_permissions.manage_roles:
             await update_roles_for_member(msg.guild, msg.author)
-        elif channel_perms.send_messages and channel_perms.view_channel:
+        elif msg.channel.can_send():
             msg2 = await msg.channel.send(
                 "Couldn't update roles for you, contact an admin in order to resolve the issue.")
             await msg2.delete(delay=5)
 
-        if before_level != after_level and channel_perms.send_messages and channel_perms.view_channel:
+        if before_level != after_level and msg.channel.can_send():
             msg2 = await msg.channel.send(
                 f'Congratulations, {msg.author.mention}! You have reached level {after_level}!')
             await msg2.delete(delay=5)
