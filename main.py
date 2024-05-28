@@ -4,7 +4,7 @@ import discord
 from discord.ext import commands as discord_commands_ext
 
 from features import welcoming, leveling, antiraid, chat_streaks, chat_revive, chat_summary, reaction_roles, \
-    feedback_cmd, logging_mod, admin_cmds, giveaways, feedback_cmd, moderation
+    feedback_cmd, logging_mod, admin_cmds, giveaways, feedback_cmd, moderation, cleanup_task
 from utils.blocked import BlockedUserError, BlockedServerError
 
 logger = logging.getLogger("Akatsuki")
@@ -68,6 +68,8 @@ async def on_application_command_error(ctx: discord.ApplicationContext, error):
         await ctx.response.send_message(error.reason, ephemeral=True)
         return
 
+
+bot.add_cog(cleanup_task.DbCleanupTask())
 
 if data["features"]["welcoming"]:
     logger.debug("Loading module Welcoming")
