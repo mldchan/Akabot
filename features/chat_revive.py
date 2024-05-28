@@ -59,6 +59,9 @@ class ChatRevive(discord.Cog):
                     if channel is None:
                         continue
 
+                    if not channel.can_send():
+                        continue
+
                     logger.debug("Sending revive alert as channel was inactive.")
                     await channel.send(f'{role.mention}, this channel has been inactive for a while.')
                     cur.execute('UPDATE chat_revive SET revived = ? WHERE guild_id = ? AND channel_id = ?',
