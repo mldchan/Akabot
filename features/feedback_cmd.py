@@ -1,6 +1,7 @@
 import logging
 
 import discord
+from discord.ui.item import Item
 
 from database import conn as db
 from utils.analytics import analytics
@@ -27,6 +28,15 @@ def add_feature_report(type: str, user_id: int, feature: str):
     db.commit()
 
 
+class VoteView(discord.ui.View):
+    def __init__(self):
+        super().__init__()
+
+        button1 = discord.ui.Button(label="top.gg", url="https://top.gg/bot/1172922944033411243")
+
+        self.add_item(button1)
+
+
 class SupportCmd(discord.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -36,7 +46,17 @@ class SupportCmd(discord.Cog):
     @analytics("website")
     async def website(self, ctx: discord.ApplicationContext):
         await ctx.response.send_message(
-            "You can visit the website [here](<https://akatsuki.nekoweb.org/project/akabot>)")
+            "You can visit the website [here](<https://akatsuki.nekoweb.org/project/akabot>)") 
+    
+    @discord.slash_command(name="vote", description="Vote on the bot")
+    @is_blocked()
+    @analytics("vote")
+    async def vote(self, ctx: discord.ApplicationContext):
+        await ctx.response.send_message(
+            "You can click the button below to vote:",
+            view=VoteView(),
+            ephemeral=True
+        )
 
     feedback_subcommand = discord.SlashCommandGroup(name="feedback", description="Give feedback for the bot")
 
