@@ -11,7 +11,8 @@
         "feedback": true,
         "logging": true,
         "admin_cmds": false,
-        "giveaways": true
+        "giveaways": true,
+        "moderation": true
     },
     "middlewares": {
         "blocklist": true,

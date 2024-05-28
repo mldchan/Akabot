@@ -50,6 +50,9 @@ class ChatSummary(discord.Cog):
         cur.close()
         db.commit()
         self.bot = bot
+
+    @discord.Cog.listener()
+    async def on_ready(self):
         self.summarize.start()
 
     @discord.Cog.listener()
@@ -97,11 +100,9 @@ class ChatSummary(discord.Cog):
     @tasks.loop(minutes=1)
     async def summarize(self):
         now = datetime.datetime.now(datetime.UTC)
+
         if now.hour != 0 or now.minute != 0:
             return
-
-        logger = logging.getLogger("Akatsuki")
-        logger.debug("Is midnight")
 
         cur = db.cursor()
         cur.execute('SELECT guild_id, channel_id, messages FROM chat_summary WHERE enabled = 1')
@@ -132,10 +133,9 @@ class ChatSummary(discord.Cog):
                 else:
                     chat_summary_message += f'{jndex}. User({j[0]}) at {j[1]} messages\n'
 
-            logger.debug(f"Sending summary message to {i[0]}/{i[1]} with {i[2]} messages")
             await channel.send(chat_summary_message)
 
-            cur.execute('UPDATE chat_summary SET messages = 0, WHERE guild_id = ? AND channel_id = ?', (i[0], i[1]))
+            cur.execute('UPDATE chat_summary SET messages = 0 WHERE guild_id = ? AND channel_id = ?', (i[0], i[1]))
             cur.execute(
                 'DELETE FROM chat_summary_members WHERE guild_id = ? AND channel_id = ?', (i[0], i[1]))
 
