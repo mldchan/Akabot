@@ -46,14 +46,16 @@ class ChatStreakStorage:
             str: The state of the streak
         """
 
-        logging.debug(f"Setting up streak for {member_id} in {guild_id}")
+        logger = logging.getLogger("Akatsuki")
+
+        logger.debug(f"Setting up streak for {member_id} in {guild_id}")
         cur = db.cursor()
 
         # Check and start if not existant
         cur.execute(
             'SELECT * FROM chat_streaks WHERE guild_id = ? AND member_id = ?', (guild_id, member_id))
         if cur.fetchone() is None:
-            logging.debug("Starting new streak for this user")
+            logger.debug("Starting new streak for this user")
             start_time = datetime.datetime.now()
             print("No streak started, starting new streak")
             cur.execute('INSERT INTO chat_streaks (guild_id, member_id, last_message, start_time) VALUES (?, ?, ?, ?)',
@@ -70,10 +72,10 @@ class ChatStreakStorage:
 
         # Check for streak expiry
         if datetime.datetime.now() - last_message > datetime.timedelta(days=2):
-            logging.debug("Streak expired for user")
-            logging.debug(f"Time Diff {(datetime.datetime.now() - last_message).total_seconds() / 3600} hours")
+            logger.debug("Streak expired for user")
+            logger.debug(f"Time Diff {(datetime.datetime.now() - last_message).total_seconds() / 3600} hours")
             streak = max((last_message - start_time).days, 0)
-            logging.debug(f"Their streak was {streak}")
+            logger.debug(f"Their streak was {streak}")
             cur.execute(
                 'UPDATE chat_streaks SET last_message = ?, start_time = ? WHERE guild_id = ? AND member_id = ?',
                 (datetime.datetime.now(), datetime.datetime.now(), guild_id, member_id))
@@ -81,22 +83,22 @@ class ChatStreakStorage:
             db.commit()
             return "expired", streak, 0
 
-        logging.debug("Updating streak")
+        logger.debug("Updating streak")
         before_update = (last_message - start_time).days
         cur.execute('UPDATE chat_streaks SET last_message = ? WHERE guild_id = ? AND member_id = ?',
                     (datetime.datetime.now(), guild_id, member_id))
         after_update = (datetime.datetime.now() - start_time).days
 
-        logging.debug(f"Before {before_update}, after {after_update}")
+        logger.debug(f"Before {before_update}, after {after_update}")
 
         cur.close()
         db.commit()
 
         if before_update != after_update:
-            logging.debug("Change detected")
+            logger.debug("Change detected")
             return "updated", before_update, after_update
 
-        logging.debug("No change detected")
+        logger.debug("No change detected")
         return "stayed", after_update, 0
 
     def reset_streak(self, guild_id: int, member_id: int) -> None:
@@ -107,7 +109,9 @@ class ChatStreakStorage:
             member_id (int): Member ID
         """
 
-        logging.debug(f"Resetting streak for {member_id} in {guild_id}")
+        logger = logging.getLogger("Akatsuki")
+
+        logger.debug(f"Resetting streak for {member_id} in {guild_id}")
         cur = db.cursor()
         cur.execute(
             'SELECT * FROM chat_streaks WHERE guild_id = ? AND member_id = ?', (guild_id, member_id))
