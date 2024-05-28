@@ -85,7 +85,7 @@ class Moderation(discord.Cog):
         await user.ban(user, reason=reason)
         await ctx.response.send_message(f'Successfully banned {user.mention} for {reason}.', ephemeral=True)
 
-    @discord.slash_command(name='timeout', description='Time out a user from the server')
+    @discord.slash_command(name='timeout', description='Time out a user from the server. If a user has a timeout, this will change the timeout.')
     @commands_ext.guild_only()
     @commands_ext.has_permissions(mute_members=True)
     @commands_ext.bot_has_permissions(mute_members=True)
@@ -117,14 +117,24 @@ class Moderation(discord.Cog):
             await ctx.response.send_message('The maximum timeout duration is 28 days.',
                                             ephemeral=True)
             return
+        
+        dm_has_updated = False
+
+        if user.timed_out:
+            await user.remove_timeout(reason=f"Changing of duration of timeout for: {reason}")
+            dm_has_updated = True
 
         if send_dm and user.can_send():
-            await user.send(
+            if dm_has_updated:
+                await user.send(
+                f'Your timeout in {ctx.guild.name} was changed to {pretty_time_delta(total_seconds)} by {ctx.user.display_name} for {reason}.')
+            else:
+                await user.send(
                 f'You have been timed out from {ctx.guild.name} for {reason} by {ctx.user.display_name} for {pretty_time_delta(total_seconds)}.')
 
         await user.timeout_for(datetime.timedelta(seconds=total_seconds), reason=reason)
         await ctx.response.send_message(
-            f'Successfully banned {user.mention} for {reason} for {pretty_time_delta(total_seconds)}.', ephemeral=True)
+            f'Successfully timed out {user.mention} for {reason} for {pretty_time_delta(total_seconds)}.', ephemeral=True)
 
     @discord.slash_command(name='remove_timeout', description='Remove a timeout from a user on the server')
     @commands_ext.guild_only()
@@ -147,7 +157,7 @@ class Moderation(discord.Cog):
             return
 
         if user.top_role >= ctx.user.top_role:  # Check if the user has a higher role
-            await ctx.response.send_message('You cannot ban a user with a higher or equal role.', ephemeral=True)
+            await ctx.response.send_message('You cannot timeout a user with a higher or equal role.', ephemeral=True)
             return
 
         if send_dm and user.can_send():
@@ -155,4 +165,4 @@ class Moderation(discord.Cog):
                 f'Your timeout in {ctx.guild.name} has been removed for {reason} by {ctx.user.display_name}.')
 
         await user.remove_timeout(user, reason=reason)
-        await ctx.response.send_message(f'Successfully banned {user.mention} for {reason}.', ephemeral=True)
+        await ctx.response.send_message(f'Successfully unmuted {user.mention} for {reason}.', ephemeral=True)
