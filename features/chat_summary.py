@@ -68,7 +68,7 @@ class ChatSummary(discord.Cog):
         if not cur.fetchone():
             logger.debug(f"Setting up chat summary for channel {message.channel.id}")
             cur.execute(
-                'INSERT INTO chat_summary(guild_id, channel_id, enabled, messages) VALUES (?, ?, ?, ?, ?, ?, ?)',
+                'INSERT INTO chat_summary(guild_id, channel_id, enabled, messages) VALUES (?, ?, ?, ?)',
                 (message.guild.id, message.channel.id, 0, 0))
 
         # Increment total message count
