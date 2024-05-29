@@ -99,6 +99,7 @@ class ChatSummary(discord.Cog):
 
     @tasks.loop(minutes=1)
     async def summarize(self):
+        logger = logging.getLogger("Akatsuki")
         now = datetime.datetime.now(datetime.UTC)
 
         if now.hour != 0 or now.minute != 0:
@@ -113,6 +114,9 @@ class ChatSummary(discord.Cog):
 
             channel = guild.get_channel(i[1])
             if channel is None:
+                continue
+
+            if not channel.can_send():
                 continue
 
             now = datetime.datetime.now(datetime.timezone.utc)
@@ -133,7 +137,10 @@ class ChatSummary(discord.Cog):
                 else:
                     chat_summary_message += f'{jndex}. User({j[0]}) at {j[1]} messages\n'
 
-            await channel.send(chat_summary_message)
+            try:
+                await channel.send(chat_summary_message)
+            except:
+                logger.error(f"Error while sending chat summary message in {guild.id} in {channel.id}")
 
             cur.execute('UPDATE chat_summary SET messages = 0 WHERE guild_id = ? AND channel_id = ?', (i[0], i[1]))
             cur.execute(

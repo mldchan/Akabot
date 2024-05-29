@@ -115,6 +115,8 @@ class Leveling(discord.Cog):
     async def on_message(self, msg: discord.Message):
         if msg.author.bot:
             return
+        
+        logger = logging.getLogger("Akatsuki")
 
         before_level = get_level_for_xp(db_get_user_xp(msg.guild.id, msg.author.id))
         db_add_user_xp(msg.guild.id, msg.author.id, 3)
@@ -125,15 +127,14 @@ class Leveling(discord.Cog):
 
         if msg.guild.me.guild_permissions.manage_roles:
             await update_roles_for_member(msg.guild, msg.author)
-        elif msg.channel.can_send():
-            msg2 = await msg.channel.send(
-                "Couldn't update roles for you, contact an admin in order to resolve the issue.")
-            await msg2.delete(delay=5)
 
         if before_level != after_level and msg.channel.can_send():
-            msg2 = await msg.channel.send(
+            try:
+                msg2 = await msg.channel.send(
                 f'Congratulations, {msg.author.mention}! You have reached level {after_level}!')
-            await msg2.delete(delay=5)
+                await msg2.delete(delay=5)
+            except:
+                logger.error(f"Error while sending leveling message in {msg.guild.id} in {msg.channel.id}")
 
     @discord.slash_command(name='level', description='Get the level of a user')
     @commands_ext.guild_only()
