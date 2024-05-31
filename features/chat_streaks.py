@@ -208,5 +208,5 @@ class ChatStreaks(discord.Cog):
     @is_blocked()
     @analytics("streak")
     async def get_streak_command(self, ctx: discord.ApplicationContext):
-        (_, _, new_day) = self.streak_storage.set_streak(ctx.guild.id, ctx.user.id)
-        await ctx.response.send_message(f'Your current streak is {new_day} days.', ephemeral=True)
+        (_, streak, _) = self.streak_storage.set_streak(ctx.guild.id, ctx.user.id)
+        await ctx.response.send_message(f'Your current streak is {streak} days.', ephemeral=True)
