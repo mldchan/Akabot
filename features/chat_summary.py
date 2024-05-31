@@ -8,7 +8,7 @@ from discord.ext import tasks
 from database import conn as db
 from utils.analytics import analytics
 from utils.blocked import is_blocked
-
+from utils.settings import get_setting, set_setting
 
 class ChatSummary(discord.Cog):
     def __init__(self, bot: discord.Bot) -> None:
@@ -120,7 +120,33 @@ class ChatSummary(discord.Cog):
                 continue
 
             now = datetime.datetime.now(datetime.timezone.utc)
-            chat_summary_message = f'# Chat Summary for {now.month}/{now.day}/{now.year}:\n'
+
+            # Get date format
+            date_format = get_setting(guild.id, "chatsummary_dateformat", "YYYY/MM/DD")
+
+            # Better formatting for day
+            day = str(now.day)
+            if len(day) == 1:
+                day = "0" + day
+
+            # Better formatting for the month
+            month = str(now.month)
+            if len(month) == 1:
+                month = "0" + month
+
+            # Select appropriate date format
+            if date_format == "DD/MM/YYYY":
+                date = f"{day}/{month}/{now.year}"
+            elif date_format == "DD. MM. YYYY":
+                date = f"{day}. {month}. {now.year}"
+            elif date_format == "YYYY/DD/MM":
+                date = f"{now.year}/{day}/{month}"
+            elif date_format == "MM/DD/YYYY":
+                date = f"{month}/{day}/{now.year}"
+            else:
+                date = f"{now.year}/{month}/{day}"
+
+            chat_summary_message = f'# Chat Summary for {date}:\n'
             chat_summary_message += '\n'
             chat_summary_message += f'**Messages**: {i[2]}\n'
 
@@ -209,6 +235,19 @@ class ChatSummary(discord.Cog):
 
         await ctx.response.send_message('Removed channel from being counted.', ephemeral=True)
 
+    @chat_summary_subcommand.command(name="dateformat", description="Set the date format of Chat Streak messages.")
+    @commands_ext.guild_only()
+    @commands_ext.has_permissions(manage_guild=True)
+    @discord.option(name="format", description="Format", choices=["YYYY/MM/DD", "DD/MM/YYYY", "DD. MM. YYYY", "YYYY/DD/MM", "MM/DD/YYYY"])
+    @is_blocked()
+    @analytics("streaks streak")
+    async def streak_dateformat(self, ctx: discord.ApplicationContext, format: str):
+        # Save setting
+        set_setting(ctx.guild.id, "chatsummary_dateformat", format)
+
+        # Respond
+        await ctx.response.send_message(f"Set the Chat Summary date format to {format}.", ephemeral=True)
+
     # The commented code below is for testing purposes
     # @chat_summary_subcommand.command(name="test", description="Test command for testing purposes")
     # @commands_ext.guild_only()
@@ -229,8 +268,37 @@ class ChatSummary(discord.Cog):
     #         if channel is None:
     #             continue
 
+    #         if not channel.can_send():
+    #             continue
+
     #         now = datetime.datetime.now(datetime.timezone.utc)
-    #         chat_summary_message = f'# Chat Summary for {now.month}/{now.day}/{now.year}:\n'
+
+    #         # Get date format
+    #         date_format = get_setting(guild.id, "chatsummary_dateformat", "YYYY/MM/DD")
+
+    #         # Better formatting for day
+    #         day = str(now.day)
+    #         if len(day) == 1:
+    #             day = "0" + day
+
+    #         # Better formatting for the month
+    #         month = str(now.month)
+    #         if len(month) == 1:
+    #             month = "0" + month
+
+    #         # Select appropriate date format
+    #         if date_format == "DD/MM/YYYY":
+    #             date = f"{day}/{month}/{now.year}"
+    #         elif date_format == "DD. MM. YYYY":
+    #             date = f"{day}. {month}. {now.year}"
+    #         elif date_format == "YYYY/DD/MM":
+    #             date = f"{now.year}/{day}/{month}"
+    #         elif date_format == "MM/DD/YYYY":
+    #             date = f"{month}/{day}/{now.year}"
+    #         else:
+    #             date = f"{now.year}/{month}/{day}"
+
+    #         chat_summary_message = f'# Chat Summary for {date}:\n'
     #         chat_summary_message += '\n'
     #         chat_summary_message += f'**Messages**: {i[2]}\n'
 
@@ -247,10 +315,12 @@ class ChatSummary(discord.Cog):
     #             else:
     #                 chat_summary_message += f'{jndex}. User({j[0]}) at {j[1]} messages\n'
 
-    #         logger.debug(f"Sending summary message to {i[0]}/{i[1]} with {i[2]} messages")
-    #         await channel.send(chat_summary_message)
+    #         try:
+    #             await channel.send(chat_summary_message)
+    #         except:
+    #             logger.error(f"Error while sending chat summary message in {guild.id} in {channel.id}")
 
-    #         cur.execute('UPDATE chat_summary SET messages = 0, WHERE guild_id = ? AND channel_id = ?', (i[0], i[1]))
+    #         cur.execute('UPDATE chat_summary SET messages = 0 WHERE guild_id = ? AND channel_id = ?', (i[0], i[1]))
     #         cur.execute(
     #             'DELETE FROM chat_summary_members WHERE guild_id = ? AND channel_id = ?', (i[0], i[1]))
 
