@@ -309,82 +309,82 @@ class ChatSummary(discord.Cog):
             ephemeral=True)
 
     # The commented code below is for testing purposes
-    @chat_summary_subcommand.command(name="test", description="Test command for testing purposes")
-    @commands_ext.guild_only()
-    @commands_ext.has_permissions(manage_guild=True)
-    @is_blocked()
-    async def test_summarize(self, ctx: discord.ApplicationContext):
-        logger = logging.getLogger("Akatsuki")
-        logger.debug("Is midnight")
+    # @chat_summary_subcommand.command(name="test", description="Test command for testing purposes")
+    # @commands_ext.guild_only()
+    # @commands_ext.has_permissions(manage_guild=True)
+    # @is_blocked()
+    # async def test_summarize(self, ctx: discord.ApplicationContext):
+    #     logger = logging.getLogger("Akatsuki")
+    #     logger.debug("Is midnight")
 
-        cur = db.cursor()
-        cur.execute('SELECT guild_id, channel_id, messages FROM chat_summary WHERE enabled = 1')
-        for i in cur.fetchall():
-            guild = self.bot.get_guild(i[0])
-            if guild is None:
-                continue
+    #     cur = db.cursor()
+    #     cur.execute('SELECT guild_id, channel_id, messages FROM chat_summary WHERE enabled = 1')
+    #     for i in cur.fetchall():
+    #         guild = self.bot.get_guild(i[0])
+    #         if guild is None:
+    #             continue
 
-            channel = guild.get_channel(i[1])
-            if channel is None:
-                continue
+    #         channel = guild.get_channel(i[1])
+    #         if channel is None:
+    #             continue
 
-            if not channel.can_send():
-                continue
+    #         if not channel.can_send():
+    #             continue
 
-            now = datetime.datetime.now(datetime.timezone.utc)
+    #         now = datetime.datetime.now(datetime.timezone.utc)
 
-            # Get date format
-            date_format = get_setting(guild.id, "chatsummary_dateformat", "YYYY/MM/DD")
+    #         # Get date format
+    #         date_format = get_setting(guild.id, "chatsummary_dateformat", "YYYY/MM/DD")
 
-            # Better formatting for day
-            day = str(now.day)
-            if len(day) == 1:
-                day = "0" + day
+    #         # Better formatting for day
+    #         day = str(now.day)
+    #         if len(day) == 1:
+    #             day = "0" + day
 
-            # Better formatting for the month
-            month = str(now.month)
-            if len(month) == 1:
-                month = "0" + month
+    #         # Better formatting for the month
+    #         month = str(now.month)
+    #         if len(month) == 1:
+    #             month = "0" + month
 
-            # Select appropriate date format
-            if date_format == "DD/MM/YYYY":
-                date = f"{day}/{month}/{now.year}"
-            elif date_format == "DD. MM. YYYY":
-                date = f"{day}. {month}. {now.year}"
-            elif date_format == "YYYY/DD/MM":
-                date = f"{now.year}/{day}/{month}"
-            elif date_format == "MM/DD/YYYY":
-                date = f"{month}/{day}/{now.year}"
-            else:
-                date = f"{now.year}/{month}/{day}"
+    #         # Select appropriate date format
+    #         if date_format == "DD/MM/YYYY":
+    #             date = f"{day}/{month}/{now.year}"
+    #         elif date_format == "DD. MM. YYYY":
+    #             date = f"{day}. {month}. {now.year}"
+    #         elif date_format == "YYYY/DD/MM":
+    #             date = f"{now.year}/{day}/{month}"
+    #         elif date_format == "MM/DD/YYYY":
+    #             date = f"{month}/{day}/{now.year}"
+    #         else:
+    #             date = f"{now.year}/{month}/{day}"
 
-            chat_summary_message = f'# Chat Summary for {date}:\n'
-            chat_summary_message += '\n'
-            chat_summary_message += f'**Messages**: {i[2]}\n'
+    #         chat_summary_message = f'# Chat Summary for {date}:\n'
+    #         chat_summary_message += '\n'
+    #         chat_summary_message += f'**Messages**: {i[2]}\n'
 
-            cur.execute(
-                'SELECT member_id, messages FROM chat_summary_members WHERE guild_id = ? AND channel_id = ? ORDER BY '
-                'messages DESC LIMIT 5', (i[0], i[1]))
+    #         cur.execute(
+    #             'SELECT member_id, messages FROM chat_summary_members WHERE guild_id = ? AND channel_id = ? ORDER BY '
+    #             'messages DESC LIMIT 5', (i[0], i[1]))
 
-            jndex = 0  # idk
-            for j in cur.fetchall():
-                jndex += 1
-                member = guild.get_member(j[0])
-                if member is not None:
-                    chat_summary_message += f'{jndex}. {member.display_name} at {j[1]} messages\n'
-                else:
-                    chat_summary_message += f'{jndex}. User({j[0]}) at {j[1]} messages\n'
+    #         jndex = 0  # idk
+    #         for j in cur.fetchall():
+    #             jndex += 1
+    #             member = guild.get_member(j[0])
+    #             if member is not None:
+    #                 chat_summary_message += f'{jndex}. {member.display_name} at {j[1]} messages\n'
+    #             else:
+    #                 chat_summary_message += f'{jndex}. User({j[0]}) at {j[1]} messages\n'
 
-            try:
-                await channel.send(chat_summary_message)
-            except:
-                logger.error(f"Error while sending chat summary message in {guild.id} in {channel.id}")
+    #         try:
+    #             await channel.send(chat_summary_message)
+    #         except:
+    #             logger.error(f"Error while sending chat summary message in {guild.id} in {channel.id}")
 
-            cur.execute('UPDATE chat_summary SET messages = 0 WHERE guild_id = ? AND channel_id = ?', (i[0], i[1]))
-            cur.execute(
-                'DELETE FROM chat_summary_members WHERE guild_id = ? AND channel_id = ?', (i[0], i[1]))
+    #         cur.execute('UPDATE chat_summary SET messages = 0 WHERE guild_id = ? AND channel_id = ?', (i[0], i[1]))
+    #         cur.execute(
+    #             'DELETE FROM chat_summary_members WHERE guild_id = ? AND channel_id = ?', (i[0], i[1]))
 
-        cur.close()
-        db.commit()
+    #     cur.close()
+    #     db.commit()
 
-        await ctx.response.send_message("Done.", ephemeral=True)
+    #     await ctx.response.send_message("Done.", ephemeral=True)
