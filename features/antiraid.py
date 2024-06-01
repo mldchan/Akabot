@@ -35,7 +35,11 @@ class AntiRaid(discord.Cog):
     @is_blocked()
     async def on_member_join(self, member: discord.Member):
         self.violation_counters.filter_expired_actions()
-        if self.violation_counters.count_actions('join', member) > 5:
+
+        antiraid_join_threshold = get_setting(member.guild.id, "antiraid_join_threshold", "5")
+        antiraid_join_threshold_per = get_setting(member.guild.id, "antiraid_join_threshold_per", "60")
+
+        if self.violation_counters.count_actions('join', member) > int(antiraid_join_threshold):
             if not member.guild.me.guild_permissions.kick_members:
                 return  # TODO: Send a warning if possible
 
@@ -45,7 +49,7 @@ class AntiRaid(discord.Cog):
             await member.kick(reason='Suspected raiding')
             return
 
-        self.violation_counters.add_action('join', member, 60)
+        self.violation_counters.add_action('join', member, int(antiraid_join_threshold_per))
 
     antiraid_subcommand = discord.SlashCommandGroup(name='antiraid', description='Manage the antiraid settings')
 
@@ -59,7 +63,7 @@ class AntiRaid(discord.Cog):
     async def set_join_threshold(self, ctx: discord.ApplicationContext, people: int, per: int):
         set_setting(ctx.guild.id, 'antiraid_join_threshold', str(people))
         set_setting(ctx.guild.id, 'antiraid_join_threshold_per', str(per))
-        await ctx.response.send_message(f'Successfully set the join threshold to {people} per {per}.', ephemeral=True)
+        await ctx.response.send_message(f'Successfully set the join threshold to {people} per {per} seconds.', ephemeral=True)
 
     @antiraid_subcommand.command(name="list", description="List the antiraid settings")
     @commands_ext.has_permissions(manage_guild=True)
