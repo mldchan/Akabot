@@ -4,7 +4,7 @@ import discord
 from discord.ext import commands as discord_commands_ext
 
 from features import welcoming, leveling, antiraid, chat_streaks, chat_revive, chat_summary, reaction_roles, \
-    feedback_cmd, logging_mod, admin_cmds, giveaways, feedback_cmd, moderation, cleanup_task
+    feedback_cmd, logging_mod, admin_cmds, giveaways, feedback_cmd, moderation, cleanup_task, verification
 from utils.blocked import BlockedUserError, BlockedServerError
 
 logger = logging.getLogger("Akatsuki")
@@ -18,6 +18,8 @@ file_handler.setLevel(logging.DEBUG)
 file_handler.setFormatter(logging.Formatter("%(asctime)s | %(filename)s:%(lineno)d %(funcName)s %(name)s %(levelname)s | %(message)s"))
 logger.addHandler(file_handler)
 
+BOT_VERSION = "3.1"
+
 with open('config.json', 'r', encoding='utf8') as f:
     data = json.load(f)
 
@@ -29,10 +31,10 @@ bot = discord.Bot(intents=intents)
 
 @bot.event
 async def on_ready():
-    print("temporary test")
+    bot.add_view(verification.VerificationView())
     logger = logging.getLogger("Akatsuki")
     logger.info('Ready')
-    await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.playing, name="v3"))
+    await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.playing, name=f"v{BOT_VERSION}"))
 
 
 @bot.event
@@ -70,53 +72,18 @@ async def on_application_command_error(ctx: discord.ApplicationContext, error):
 
 
 bot.add_cog(cleanup_task.DbCleanupTask())
-
-if data["features"]["welcoming"]:
-    logger.debug("Loading module Welcoming")
-    bot.add_cog(welcoming.Welcoming(bot))
-
-if data["features"]["leveling"]:
-    logger.debug("Loading module Leveling")
-    bot.add_cog(leveling.Leveling(bot))
-
-if data["features"]["antiraid"]:
-    logger.debug("Loading module AntiRaid")
-    bot.add_cog(antiraid.AntiRaid(bot))
-
-if data["features"]["chatstreaks"]:
-    logger.debug("Loading module Chat Streaks")
-    bot.add_cog(chat_streaks.ChatStreaks(bot))
-
-if data["features"]["chatrevive"]:
-    logger.debug("Loading module Chat Revive")
-    bot.add_cog(chat_revive.ChatRevive(bot))
-
-if data["features"]["chatsummary"]:
-    logger.debug("Loading module Chat Summary")
-    bot.add_cog(chat_summary.ChatSummary(bot))
-
-if data["features"]["reactionroles"]:
-    logger.debug("Loading module Reaction Roles")
-    bot.add_cog(reaction_roles.ReactionRoles(bot))
-
-if data["features"]["feedback"]:
-    logger.debug("Loading module Feedback")
-    bot.add_cog(feedback_cmd.SupportCmd(bot))
-
-if data['features']['logging']:
-    logger.debug("Loading module Logging")
-    bot.add_cog(logging_mod.Logging(bot))
-
-if data["features"]["admin_cmds"]:
-    logger.debug("Loading module Admin Commands")
-    bot.add_cog(admin_cmds.AdminCommands(bot))
-
-if data["features"]["giveaways"]:
-    logger.debug("Loading module Giveaways")
-    bot.add_cog(giveaways.Giveaways(bot))
-
-if data["features"]["moderation"]:
-    logger.debug("Loading moderation commands")
-    bot.add_cog(moderation.Moderation(bot))
+bot.add_cog(welcoming.Welcoming(bot))
+bot.add_cog(leveling.Leveling(bot))
+bot.add_cog(antiraid.AntiRaid(bot))
+bot.add_cog(chat_streaks.ChatStreaks(bot))
+bot.add_cog(chat_revive.ChatRevive(bot))
+bot.add_cog(chat_summary.ChatSummary(bot))
+bot.add_cog(reaction_roles.ReactionRoles(bot))
+bot.add_cog(feedback_cmd.SupportCmd(bot))
+bot.add_cog(logging_mod.Logging(bot))
+bot.add_cog(admin_cmds.AdminCommands(bot))
+bot.add_cog(giveaways.Giveaways(bot))
+bot.add_cog(moderation.Moderation(bot))
+bot.add_cog(verification.Verification(bot))
 
 bot.run(data['token'])
