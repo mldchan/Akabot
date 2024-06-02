@@ -4,7 +4,7 @@ import discord
 from discord.ext import commands as discord_commands_ext
 
 from features import welcoming, leveling, antiraid, chat_streaks, chat_revive, chat_summary, reaction_roles, \
-    feedback_cmd, logging_mod, admin_cmds, giveaways, feedback_cmd, moderation, cleanup_task, verification
+    feedback_cmd, logging_mod, admin_cmds, giveaways, feedback_cmd, moderation, cleanup_task, verification, velky_stompies
 from utils.blocked import BlockedUserError, BlockedServerError
 
 logger = logging.getLogger("Akatsuki")
@@ -85,5 +85,6 @@ bot.add_cog(admin_cmds.AdminCommands(bot))
 bot.add_cog(giveaways.Giveaways(bot))
 bot.add_cog(moderation.Moderation(bot))
 bot.add_cog(verification.Verification(bot))
+bot.add_cog(velky_stompies.VelkyStompies())
 
 bot.run(data['token'])
