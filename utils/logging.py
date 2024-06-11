@@ -13,14 +13,9 @@ async def log_into_logs(server: discord.Guild, message: discord.Embed):
         return
 
     logger = logging.getLogger("Akatsuki")
-    logger.debug(f"Logs on {server.name} to {log_chan.name}: embed: {message.title}")
-    logger.debug(message.description)
-    for i in message.fields:
-        logger.debug(f"Field: {i.name}: {i.value}")
 
     if not log_chan.can_send():
         logger.warning("Tried to send to logs but no permission!")
         return
 
     await log_chan.send(embed=message)
-    logger.debug("Log was sent successfully!")

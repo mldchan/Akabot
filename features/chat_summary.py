@@ -26,12 +26,8 @@ class ChatSummary(discord.Cog):
         cur.execute("SELECT * FROM chat_summary")
         chat_summary_old = cur.fetchall()
         if chat_summary_cols != 4:
-            logger.debug(f"DEBUG recreating table chat_summary, row count{chat_summary_cols}, is not 4")
-            logger.debug(f"Loading records... {len(chat_summary_old)} records fetched.")
-
             cur.execute("DROP TABLE chat_summary")
 
-        logger.debug("Setting up tables")
         # Set up new tables
         cur.execute(
             'CREATE TABLE IF NOT EXISTS chat_summary(guild_id INTEGER, channel_id INTEGER, enabled INTEGER, messages INTEGER)')
@@ -40,14 +36,10 @@ class ChatSummary(discord.Cog):
 
         # Paste new data when database is migrating
         if chat_summary_cols != 4:
-            logger.debug("Importing old records...")
             for i in chat_summary_old:
                 cur.execute("insert into chat_summary(guild_id, channel_id, enabled, messages) values (?, ?, ?, ?)",
                             (i[0], i[1], i[2], i[3]))
-        else:
-            logger.debug("Skipping importing of old records.")
 
-        logger.debug("Setting up tables 2/2")
         # Create the rest of tables
         cur.execute(
             'CREATE TABLE IF NOT EXISTS chat_summary_members(guild_id INTEGER, channel_id INTEGER, member_id INTEGER, messages INTEGER)')
@@ -71,28 +63,22 @@ class ChatSummary(discord.Cog):
 
         logger = logging.getLogger("Akatsuki")
 
-        logger.debug(f"Chat Summary for {message.id}")
-
         cur = db.cursor()
         cur.execute('SELECT * FROM chat_summary WHERE guild_id = ? AND channel_id = ?',
                     (message.guild.id, message.channel.id))
         if not cur.fetchone():
-            logger.debug(f"Setting up chat summary for channel {message.channel.id}")
             cur.execute(
                 'INSERT INTO chat_summary(guild_id, channel_id, enabled, messages) VALUES (?, ?, ?, ?)',
                 (message.guild.id, message.channel.id, 0, 0))
 
         # Increment total message count
-        logger.debug("Incrementing message count")
         cur.execute('UPDATE chat_summary SET messages = messages + 1 WHERE guild_id = ? AND channel_id = ?',
                     (message.guild.id, message.channel.id))
 
         # Increment message count for specific member
-        logger.debug("Incrementing message count for specific member")
         cur.execute('SELECT * FROM chat_summary_members WHERE guild_id = ? AND channel_id = ? AND member_id = ?',
                     (message.guild.id, message.channel.id, message.author.id))
         if not cur.fetchone():
-            logger.debug("Initializing profile for specific member")
             cur.execute(
                 'INSERT INTO chat_summary_members(guild_id, channel_id, member_id, messages) VALUES (?, ?, ?, ?)',
                 (message.guild.id, message.channel.id, message.author.id, 0))
@@ -101,7 +87,6 @@ class ChatSummary(discord.Cog):
             'UPDATE chat_summary_members SET messages = messages + 1 WHERE guild_id = ? AND channel_id = ? AND member_id = ?',
             (message.guild.id, message.channel.id, message.author.id))
 
-        logger.debug("Done")
         cur.close()
         db.commit()
 
@@ -117,28 +102,23 @@ class ChatSummary(discord.Cog):
 
         logger = logging.getLogger("Akatsuki")
 
-        logger.debug(f"Chat Summary (edit) for {old_message.id}")
 
         cur = db.cursor()
         cur.execute('SELECT * FROM chat_summary WHERE guild_id = ? AND channel_id = ?',
                     (old_message.guild.id, old_message.channel.id))
         if not cur.fetchone():
-            logger.debug(f"Setting up chat summary for channel {old_message.channel.id}")
             cur.execute(
                 'INSERT INTO chat_summary(guild_id, channel_id, enabled, messages) VALUES (?, ?, ?, ?)',
                 (old_message.guild.id, old_message.channel.id, 0, 0))
 
         # Increment total old_message count
-        logger.debug("Incrementing old_message count")
         cur.execute('UPDATE chat_summary SET messages = messages + 1 WHERE guild_id = ? AND channel_id = ?',
                     (old_message.guild.id, old_message.channel.id))
 
         # Increment old_message count for specific member
-        logger.debug("Incrementing old_message count for specific member")
         cur.execute('SELECT * FROM chat_summary_members WHERE guild_id = ? AND channel_id = ? AND member_id = ?',
                     (old_message.guild.id, old_message.channel.id, old_message.author.id))
         if not cur.fetchone():
-            logger.debug("Initializing profile for specific member")
             cur.execute(
                 'INSERT INTO chat_summary_members(guild_id, channel_id, member_id, messages) VALUES (?, ?, ?, ?)',
                 (old_message.guild.id, old_message.channel.id, old_message.author.id, 0))
@@ -147,7 +127,6 @@ class ChatSummary(discord.Cog):
             'UPDATE chat_summary_members SET messages = messages + 1 WHERE guild_id = ? AND channel_id = ? AND member_id = ?',
             (old_message.guild.id, old_message.channel.id, old_message.author.id))
 
-        logger.debug("Done")
         cur.close()
         db.commit()
 
@@ -372,7 +351,6 @@ class ChatSummary(discord.Cog):
     # @is_blocked()
     # async def test_summarize(self, ctx: discord.ApplicationContext):
     #     logger = logging.getLogger("Akatsuki")
-    #     logger.debug("Is midnight")
 
     #     cur = db.cursor()
     #     cur.execute('SELECT guild_id, channel_id, messages FROM chat_summary WHERE enabled = 1')

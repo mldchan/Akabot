@@ -43,12 +43,10 @@ class ChatRevive(discord.Cog):
     async def revive_channels(self):
         logger = logging.getLogger("Akatsuki")
         for guild in self.bot.guilds:
-            logger.debug(f"Checking revival status in {guild.name}")
             cur = db.cursor()
             cur.execute('SELECT * FROM chat_revive WHERE guild_id = ?', (guild.id,))
             settings = cur.fetchall()
             for revive_channel in settings:
-                logger.debug(f"Checking {revive_channel[1]} in {guild.name}")
                 if revive_channel[5]:
                     continue
 
@@ -64,7 +62,6 @@ class ChatRevive(discord.Cog):
                     if not channel.can_send():
                         continue
 
-                    logger.debug("Sending revive alert as channel was inactive.")
                     await channel.send(f'{role.mention}, this channel has been inactive for a while.')
                     cur.execute('UPDATE chat_revive SET revived = ? WHERE guild_id = ? AND channel_id = ?',
                                 (True, guild.id, revive_channel[1]))
