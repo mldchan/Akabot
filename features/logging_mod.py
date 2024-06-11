@@ -5,26 +5,7 @@ from discord.ext import commands as commands_ext
 
 from utils.blocked import is_blocked
 from utils.settings import get_setting, set_setting
-
-
-async def log_into_logs(server: discord.Guild, message: discord.Embed):
-    log_id = get_setting(server.id, 'logging_channel', '0')
-    log_chan = server.get_channel(int(log_id))
-    if log_chan is None:
-        return
-
-    logger = logging.getLogger("Akatsuki")
-    logger.debug(f"Logs on {server.name} to {log_chan.name}: embed: {message.title}")
-    logger.debug(message.description)
-    for i in message.fields:
-        logger.debug(f"Field: {i.name}: {i.value}")
-
-    if not log_chan.can_send():
-        logger.warning("Tried to send to logs but no permission!")
-        return
-
-    await log_chan.send(embed=message)
-    logger.debug("Log was sent successfully!")
+from utils.logging import log_into_logs
 
 
 class Logging(discord.Cog):
@@ -492,5 +473,20 @@ class Logging(discord.Cog):
     @commands_ext.bot_has_permissions(send_messages=True, view_channel=True)
     @is_blocked()
     async def set_logging_channel(self, ctx: discord.ApplicationContext, channel: discord.TextChannel):
+        # Get old channel
+        old_channel_id = get_setting(ctx.guild.id, "logging_channel", str(channel.id))
+        old_channel = ctx.guild.get_channel(int(old_channel_id))
+
+        # New channel
         set_setting(ctx.guild.id, 'logging_channel', str(channel.id))
+
+        logging_embed = discord.Embed(title="Logging channel changed")
+        logging_embed.add_field(name="User", value=f"{ctx.user.mention}")
+        if old_channel is not None:
+            logging_embed.add_field(name="Previous Channel", value=f"{old_channel.mention}")
+
+        # Send into logs
+        await log_into_logs(ctx.guild, logging_embed)
+
+        # Respond
         await ctx.response.send_message(f"Logging channel was set to {channel.mention}", ephemeral=True)

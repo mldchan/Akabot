@@ -8,7 +8,7 @@ from database import conn as db
 from utils.analytics import analytics
 from utils.blocked import is_blocked
 from utils.settings import get_setting, set_setting
-
+from utils.logging import log_into_logs
 
 def db_init():
     cur = db.cursor()
@@ -175,7 +175,21 @@ class Leveling(discord.Cog):
     @is_blocked()
     @analytics("leveling multiplier")
     async def set_multiplier(self, ctx: discord.ApplicationContext, multiplier: int):
+        # Get old setting
+        old_multiplier = get_setting(ctx.guild.id, 'leveling_xp_multiplier', str(multiplier))
+
+        # Set new setting
         set_setting(ctx.guild.id, 'leveling_xp_multiplier', str(multiplier))
+
+        # Create message
+        logging_embed = discord.Embed(title="Leveling XP multiplier changed")
+        logging_embed.add_field(name="User", value=f"{ctx.user.mention}")
+        logging_embed.add_field(name="Multiplier", value=f"{old_multiplier} -> {str(multiplier)}")
+
+        # Send to logs
+        await log_into_logs(ctx.guild, logging_embed)
+
+        # Send response
         await ctx.response.send_message(f'Successfully set the leveling multiplier to {multiplier}.', ephemeral=True)
 
     @leveling_subcommand.command(name='weekend_event', description='Set the weekend event')
@@ -185,7 +199,21 @@ class Leveling(discord.Cog):
     @is_blocked()
     @analytics("leveling weekend event")
     async def set_weekend_event(self, ctx: discord.ApplicationContext, enabled: bool):
+        # Get old setting
+        old_weekend_event = get_setting(ctx.guild.id, "weekend_event_enabled", str(enabled).lower()) == "true"
+
+        # Set setting
         set_setting(ctx.guild.id, 'weekend_event_enabled', str(enabled).lower())
+
+        # Create message
+        logging_embed = discord.Embed(title="Leveling XP weekend event changed")
+        logging_embed.add_field(name="User", value=f"{ctx.user.mention}")
+        logging_embed.add_field(name="Enabled", value=f"{"Enabled" if old_weekend_event else "Disabled"} -> {"Enabled" if enabled else "Disabled"}")
+        
+        # Send to logs
+        await log_into_logs(ctx.guild, logging_embed)
+
+        # Respond
         await ctx.response.send_message(f'Successfully set the weekend event to {enabled}.', ephemeral=True)
 
     @leveling_subcommand.command(name='weekend_event_multiplier', description='Set the weekend event multiplier')
@@ -195,7 +223,19 @@ class Leveling(discord.Cog):
     @is_blocked()
     @analytics("leveling weekend event multiplier")
     async def set_weekend_event_multiplier(self, ctx: discord.ApplicationContext, weekend_event_multiplier: int):
+        old_setting = get_setting(ctx.guild.id, "weekend_event_multiplier", str(weekend_event_multiplier))
+
         set_setting(ctx.guild.id, 'weekend_event_multiplier', str(weekend_event_multiplier))
+
+        # Create message
+        logging_embed = discord.Embed(title="Leveling XP weekend event changed")
+        logging_embed.add_field(name="User", value=f"{ctx.user.mention}")
+        logging_embed.add_field(name="Multiplier", value=f"{old_setting} -> {str(weekend_event_multiplier)}")
+
+        # Send to logs
+        await log_into_logs(ctx.guild, logging_embed)
+
+        # Respond
         await ctx.response.send_message(f'Successfully set the weekend event multiplier to {weekend_event_multiplier}.',
                                         ephemeral=True)
 
@@ -207,9 +247,26 @@ class Leveling(discord.Cog):
     @is_blocked()
     @analytics("leveling set reward")
     async def set_reward(self, ctx: discord.ApplicationContext, level: int, role: discord.Role):
+        # Get old setting
+        old_role_id = get_setting(ctx.guild.id, f"leveling_reward_{level}", '0')
+        old_role = ctx.guild.get_role(int(old_role_id))
+
+        # Set new setting
         set_setting(ctx.guild.id, f'leveling_reward_{level}', str(role.id))
-        await ctx.response.send_message(f'Successfully set the reward for level {level} to {role.mention}.',
-                                        ephemeral=True)
+
+        # Logging embed
+        logging_embed = discord.Embed(title="Leveling reward added/changed")
+        logging_embed.add_field(name="User", value=f"{ctx.user.mention}")
+        if old_role_id == '0':
+            logging_embed.add_field(name="Role", value=f"+Added: {role.mention}")
+        else:
+            logging_embed.add_field(name="Role", value=f"Changed: {old_role.mention if old_role is not None else old_role_id} -> {role.mention}")
+
+        # Send into logs
+        await log_into_logs(ctx.guild, logging_embed)
+
+        # Send response
+        await ctx.response.send_message(f'Successfully set the reward for level {level} to {role.mention}.', ephemeral=True)
 
     @leveling_subcommand.command(name='remove_reward', description='Remove a role for a level')
     @commands_ext.has_permissions(manage_guild=True)
@@ -218,5 +275,23 @@ class Leveling(discord.Cog):
     @is_blocked()
     @analytics("leveling remove reward")
     async def remove_reward(self, ctx: discord.ApplicationContext, level: int):
+        # Get old setting
+        old_role_id = get_setting(ctx.guild.id, f"leveling_reward_{level}", '0')
+        old_role = ctx.guild.get_role(int(old_role_id))
+
+        # Logging embed
+        logging_embed = discord.Embed(title="Leveling reward added/changed")
+        logging_embed.add_field(name="User", value=f"{ctx.user.mention}")
+        if old_role is not None:
+            logging_embed.add_field(name="Role", value=f"{old_role.mention}")
+        else:
+            logging_embed.add_field(name="Role", value="*Unknown*")
+    
+        # Send into logs
+        await log_into_logs(ctx.guild, logging_embed)
+
+        # Set new setting
         set_setting(ctx.guild.id, f'leveling_reward_{level}', '0')
+
+        # Send response
         await ctx.response.send_message(f'Successfully removed the reward for level {level}.', ephemeral=True)

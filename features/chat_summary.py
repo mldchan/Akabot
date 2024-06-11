@@ -10,6 +10,8 @@ from utils.analytics import analytics
 from utils.blocked import is_blocked
 from utils.settings import get_setting, set_setting
 
+from utils.logging import log_into_logs
+
 class ChatSummary(discord.Cog):
     def __init__(self, bot: discord.Bot) -> None:
         super().__init__()
@@ -20,6 +22,7 @@ class ChatSummary(discord.Cog):
         # Check if the format is correct, there should be 4 columns of info, if not, delete and recreate table.
         chat_summary_cols = len(cur.fetchall())
 
+        # Migrate database if old TODO: remove
         cur.execute("SELECT * FROM chat_summary")
         chat_summary_old = cur.fetchall()
         if chat_summary_cols != 4:
@@ -29,11 +32,13 @@ class ChatSummary(discord.Cog):
             cur.execute("DROP TABLE chat_summary")
 
         logger.debug("Setting up tables")
+        # Set up new tables
         cur.execute(
             'CREATE TABLE IF NOT EXISTS chat_summary(guild_id INTEGER, channel_id INTEGER, enabled INTEGER, messages INTEGER)')
         cur.execute(
             'CREATE INDEX IF NOT EXISTS chat_summary_i ON chat_summary(guild_id, channel_id)')
 
+        # Paste new data when database is migrating
         if chat_summary_cols != 4:
             logger.debug("Importing old records...")
             for i in chat_summary_old:
@@ -43,11 +48,14 @@ class ChatSummary(discord.Cog):
             logger.debug("Skipping importing of old records.")
 
         logger.debug("Setting up tables 2/2")
+        # Create the rest of tables
         cur.execute(
             'CREATE TABLE IF NOT EXISTS chat_summary_members(guild_id INTEGER, channel_id INTEGER, member_id INTEGER, messages INTEGER)')
         cur.execute(
             'CREATE INDEX IF NOT EXISTS chat_summary_members_i ON chat_summary_members(guild_id, channel_id, member_id)')
         cur.close()
+
+        # Save
         db.commit()
         self.bot = bot
 
@@ -232,6 +240,8 @@ class ChatSummary(discord.Cog):
     @analytics("chatsummary add")
     async def command_add(self, ctx: discord.ApplicationContext, channel: discord.TextChannel):
         cur = db.cursor()
+        
+        # Add channel to chat summary if not already there
         cur.execute('SELECT * FROM chat_summary WHERE guild_id = ? AND channel_id = ?',
                     (ctx.guild.id, channel.id))
         if not cur.fetchone():
@@ -239,6 +249,7 @@ class ChatSummary(discord.Cog):
                 'INSERT INTO chat_summary(guild_id, channel_id, enabled, messages) VALUES (?, ?, ?, ?)',
                 (ctx.guild.id, channel.id, 0, 0))
 
+        # Check enabled state
         cur.execute('SELECT enabled FROM chat_summary WHERE guild_id = ? AND channel_id = ?',
                     (ctx.guild.id, channel.id))
         data = cur.fetchone()
@@ -246,11 +257,21 @@ class ChatSummary(discord.Cog):
             await ctx.response.send_message("This channel is already being counted.", ephemeral=True)
             return
 
+        # Enable
         cur.execute('UPDATE chat_summary SET enabled = 1 WHERE guild_id = ? AND channel_id = ?',
                     (ctx.guild.id, channel.id))
         cur.close()
         db.commit()
 
+        # Logging embed
+        logging_embed = discord.Embed(title="Chat Summary channel added")
+        logging_embed.add_field(name="Channel", value=f"{channel.mention}")
+        logging_embed.add_field(name="User", value=f"{ctx.user.mention}")
+
+        # Log into logs
+        await log_into_logs(ctx.guild, logging_embed)
+
+        # Send response
         await ctx.response.send_message('Added channel to counting.', ephemeral=True)
 
     @chat_summary_subcommand.command(name="remove", description="Remove a channel from being counted to chat summary")
@@ -260,6 +281,8 @@ class ChatSummary(discord.Cog):
     @analytics("chatsummary remove")
     async def command_remove(self, ctx: discord.ApplicationContext, channel: discord.TextChannel):
         cur = db.cursor()
+
+        # Check if present into database
         cur.execute('SELECT * FROM chat_summary WHERE guild_id = ? AND channel_id = ?',
                     (ctx.guild.id, channel.id))
         if not cur.fetchone():
@@ -267,6 +290,8 @@ class ChatSummary(discord.Cog):
                 'INSERT INTO chat_summary(guild_id, channel_id, enabled, messages) VALUES (?, ?, ?, '
                 '?)',
                 (ctx.guild.id, channel.id, 0, 0))
+
+        # Check enabled
         cur.execute('SELECT enabled FROM chat_summary WHERE guild_id = ? AND channel_id = ?',
                     (ctx.guild.id, channel.id))
         data = cur.fetchone()
@@ -274,11 +299,21 @@ class ChatSummary(discord.Cog):
             await ctx.response.send_message("This channel is already not being counted.", ephemeral=True)
             return
 
+        # Set disabled
         cur.execute('UPDATE chat_summary SET enabled = 0 WHERE guild_id = ? AND channel_id = ?',
                     (ctx.guild.id, channel.id))
         cur.close()
         db.commit()
 
+        # Logging embed
+        logging_embed = discord.Embed(title="Chat Summary channel removed")
+        logging_embed.add_field(name="Channel", value=f"{channel.mention}")
+        logging_embed.add_field(name="User", value=f"{ctx.user.mention}")
+
+        # Send
+        await log_into_logs(ctx.guild, logging_embed)
+
+        # Respond
         await ctx.response.send_message('Removed channel from being counted.', ephemeral=True)
 
     @chat_summary_subcommand.command(name="dateformat", description="Set the date format of Chat Streak messages.")
@@ -288,8 +323,19 @@ class ChatSummary(discord.Cog):
     @is_blocked()
     @analytics("chatsummary dateformat")
     async def summary_dateformat(self, ctx: discord.ApplicationContext, format: str):
+        # Get old setting
+        old_date_format = get_setting(ctx.guild.id, "chatsummary_dateformat", "YYYY/MM/DD")
+
         # Save setting
         set_setting(ctx.guild.id, "chatsummary_dateformat", format)
+
+        # Create logging embed
+        logging_embed = discord.Embed(title="Chat Summary date format changed")
+        logging_embed.add_field(name="Date Format", value=f"{old_date_format} -> {format}")
+        logging_embed.add_field(name="User", value=f"{ctx.user.mention}")
+
+        # Send
+        await log_into_logs(ctx.guild, logging_embed)
 
         # Respond
         await ctx.response.send_message(f"Set the Chat Summary date format to {format}.", ephemeral=True)
@@ -300,8 +346,19 @@ class ChatSummary(discord.Cog):
     @is_blocked()
     @analytics("chatsummary countedits")
     async def chatsummary_countedits(self, ctx: discord.ApplicationContext, countedits: bool):
+        # Get old setting
+        old_count_edits = get_setting(ctx.guild.id, "chatsummary_count_edits", str(False))
+
         # Save setting
         set_setting(ctx.guild.id, "chatsummary_countedits", str(countedits))
+
+        # Create logging embed
+        logging_embed = discord.Embed(title="Chat Summary date format changed")
+        logging_embed.add_field(name="Count Edits", value=f"{"Yes" if old_count_edits == "True" else "No"} -> {"Yes" if countedits else "No"}")
+        logging_embed.add_field(name="User", value=f"{ctx.user.mention}")
+
+        # Send
+        await log_into_logs(ctx.guild, logging_embed)
 
         # Respond
         await ctx.response.send_message(

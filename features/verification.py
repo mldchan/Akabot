@@ -4,6 +4,7 @@ import discord.ext
 import discord.ext.commands
 from discord.ui.input_text import InputText
 
+import utils.logging
 import utils.settings
 import random
 
@@ -246,6 +247,10 @@ class Verification(discord.Cog):
     @discord.ext.commands.has_permissions(manage_roles=True)
     @discord.ext.commands.bot_has_permissions(manage_roles=True)
     async def set_difficulty(self, ctx: discord.ApplicationContext, difficulty: str):
+        # Store old difficulty
+        old_difficulty = utils.settings.get_setting(ctx.guild.id, "verification_method", "none")
+
+        # Select new difficulty
         if difficulty == "none":
             utils.settings.set_setting(ctx.guild.id, "verification_method", "none")
         elif difficulty == "easy math":
@@ -259,7 +264,15 @@ class Verification(discord.Cog):
         elif difficulty == "reverse text":
             utils.settings.set_setting(ctx.guild.id, "verification_method", "reverse_string")
         
-        # TODO: rest of options
+        # Generate logging embed
+        logging_embed = discord.Embed(title="Verification difficulty changed")
+        logging_embed.add_field(name="User", value=f"{ctx.user.mention}")
+        logging_embed.add_field(name="Difficulty", value=f"{old_difficulty} -> {difficulty}")
+
+        # Send to logs
+        await utils.logging.log_into_logs(ctx.guild, logging_embed)
+        
+        # Respond
         await ctx.response.send_message(f"Verification difficulty was set to {difficulty}.", ephemeral=True)
 
     @verification_subcommand.command(name="send_message", description="Send the verification message")

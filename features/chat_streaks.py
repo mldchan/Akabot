@@ -8,6 +8,7 @@ from database import conn as db
 from utils.analytics import analytics
 from utils.blocked import is_blocked
 from utils.settings import get_setting, set_setting
+from utils.logging import log_into_logs
 
 
 class ChatStreakStorage:
@@ -166,9 +167,21 @@ class ChatStreaks(discord.Cog):
     @is_blocked()
     @analytics("streaks alerts")
     async def toggle_alerts(self, ctx: discord.ApplicationContext, value: bool):
+        # Get old value
+        old_value = get_setting(ctx.guild.id, "chat_streak_alerts", str(value)) == "True"
+
+        # Determine if the value has changed and update accordingly
+        if old_value != value:
+            logging_embed = discord.Embed(title="Chat Streaks alerts changed")
+            logging_embed.add_field(name="User", value=f"{ctx.user.mention}")
+            logging_embed.add_field(name="Value", value=f'{"Yes" if old_value else "No"} -> {"Yes" if value else "No"}')
+
+        # Save settings value
         set_setting(ctx.guild.id, 'chat_streak_alerts', str(value))
+
+        # Respond
         await ctx.response.send_message(
-            'Succcessfully turned on chat streaks' if value else 'Successfully turned off chat streaks', ephemeral=True)
+            'Succcessfully turned on chat streak alerts' if value else 'Successfully turned off chat streak alerts', ephemeral=True)
 
     @streaks_subcommand.command(name="list", description="List the chat streak options.")
     @commands_ext.guild_only()
@@ -191,7 +204,18 @@ class ChatStreaks(discord.Cog):
     @is_blocked()
     @analytics("streaks reset")
     async def reset_streak_command(self, ctx: discord.ApplicationContext, user: discord.Member):
+        # Reset streak
         self.streak_storage.reset_streak(ctx.guild.id, user.id)
+
+        # Create a embed for logs
+        logging_embed = discord.Embed(title="Chat Streak reset")
+        logging_embed.add_field(name="Admin", value=f'{ctx.user.mention}')
+        logging_embed.add_field(name="Target", value=f'{user.mention}')
+
+        # Send to log
+        await log_into_logs(ctx.guild, logging_embed)
+
+        # Respond
         await ctx.response.send_message(f'Successfully reset the streak for {user.mention}.', ephemeral=True)
 
     @streaks_subcommand.command(name="streak", description="Get someone's streak, to get yours, /streak.")

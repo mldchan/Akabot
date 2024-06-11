@@ -4,7 +4,7 @@ from discord.ext import commands as commands_ext
 from utils.analytics import analytics
 from utils.blocked import is_blocked
 from utils.settings import get_setting, set_setting
-
+from utils.logging import log_into_logs
 
 class Welcoming(discord.Cog):
     def __init__(self, bot: discord.Bot) -> None:
@@ -96,7 +96,25 @@ class Welcoming(discord.Cog):
     @is_blocked()
     @analytics("welcome channel")
     async def welcome_channel(self, ctx: discord.ApplicationContext, channel: discord.TextChannel):
+        # Get old channel
+        old_welcome_channel_id = get_setting(ctx.guild.id, "welcome_channel", '0')
+        old_welcome_channel = ctx.guild.get_channel(old_welcome_channel_id)
+
+        # Set new channel
         set_setting(ctx.guild.id, 'welcome_channel', str(channel.id))
+
+        # Logging embed
+        logging_embed = discord.Embed(title="Welcome channel changed")
+        logging_embed.add_field(name="User", value=f"{ctx.user.mention}")
+        if old_welcome_channel is None:
+            logging_embed.add_field(name="Channel", value=f"Set to {channel.mention}")
+        else:
+            logging_embed.add_field(name="Channel", value=f"{old_welcome_channel.mention} -> {channel.mention}")
+
+        # Send log
+        await log_into_logs(ctx.guild, logging_embed)
+
+        # Respond
         await ctx.response.send_message(f'Welcoming channel set to {channel.mention}!', ephemeral=True)
 
     @welcome_subcommands.command(name='type', description="Set whether you want to use message content or embed")
@@ -107,7 +125,21 @@ class Welcoming(discord.Cog):
     @is_blocked()
     @analytics("welcome type")
     async def welcome_type(self, ctx: discord.ApplicationContext, message_type: str):
+        # Get old response type
+        old_welcome_type = get_setting(ctx.guild.id, "welcome_type", '0')
+
+        # Set new response type
         set_setting(ctx.guild.id, 'welcome_type', message_type)
+
+        # Logging embed
+        logging_embed = discord.Embed(title="Welcome type changed")
+        logging_embed.add_field(name="User", value=f"{ctx.user.mention}")
+        logging_embed.add_field(name="Response Type", value=f"{old_welcome_type} -> {message_type}")
+
+        # Send log
+        await log_into_logs(ctx.guild.id, logging_embed)
+
+        # Respond
         await ctx.response.send_message(f'Welcoming message type set to {message_type}!', ephemeral=True)
 
     @welcome_subcommands.command(name='title', description="Set the title of the welcoming message")
@@ -117,7 +149,21 @@ class Welcoming(discord.Cog):
     @is_blocked()
     @analytics("welcome title")
     async def welcome_title(self, ctx: discord.ApplicationContext, title: str):
+        # Get old response title
+        old_welcome_title = get_setting(ctx.guild.id, "welcome_title", '0')
+
+        # Set new message
         set_setting(ctx.guild.id, 'welcome_title', title)
+
+        # Logging embed
+        logging_embed = discord.Embed(title="Welcome title changed")
+        logging_embed.add_field(name="User", value=f"{ctx.user.mention}")
+        logging_embed.add_field(name="Title", value=f"{old_welcome_title} -> {title}")
+
+        # Send log
+        await log_into_logs(ctx.guild.id, logging_embed)
+
+        # Respond
         await ctx.response.send_message(f'Welcoming message title set to {title}!', ephemeral=True)
 
     @welcome_subcommands.command(name='text', description="Set the text of the welcoming message")
@@ -127,8 +173,23 @@ class Welcoming(discord.Cog):
     @is_blocked()
     @analytics("welcome text")
     async def welcome_text(self, ctx: discord.ApplicationContext, text: str):
+        # Get old welcome text
+        old_welcome_text = get_setting(ctx.guild.id, "welcome_text", '0')
+
+        # Set new welcome text
         set_setting(ctx.guild.id, 'welcome_text', text)
+
+        # Logging embed
+        logging_embed = discord.Embed(title="Welcome text changed")
+        logging_embed.add_field(name="User", value=f"{ctx.user.mention}")
+        logging_embed.add_field(name="Text", value=f"{old_welcome_text} -> {text}")
+
+        # Send log
+        await log_into_logs(ctx.guild.id, logging_embed)
+
+        # Respond
         await ctx.response.send_message(f'Welcoming message text set to {text}!', ephemeral=True)
+
 
     goodbye_subcommands = discord.SlashCommandGroup(name="goodbye", description="Change the goodbye message")
 
@@ -158,18 +219,45 @@ class Welcoming(discord.Cog):
     @is_blocked()
     @analytics("goodbye channel")
     async def goodbye_channel(self, ctx: discord.ApplicationContext, channel: discord.TextChannel):
-        set_setting(ctx.guild.id, 'goodbye_channel', str(channel.id))
-        await ctx.response.send_message(f'Goodbye channel set to {channel.mention}!', ephemeral=True)
+        # Get old goodbye channel
+        old_goodbye_channel = get_setting(ctx.guild.id, "goodbye_channel", '0')
 
+        # Set new goodbye channel
+        set_setting(ctx.guild.id, 'goodbye_channel', str(channel.id))
+
+        # Logging embed
+        logging_embed = discord.Embed(title="Goodbye channel changed")
+        logging_embed.add_field(name="User", value=f"{ctx.user.mention}")
+        logging_embed.add_field(name="Channel", value=f"{old_goodbye_channel} -> {channel.mention}")
+
+        # Send log
+        await log_into_logs(ctx.guild.id, logging_embed)
+
+        # Respond
+        await ctx.response.send_message(f'Goodbye channel set to {channel.mention}!', ephemeral=True)
+        
     @goodbye_subcommands.command(name='type', description="Set whether you want to use message content or embed")
     @commands_ext.has_permissions(manage_guild=True)
     @commands_ext.guild_only()
-    @discord.option(name="message_type", description="The type of the message (embed or text)",
-                    choices=['embed', 'text'])
+    @discord.option(name="message_type", description="The type of the message (embed or text)", choices=['embed', 'text'])
     @is_blocked()
     @analytics("goodbye type")
     async def goodbye_type(self, ctx: discord.ApplicationContext, message_type: str):
+        # Get old goodbye type
+        old_goodbye_type = get_setting(ctx.guild.id, "goodbye_type", 'embed')
+
+        # Set new goodbye type
         set_setting(ctx.guild.id, 'goodbye_type', message_type)
+
+        # Logging embed
+        logging_embed = discord.Embed(title="Goodbye message type changed")
+        logging_embed.add_field(name="User", value=f"{ctx.user.mention}")
+        logging_embed.add_field(name="Type", value=f"{old_goodbye_type} -> {message_type}")
+
+        # Send log
+        await log_into_logs(ctx.guild.id, logging_embed)
+
+        # Respond
         await ctx.response.send_message(f'Goodbye message type set to {message_type}!', ephemeral=True)
 
     @goodbye_subcommands.command(name='title', description="Set the title of the goodbye message")
@@ -179,7 +267,21 @@ class Welcoming(discord.Cog):
     @is_blocked()
     @analytics("goodbye title")
     async def goodbye_title(self, ctx: discord.ApplicationContext, title: str):
+        # Get old goodbye title
+        old_goodbye_title = get_setting(ctx.guild.id, "goodbye_title", 'Welcome')
+
+        # Set new goodbye title
         set_setting(ctx.guild.id, 'goodbye_title', title)
+
+        # Logging embed
+        logging_embed = discord.Embed(title="Goodbye message title changed")
+        logging_embed.add_field(name="User", value=f"{ctx.user.mention}")
+        logging_embed.add_field(name="Title", value=f"{old_goodbye_title} -> {title}")
+
+        # Send log
+        await log_into_logs(ctx.guild.id, logging_embed)
+
+        # Respond
         await ctx.response.send_message(f'Goodbye message title set to {title}!', ephemeral=True)
 
     @goodbye_subcommands.command(name='text', description="Set the text of the goodbye message")
@@ -189,5 +291,19 @@ class Welcoming(discord.Cog):
     @is_blocked()
     @analytics("goodbye text")
     async def goodbye_text(self, ctx: discord.ApplicationContext, text: str):
+        # Get old goodbye text
+        old_goodbye_text = get_setting(ctx.guild.id, "goodbye_text", 'Welcome {user} to {server}!')
+
+        # Set new goodbye text
         set_setting(ctx.guild.id, 'goodbye_text', text)
+
+        # Logging embed
+        logging_embed = discord.Embed(title="Goodbye message text changed")
+        logging_embed.add_field(name="User", value=f"{ctx.user.mention}")
+        logging_embed.add_field(name="Text", value=f"{old_goodbye_text} -> {text}")
+
+        # Send log
+        await log_into_logs(ctx.guild.id, logging_embed)
+
+        # Respond
         await ctx.response.send_message(f'Goodbye message text set to {text}!', ephemeral=True)

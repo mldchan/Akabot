@@ -9,6 +9,8 @@ from database import conn as db
 from utils.analytics import analytics
 from utils.blocked import is_blocked
 
+from utils.logging import log_into_logs
+
 
 class ChatRevive(discord.Cog):
     def __init__(self, bot: discord.Bot):
@@ -81,18 +83,39 @@ class ChatRevive(discord.Cog):
     async def set_revive_settings(self, ctx: discord.ApplicationContext, channel: discord.TextChannel,
                                   revival_minutes: int,
                                   revival_role: discord.Role):
+    
+        # Permission checks
         if not revival_role.mentionable and not ctx.guild.me.guild_permissions.manage_roles:
             await ctx.response.send_message('The role must be mentionable in order to continue.',
                                             ephemeral=True)
             return
 
+        # Database access
         cur = db.cursor()
+
+        # Delete existing record
         cur.execute('DELETE FROM chat_revive WHERE guild_id = ? AND channel_id = ?', (ctx.guild.id, channel.id))
+
+        # Set new one
         cur.execute(
             'INSERT INTO chat_revive (guild_id, channel_id, role_id, revival_time, last_message, revived) VALUES (?, ?, ?, ?, ?, ?)',
             (ctx.guild.id, channel.id, revival_role.id, revival_minutes * 60, time.time(), False))
+
+        # Save database
         cur.close()
         db.commit()
+
+        # Embed for logs
+        logging_embed = discord.Embed(title="Chat Revive settings set for channel")
+        logging_embed.add_field(name="Channel", value=f"{ctx.channel.mention}", inline=True)
+        logging_embed.add_field(name="User", value=f"{ctx.user.mention}", inline=True)
+        logging_embed.add_field(name="Revival Role", value=f"{revival_role.mention}", inline=False)
+        logging_embed.add_field(name="Revival Time", value=f"{str(revival_minutes)} minutes", inline=True)
+
+        # Send to logs
+        await log_into_logs(ctx.guild, logging_embed)
+
+        # Send back response
         await ctx.response.send_message(f'Successfully set revive settings for {channel.mention}.', ephemeral=True)
 
     @chat_revive_subcommand.command(name="remove", description="List the revive settings")
@@ -101,10 +124,25 @@ class ChatRevive(discord.Cog):
     @is_blocked()
     @analytics("chatrevive remove")
     async def remove_revive_settings(self, ctx: discord.ApplicationContext, channel: discord.TextChannel):
+        # Connect to database
         cur = db.cursor()
+
+        # Delete record
         cur.execute('DELETE FROM chat_revive WHERE guild_id = ? AND channel_id = ?', (ctx.guild.id, channel.id))
+
+        # Save
         cur.close()
         db.commit()
+
+        # Create embed
+        logging_embed = discord.Embed(title="Chat Revive settings removed for channel")
+        logging_embed.add_field(name="Channel", value=f"{ctx.channel.mention}", inline=True)
+        logging_embed.add_field(name="User", value=f"{ctx.user.mention}", inline=True)
+
+        # Send to logs
+        await log_into_logs(ctx.guild, logging_embed)
+
+        # Respond
         await ctx.response.send_message(f'Successfully removed revive settings for {channel.mention}.', ephemeral=True)
 
     @chat_revive_subcommand.command(name="list", description="List the revive settings")
