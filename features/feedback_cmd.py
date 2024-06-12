@@ -36,6 +36,13 @@ class VoteView(discord.ui.View):
 
         self.add_item(button1)
 
+class PrivacyPolicyView(discord.ui.View):
+    def __init__(self):
+        super().__init__()
+
+        button1 = discord.ui.Button(label="akatsuki.nekoweb.org", url="https://akatsuki.nekoweb.org/project/akabot/privacy/")
+
+        self.add_item(button1)
 
 class SupportCmd(discord.Cog):
     def __init__(self, bot):
@@ -55,6 +62,16 @@ class SupportCmd(discord.Cog):
         await ctx.respond(
             "You can click the button below to vote:",
             view=VoteView(),
+            ephemeral=True
+        )
+
+    @discord.slash_command(name="privacy", description="Privacy policy URL")
+    @is_blocked()
+    @analytics("privacy policy")
+    async def privacy_policy(str, ctx: discord.ApplicationContext):
+        await ctx.respond(
+            "You can click the button below to view the Privacy Policy:",
+            view=PrivacyPolicyView(),
             ephemeral=True
         )
 
