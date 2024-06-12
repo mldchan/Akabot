@@ -149,3 +149,4 @@ class AutoResponse(discord.Cog):
                 # Reply to it
                 await msg.reply(i[3])
 
+

@@ -189,3 +189,4 @@ class AutoReact(discord.Cog):
                 emoji = discord.PartialEmoji.from_str(i[3])
                 # Add le reaction to it
                 await msg.add_reaction(emoji)
+
