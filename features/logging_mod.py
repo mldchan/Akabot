@@ -346,32 +346,9 @@ class Logging(discord.Cog):
 
     @discord.Cog.listener()
     @is_blocked()
-    async def on_message_delete(self, message: discord.Message):
-        embed = discord.Embed(title=f"Message Deleted", color=discord.Color.red())
-        embed.description = f"A message sent by {message.author} was deleted"
-        embed.add_field(name="Content", value=message.content)
-        await log_into_logs(message.guild, embed)
-
-    @discord.Cog.listener()
-    @is_blocked()
-    async def on_message_edit(self, before: discord.Message, after: discord.Message):
-        embed = discord.Embed(title=f"Message Edited", color=discord.Color.blue())
-        embed.description = f"A message sent by {before.author} was edited"
-        if before.content != after.content:
-            embed.add_field(name="Before", value=before.content)
-            embed.add_field(name="After", value=after.content)
-        if before.pinned != after.pinned:
-            embed.add_field(name="Pinned", value=f'{before.pinned} -> {after.pinned}')
-
-        if len(embed.fields) > 0:
-            await log_into_logs(before.guild, embed)
-
-    @discord.Cog.listener()
-    @is_blocked()
     async def on_reaction_add(self, reaction: discord.Reaction, user: discord.User):
         embed = discord.Embed(title="Reaction Added", color=discord.Color.green())
         embed.add_field(name='Message', value=f"[jump](<{reaction.message.jump_url}>)")
-        embed.add_field(name="User", value=f"{user.mention}")
         embed.add_field(name="Emoji", value=str(reaction.emoji))
         await log_into_logs(reaction.message.guild, embed)
 
@@ -380,7 +357,6 @@ class Logging(discord.Cog):
     async def on_reaction_remove(self, reaction: discord.Reaction, user: discord.User):
         embed = discord.Embed(title="Reaction Removed", color=discord.Color.red())
         embed.add_field(name='Message', value=f"[jump](<{reaction.message.jump_url}>)")
-        embed.add_field(name="User", value=f"{user.mention}")
         embed.add_field(name="Emoji", value=str(reaction.emoji))
         await log_into_logs(reaction.message.guild, embed)
 
