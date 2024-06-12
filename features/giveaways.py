@@ -33,7 +33,7 @@ class Giveaways(discord.Cog):
     async def giveaway_new(self, ctx: discord.ApplicationContext, item: str, days: int, hours: int):
         # Check if the parameters are correct
         if days + hours < 0 or days < 0 or hours < 0:
-            await ctx.response.send_message("Parameters must be positive", ephemeral=True)
+            await ctx.respond("Parameters must be positive", ephemeral=True)
             return
 
         # Determine ending date
@@ -52,7 +52,7 @@ class Giveaways(discord.Cog):
         conn.commit()
 
         # Send success message
-        await ctx.response.send_message("Created giveaway successfully!", ephemeral=True)
+        await ctx.respond("Created giveaway successfully!", ephemeral=True)
 
     @discord.Cog.listener()
     @is_blocked()

@@ -145,7 +145,7 @@ class Leveling(discord.Cog):
 
         level = get_level_for_xp(db_get_user_xp(ctx.guild.id, user.id))
 
-        await ctx.response.send_message(
+        await ctx.respond(
             f'{user.mention} is level {level}.\nThe multiplier is currently `{str(db_calculate_multiplier(ctx.guild.id))}x`.',
             ephemeral=True)
 
@@ -166,7 +166,7 @@ class Leveling(discord.Cog):
         embed.add_field(name='Weekend event', value=weekend_event_enabled)
         embed.add_field(name='Weekend event multiplier', value=f'`{weekend_event_multiplier}x`')
 
-        await ctx.response.send_message(embed=embed, ephemeral=True)
+        await ctx.respond(embed=embed, ephemeral=True)
 
     @leveling_subcommand.command(name='multiplier', description='Set the leveling multiplier')
     @commands_ext.has_permissions(manage_guild=True)
@@ -190,7 +190,7 @@ class Leveling(discord.Cog):
         await log_into_logs(ctx.guild, logging_embed)
 
         # Send response
-        await ctx.response.send_message(f'Successfully set the leveling multiplier to {multiplier}.', ephemeral=True)
+        await ctx.respond(f'Successfully set the leveling multiplier to {multiplier}.', ephemeral=True)
 
     @leveling_subcommand.command(name='weekend_event', description='Set the weekend event')
     @commands_ext.has_permissions(manage_guild=True)
@@ -214,7 +214,7 @@ class Leveling(discord.Cog):
         await log_into_logs(ctx.guild, logging_embed)
 
         # Respond
-        await ctx.response.send_message(f'Successfully set the weekend event to {enabled}.', ephemeral=True)
+        await ctx.respond(f'Successfully set the weekend event to {enabled}.', ephemeral=True)
 
     @leveling_subcommand.command(name='weekend_event_multiplier', description='Set the weekend event multiplier')
     @commands_ext.has_permissions(manage_guild=True)
@@ -236,7 +236,7 @@ class Leveling(discord.Cog):
         await log_into_logs(ctx.guild, logging_embed)
 
         # Respond
-        await ctx.response.send_message(f'Successfully set the weekend event multiplier to {weekend_event_multiplier}.',
+        await ctx.respond(f'Successfully set the weekend event multiplier to {weekend_event_multiplier}.',
                                         ephemeral=True)
 
     @leveling_subcommand.command(name='set_reward', description='Set a role for a level')
@@ -266,7 +266,7 @@ class Leveling(discord.Cog):
         await log_into_logs(ctx.guild, logging_embed)
 
         # Send response
-        await ctx.response.send_message(f'Successfully set the reward for level {level} to {role.mention}.', ephemeral=True)
+        await ctx.respond(f'Successfully set the reward for level {level} to {role.mention}.', ephemeral=True)
 
     @leveling_subcommand.command(name='remove_reward', description='Remove a role for a level')
     @commands_ext.has_permissions(manage_guild=True)
@@ -294,4 +294,4 @@ class Leveling(discord.Cog):
         set_setting(ctx.guild.id, f'leveling_reward_{level}', '0')
 
         # Send response
-        await ctx.response.send_message(f'Successfully removed the reward for level {level}.', ephemeral=True)
+        await ctx.respond(f'Successfully removed the reward for level {level}.', ephemeral=True)

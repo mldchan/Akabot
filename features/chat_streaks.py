@@ -166,7 +166,7 @@ class ChatStreaks(discord.Cog):
         set_setting(ctx.guild.id, 'chat_streak_alerts', str(value))
 
         # Respond
-        await ctx.response.send_message(
+        await ctx.respond(
             'Succcessfully turned on chat streak alerts' if value else 'Successfully turned off chat streak alerts', ephemeral=True)
 
     @streaks_subcommand.command(name="list", description="List the chat streak options.")
@@ -181,7 +181,7 @@ class ChatStreaks(discord.Cog):
                               color=discord.Color.blurple())
         embed.add_field(name='Chat Streak Alerts', value=alerts)
 
-        await ctx.response.send_message(embed=embed, ephemeral=True)
+        await ctx.respond(embed=embed, ephemeral=True)
 
     @streaks_subcommand.command(name="reset", description="Reset streak for a specific user")
     @commands_ext.guild_only()
@@ -202,7 +202,7 @@ class ChatStreaks(discord.Cog):
         await log_into_logs(ctx.guild, logging_embed)
 
         # Respond
-        await ctx.response.send_message(f'Successfully reset the streak for {user.mention}.', ephemeral=True)
+        await ctx.respond(f'Successfully reset the streak for {user.mention}.', ephemeral=True)
 
     @streaks_subcommand.command(name="streak", description="Get someone's streak, to get yours, /streak.")
     @commands_ext.guild_only()
@@ -212,11 +212,11 @@ class ChatStreaks(discord.Cog):
     @analytics("streaks streak")
     async def get_user_streak(self, ctx: discord.ApplicationContext, user: discord.Member):
         (_, streak, _) = self.streak_storage.set_streak(ctx.guild.id, user.id)
-        await ctx.response.send_message(f'{user.mention}\'s current streak is {streak} days.', ephemeral=True)
+        await ctx.respond(f'{user.mention}\'s current streak is {streak} days.', ephemeral=True)
 
     @discord.slash_command(name='streak', description='Get your current streak')
     @is_blocked()
     @analytics("streak")
     async def get_streak_command(self, ctx: discord.ApplicationContext):
         (_, streak, _) = self.streak_storage.set_streak(ctx.guild.id, ctx.user.id)
-        await ctx.response.send_message(f'Your current streak is {streak} days.', ephemeral=True)
+        await ctx.respond(f'Your current streak is {streak} days.', ephemeral=True)

@@ -44,32 +44,32 @@ async def on_application_command_error(ctx: discord.ApplicationContext, error):
     logging.warning(error)
 
     if isinstance(error, discord_commands_ext.CommandOnCooldown):
-        await ctx.response.send_message(f'Cooldown! Try again after {error.retry_after} seconds.', ephemeral=True)
+        await ctx.respond(f'Cooldown! Try again after {error.retry_after} seconds.', ephemeral=True)
         return
 
     if isinstance(error, discord_commands_ext.MissingPermissions):
-        await ctx.response.send_message(
+        await ctx.respond(
             'You do not have the permissions to use this command. Missing: ' + ', '.join(error.missing_permissions),
             ephemeral=True)
         return
 
     if isinstance(error, discord_commands_ext.NoPrivateMessage):
-        await ctx.response.send_message('This command cannot be used in private messages.', ephemeral=True)
+        await ctx.respond('This command cannot be used in private messages.', ephemeral=True)
         return
 
     if isinstance(error, discord_commands_ext.BotMissingPermissions):
-        await ctx.response.send_message(
+        await ctx.respond(
             f"The bot is missing permissions to perform this action.\n"
             f"Missing: {', '.join(error.missing_permissions)}",
             ephemeral=True)
         return
 
     if isinstance(error, BlockedUserError):
-        await ctx.response.send_message(error.reason, ephemeral=True)
+        await ctx.respond(error.reason, ephemeral=True)
         return
 
     if isinstance(error, BlockedServerError):
-        await ctx.response.send_message(error.reason, ephemeral=True)
+        await ctx.respond(error.reason, ephemeral=True)
         return
 
 

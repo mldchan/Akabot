@@ -79,7 +79,7 @@ class AntiRaid(discord.Cog):
         await log_into_logs(ctx.guild, logging_embed)
 
         # Send response to user
-        await ctx.response.send_message(f'Successfully set the join threshold to {people} per {per} seconds.', ephemeral=True)
+        await ctx.respond(f'Successfully set the join threshold to {people} per {per} seconds.', ephemeral=True)
 
     @antiraid_subcommand.command(name="list", description="List the antiraid settings")
     @commands_ext.has_permissions(manage_guild=True)
@@ -93,4 +93,4 @@ class AntiRaid(discord.Cog):
         embed = discord.Embed(title='Antiraid settings', color=discord.Color.blurple())
         embed.add_field(name='Join threshold', value=f'{join_threshold} per {join_threshold_per} seconds')
 
-        await ctx.response.send_message(embed=embed, ephemeral=True)
+        await ctx.respond(embed=embed, ephemeral=True)

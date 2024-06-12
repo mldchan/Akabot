@@ -30,17 +30,17 @@ class AutoReact(discord.Cog):
         if emoji.is_custom_emoji():
             # Custom emoji check
             if emoji.id is None:
-                await ctx.response.send_message("Invalid emoji, make sure it's from this server and it's an emoji", ephemeral=True)
+                await ctx.respond("Invalid emoji, make sure it's from this server and it's an emoji", ephemeral=True)
                 return
 
             emoji_s = await ctx.guild.fetch_emoji(emoji.id)
             if emoji_s is None:
-                await ctx.response.send_message("Invalid emoji, make sure it's from this server and it's an emoji", ephemeral=True)
+                await ctx.respond("Invalid emoji, make sure it's from this server and it's an emoji", ephemeral=True)
                 return
         else:
             # Regex check
             if not EMOJI_REGEXP.match(emoji_input):
-                await ctx.response.send_message("Invalid emoji, make sure it's from this server and it's an emoji", ephemeral=True)
+                await ctx.respond("Invalid emoji, make sure it's from this server and it's an emoji", ephemeral=True)
                 return
 
         cur = conn.cursor()
@@ -54,7 +54,7 @@ class AutoReact(discord.Cog):
         conn.commit()
 
         # Respond
-        await ctx.response.send_message(f"Added trigger `{trigger}` that will make the bot react with {emoji}", ephemeral=True)
+        await ctx.respond(f"Added trigger `{trigger}` that will make the bot react with {emoji}", ephemeral=True)
 
     @auto_react_group.command(name="list", description="List auto react settings")
     async def list_auto_reacts(self, ctx: discord.ApplicationContext):
@@ -93,7 +93,7 @@ class AutoReact(discord.Cog):
         # Check if ID exists
         cur.execute("SELECT * FROM auto_react WHERE channel_id=? AND id=?", (ctx.channel.id, id))
         if cur.fetchone() is None:
-            await ctx.response.send_message("The setting was not found. You'll need to run this in the channel where the setting was set.", ephemeral=True)
+            await ctx.respond("The setting was not found. You'll need to run this in the channel where the setting was set.", ephemeral=True)
             return
         
         # Update
@@ -104,7 +104,7 @@ class AutoReact(discord.Cog):
         conn.commit()
 
         # Respond
-        await ctx.response.send_message("The trigger keyword was updated successfully.", ephemeral=True)
+        await ctx.respond("The trigger keyword was updated successfully.", ephemeral=True)
 
     @auto_react_group.command(name="delete", description="Delete an auto react setting")
     async def delete_auto_react(self, ctx: discord.ApplicationContext, id: int):
@@ -112,7 +112,7 @@ class AutoReact(discord.Cog):
         # Check if ID exists
         cur.execute("SELECT * FROM auto_react WHERE channel_id=? AND id=?", (ctx.channel.id, id))
         if cur.fetchone() is None:
-            await ctx.response.send_message("The setting was not found. You'll need to run this in the channel where the setting was set.", ephemeral=True)
+            await ctx.respond("The setting was not found. You'll need to run this in the channel where the setting was set.", ephemeral=True)
             return
         
         # Delete
@@ -123,7 +123,7 @@ class AutoReact(discord.Cog):
         conn.commit()
 
         # Respond
-        await ctx.response.send_message("Deleted the setting successfully.", ephemeral=True)
+        await ctx.respond("Deleted the setting successfully.", ephemeral=True)
 
 
     @auto_react_group.command(name="edit_react_emoji", description="Change react for a setting")
@@ -133,17 +133,17 @@ class AutoReact(discord.Cog):
         if emoji.is_custom_emoji():
             # Check if the emoji is from the current server
             if emoji.id is None:
-                await ctx.response.send_message("Invalid emoji, make sure it's from this server and it's an emoji", ephemeral=True)
+                await ctx.respond("Invalid emoji, make sure it's from this server and it's an emoji", ephemeral=True)
                 return
 
             emoji_s = await ctx.guild.fetch_emoji(emoji.id)
             if emoji_s is None:
-                await ctx.response.send_message("Invalid emoji, make sure it's from this server and it's an emoji", ephemeral=True)
+                await ctx.respond("Invalid emoji, make sure it's from this server and it's an emoji", ephemeral=True)
                 return
         else:
             # Regex check
             if not EMOJI_REGEXP.match(new_emoji.strip()):
-                await ctx.response.send_message("Invalid emoji, make sure it's from this server and it's an emoji", ephemeral=True)
+                await ctx.respond("Invalid emoji, make sure it's from this server and it's an emoji", ephemeral=True)
                 return
 
     
@@ -152,7 +152,7 @@ class AutoReact(discord.Cog):
         # Check if ID exists
         cur.execute("SELECT * FROM auto_react WHERE channel_id=? AND id=?", (ctx.channel.id, id))
         if cur.fetchone() is None:
-            await ctx.response.send_message("The setting was not found. You'll need to run this in the channel where the setting was set.", ephemeral=True)
+            await ctx.respond("The setting was not found. You'll need to run this in the channel where the setting was set.", ephemeral=True)
             return
         
         # Update
@@ -163,7 +163,7 @@ class AutoReact(discord.Cog):
         conn.commit()
 
         # Respond
-        await ctx.response.send_message("The react emoji was updated successfully.", ephemeral=True)
+        await ctx.respond("The react emoji was updated successfully.", ephemeral=True)
 
 
     @discord.Cog.listener()

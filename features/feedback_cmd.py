@@ -45,14 +45,14 @@ class SupportCmd(discord.Cog):
     @is_blocked()
     @analytics("website")
     async def website(self, ctx: discord.ApplicationContext):
-        await ctx.response.send_message(
+        await ctx.respond(
             "You can visit the website [here](<https://akatsuki.nekoweb.org/project/akabot>)") 
     
     @discord.slash_command(name="vote", description="Vote on the bot")
     @is_blocked()
     @analytics("vote")
     async def vote(self, ctx: discord.ApplicationContext):
-        await ctx.response.send_message(
+        await ctx.respond(
             "You can click the button below to vote:",
             view=VoteView(),
             ephemeral=True
@@ -65,11 +65,11 @@ class SupportCmd(discord.Cog):
     @analytics("feedback bug")
     async def report_bug(self, ctx: discord.ApplicationContext, bug: str):
         add_feature_report('bug', ctx.user.id, bug)
-        await ctx.response.send_message("Thank you for reporting the bug!")
+        await ctx.respond("Thank you for reporting the bug!")
 
     @feedback_subcommand.command(name="feature", description="Suggest a feature")
     @is_blocked()
     @analytics("feedback feature")
     async def suggest_feature(self, ctx: discord.ApplicationContext, feature: str):
         add_feature_report('feature', ctx.user.id, feature)
-        await ctx.response.send_message("Thank you for suggesting the feature!")
+        await ctx.respond("Thank you for suggesting the feature!")

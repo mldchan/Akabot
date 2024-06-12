@@ -87,7 +87,7 @@ class Welcoming(discord.Cog):
         embed.add_field(name='Welcoming message title', value=welcome_title)
         embed.add_field(name='Welcoming message text', value=welcome_text)
 
-        await ctx.response.send_message(embed=embed, ephemeral=True)
+        await ctx.respond(embed=embed, ephemeral=True)
 
     @welcome_subcommands.command(name='channel', description="Set the welcoming channel")
     @commands_ext.has_permissions(manage_guild=True)
@@ -115,7 +115,7 @@ class Welcoming(discord.Cog):
         await log_into_logs(ctx.guild, logging_embed)
 
         # Respond
-        await ctx.response.send_message(f'Welcoming channel set to {channel.mention}!', ephemeral=True)
+        await ctx.respond(f'Welcoming channel set to {channel.mention}!', ephemeral=True)
 
     @welcome_subcommands.command(name='type', description="Set whether you want to use message content or embed")
     @commands_ext.has_permissions(manage_guild=True)
@@ -140,7 +140,7 @@ class Welcoming(discord.Cog):
         await log_into_logs(ctx.guild.id, logging_embed)
 
         # Respond
-        await ctx.response.send_message(f'Welcoming message type set to {message_type}!', ephemeral=True)
+        await ctx.respond(f'Welcoming message type set to {message_type}!', ephemeral=True)
 
     @welcome_subcommands.command(name='title', description="Set the title of the welcoming message")
     @commands_ext.has_permissions(manage_guild=True)
@@ -164,7 +164,7 @@ class Welcoming(discord.Cog):
         await log_into_logs(ctx.guild.id, logging_embed)
 
         # Respond
-        await ctx.response.send_message(f'Welcoming message title set to {title}!', ephemeral=True)
+        await ctx.respond(f'Welcoming message title set to {title}!', ephemeral=True)
 
     @welcome_subcommands.command(name='text', description="Set the text of the welcoming message")
     @commands_ext.has_permissions(manage_guild=True)
@@ -188,7 +188,7 @@ class Welcoming(discord.Cog):
         await log_into_logs(ctx.guild.id, logging_embed)
 
         # Respond
-        await ctx.response.send_message(f'Welcoming message text set to {text}!', ephemeral=True)
+        await ctx.respond(f'Welcoming message text set to {text}!', ephemeral=True)
 
 
     goodbye_subcommands = discord.SlashCommandGroup(name="goodbye", description="Change the goodbye message")
@@ -210,7 +210,7 @@ class Welcoming(discord.Cog):
         embed.add_field(name='Goodbye message title', value=goodbye_title)
         embed.add_field(name='Goodbye message text', value=goodbye_text)
 
-        await ctx.response.send_message(embed=embed, ephemeral=True)
+        await ctx.respond(embed=embed, ephemeral=True)
 
     @goodbye_subcommands.command(name='channel', description="Set the goodbye channel")
     @commands_ext.has_permissions(manage_guild=True)
@@ -234,7 +234,7 @@ class Welcoming(discord.Cog):
         await log_into_logs(ctx.guild.id, logging_embed)
 
         # Respond
-        await ctx.response.send_message(f'Goodbye channel set to {channel.mention}!', ephemeral=True)
+        await ctx.respond(f'Goodbye channel set to {channel.mention}!', ephemeral=True)
         
     @goodbye_subcommands.command(name='type', description="Set whether you want to use message content or embed")
     @commands_ext.has_permissions(manage_guild=True)
@@ -258,7 +258,7 @@ class Welcoming(discord.Cog):
         await log_into_logs(ctx.guild.id, logging_embed)
 
         # Respond
-        await ctx.response.send_message(f'Goodbye message type set to {message_type}!', ephemeral=True)
+        await ctx.respond(f'Goodbye message type set to {message_type}!', ephemeral=True)
 
     @goodbye_subcommands.command(name='title', description="Set the title of the goodbye message")
     @commands_ext.has_permissions(manage_guild=True)
@@ -282,7 +282,7 @@ class Welcoming(discord.Cog):
         await log_into_logs(ctx.guild.id, logging_embed)
 
         # Respond
-        await ctx.response.send_message(f'Goodbye message title set to {title}!', ephemeral=True)
+        await ctx.respond(f'Goodbye message title set to {title}!', ephemeral=True)
 
     @goodbye_subcommands.command(name='text', description="Set the text of the goodbye message")
     @commands_ext.has_permissions(manage_guild=True)
@@ -306,4 +306,4 @@ class Welcoming(discord.Cog):
         await log_into_logs(ctx.guild.id, logging_embed)
 
         # Respond
-        await ctx.response.send_message(f'Goodbye message text set to {text}!', ephemeral=True)
+        await ctx.respond(f'Goodbye message text set to {text}!', ephemeral=True)

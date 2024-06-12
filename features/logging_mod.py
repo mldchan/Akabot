@@ -465,7 +465,7 @@ class Logging(discord.Cog):
                 embed.add_field(name='Logging Channel', value=channel.mention)
             else:
                 embed.add_field(name='Logging Channel', value='No logging channel set')
-        await ctx.response.send_message(embed=embed, ephemeral=True)
+        await ctx.respond(embed=embed, ephemeral=True)
 
     @logging_subcommand.command(name="set_channel", description="Set the logging channel")
     @commands_ext.guild_only()
@@ -489,4 +489,4 @@ class Logging(discord.Cog):
         await log_into_logs(ctx.guild, logging_embed)
 
         # Respond
-        await ctx.response.send_message(f"Logging channel was set to {channel.mention}", ephemeral=True)
+        await ctx.respond(f"Logging channel was set to {channel.mention}", ephemeral=True)

@@ -83,7 +83,7 @@ class ChatRevive(discord.Cog):
     
         # Permission checks
         if not revival_role.mentionable and not ctx.guild.me.guild_permissions.manage_roles:
-            await ctx.response.send_message('The role must be mentionable in order to continue.',
+            await ctx.respond('The role must be mentionable in order to continue.',
                                             ephemeral=True)
             return
 
@@ -113,7 +113,7 @@ class ChatRevive(discord.Cog):
         await log_into_logs(ctx.guild, logging_embed)
 
         # Send back response
-        await ctx.response.send_message(f'Successfully set revive settings for {channel.mention}.', ephemeral=True)
+        await ctx.respond(f'Successfully set revive settings for {channel.mention}.', ephemeral=True)
 
     @chat_revive_subcommand.command(name="remove", description="List the revive settings")
     @commands_ext.guild_only()
@@ -140,7 +140,7 @@ class ChatRevive(discord.Cog):
         await log_into_logs(ctx.guild, logging_embed)
 
         # Respond
-        await ctx.response.send_message(f'Successfully removed revive settings for {channel.mention}.', ephemeral=True)
+        await ctx.respond(f'Successfully removed revive settings for {channel.mention}.', ephemeral=True)
 
     @chat_revive_subcommand.command(name="list", description="List the revive settings")
     @commands_ext.guild_only()
@@ -154,7 +154,7 @@ class ChatRevive(discord.Cog):
         result = cur.fetchone()
 
         if not result:
-            await ctx.response.send_message(f'There are no revive settings for {channel.mention}.', ephemeral=True)
+            await ctx.respond(f'There are no revive settings for {channel.mention}.', ephemeral=True)
             return
 
         role_id, revival_time = result
@@ -164,4 +164,4 @@ class ChatRevive(discord.Cog):
         embed.add_field(name='Role', value=role.mention)
         embed.add_field(name='Revival time (seconds)', value=revival_time)
 
-        await ctx.response.send_message(embed=embed, ephemeral=True)
+        await ctx.respond(embed=embed, ephemeral=True)

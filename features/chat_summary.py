@@ -233,7 +233,7 @@ class ChatSummary(discord.Cog):
                     (ctx.guild.id, channel.id))
         data = cur.fetchone()
         if data is not None and data[0] == 1:
-            await ctx.response.send_message("This channel is already being counted.", ephemeral=True)
+            await ctx.respond("This channel is already being counted.", ephemeral=True)
             return
 
         # Enable
@@ -251,7 +251,7 @@ class ChatSummary(discord.Cog):
         await log_into_logs(ctx.guild, logging_embed)
 
         # Send response
-        await ctx.response.send_message('Added channel to counting.', ephemeral=True)
+        await ctx.respond('Added channel to counting.', ephemeral=True)
 
     @chat_summary_subcommand.command(name="remove", description="Remove a channel from being counted to chat summary")
     @commands_ext.guild_only()
@@ -275,7 +275,7 @@ class ChatSummary(discord.Cog):
                     (ctx.guild.id, channel.id))
         data = cur.fetchone()
         if data is not None and data[0] == 0:
-            await ctx.response.send_message("This channel is already not being counted.", ephemeral=True)
+            await ctx.respond("This channel is already not being counted.", ephemeral=True)
             return
 
         # Set disabled
@@ -293,7 +293,7 @@ class ChatSummary(discord.Cog):
         await log_into_logs(ctx.guild, logging_embed)
 
         # Respond
-        await ctx.response.send_message('Removed channel from being counted.', ephemeral=True)
+        await ctx.respond('Removed channel from being counted.', ephemeral=True)
 
     @chat_summary_subcommand.command(name="dateformat", description="Set the date format of Chat Streak messages.")
     @commands_ext.guild_only()
@@ -317,7 +317,7 @@ class ChatSummary(discord.Cog):
         await log_into_logs(ctx.guild, logging_embed)
 
         # Respond
-        await ctx.response.send_message(f"Set the Chat Summary date format to {format}.", ephemeral=True)
+        await ctx.respond(f"Set the Chat Summary date format to {format}.", ephemeral=True)
     
     @chat_summary_subcommand.command(name="countedits", description="Enable or disable counting of message edits as sent messages.")
     @commands_ext.guild_only()
@@ -340,7 +340,7 @@ class ChatSummary(discord.Cog):
         await log_into_logs(ctx.guild, logging_embed)
 
         # Respond
-        await ctx.response.send_message(
+        await ctx.respond(
             "Message edits will now count as messages." if countedits else "Message edits won't be counted as messages.",
             ephemeral=True)
 
@@ -422,4 +422,4 @@ class ChatSummary(discord.Cog):
     #     cur.close()
     #     db.commit()
 
-    #     await ctx.response.send_message("Done.", ephemeral=True)
+    #     await ctx.respond("Done.", ephemeral=True)

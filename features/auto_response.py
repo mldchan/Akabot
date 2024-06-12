@@ -35,7 +35,7 @@ class AutoResponse(discord.Cog):
         conn.commit()
 
         # Respond
-        await ctx.response.send_message(f"Added trigger `{trigger}` that will make the bot reply with `{reply}`", ephemeral=True)
+        await ctx.respond(f"Added trigger `{trigger}` that will make the bot reply with `{reply}`", ephemeral=True)
 
     @auto_response_group.command(name="list", description="List auto response settings")
     async def list_auto_responses(self, ctx: discord.ApplicationContext):
@@ -51,7 +51,7 @@ class AutoResponse(discord.Cog):
 
         all_settings = cur.fetchall()
         if all_settings is None:
-            await ctx.response.send_message("There are no settings set on this Discord server.", ephemeral=True)
+            await ctx.respond("There are no settings set on this Discord server.", ephemeral=True)
             return
 
         for i in all_settings:
@@ -79,7 +79,7 @@ class AutoResponse(discord.Cog):
         # Check if ID exists
         cur.execute("SELECT * FROM auto_response WHERE channel_id=? AND id=?", (ctx.channel.id, id))
         if cur.fetchone() is None:
-            await ctx.response.send_message("The setting was not found. You'll need to run this in the channel where the setting was set.", ephemeral=True)
+            await ctx.respond("The setting was not found. You'll need to run this in the channel where the setting was set.", ephemeral=True)
             return
         
         # Update
@@ -90,7 +90,7 @@ class AutoResponse(discord.Cog):
         conn.commit()
 
         # Respond
-        await ctx.response.send_message("The trigger keyword was updated successfully.", ephemeral=True)
+        await ctx.respond("The trigger keyword was updated successfully.", ephemeral=True)
 
     @auto_response_group.command(name="delete", description="Delete an auto response setting")
     async def delete_auto_response(self, ctx: discord.ApplicationContext, id: int):
@@ -98,7 +98,7 @@ class AutoResponse(discord.Cog):
         # Check if ID exists
         cur.execute("SELECT * FROM auto_response WHERE channel_id=? AND id=?", (ctx.channel.id, id))
         if cur.fetchone() is None:
-            await ctx.response.send_message("The setting was not found. You'll need to run this in the channel where the setting was set.", ephemeral=True)
+            await ctx.respond("The setting was not found. You'll need to run this in the channel where the setting was set.", ephemeral=True)
             return
         
         # Delete
@@ -109,7 +109,7 @@ class AutoResponse(discord.Cog):
         conn.commit()
 
         # Respond
-        await ctx.response.send_message("Deleted the setting successfully.", ephemeral=True)
+        await ctx.respond("Deleted the setting successfully.", ephemeral=True)
 
 
     @auto_response_group.command(name="edit_response", description="Change response for a setting")
@@ -118,7 +118,7 @@ class AutoResponse(discord.Cog):
         # Check if ID exists
         cur.execute("SELECT * FROM auto_response WHERE channel_id=? AND id=?", (ctx.channel.id, id))
         if cur.fetchone() is None:
-            await ctx.response.send_message("The setting was not found. You'll need to run this in the channel where the setting was set.", ephemeral=True)
+            await ctx.respond("The setting was not found. You'll need to run this in the channel where the setting was set.", ephemeral=True)
             return
         
         # Update
@@ -129,7 +129,7 @@ class AutoResponse(discord.Cog):
         conn.commit()
 
         # Respond
-        await ctx.response.send_message("The response text was updated successfully.", ephemeral=True)
+        await ctx.respond("The response text was updated successfully.", ephemeral=True)
 
 
     @discord.Cog.listener()
