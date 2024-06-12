@@ -50,8 +50,8 @@ class AutoResponse(discord.Cog):
         cur.execute("SELECT * FROM auto_response WHERE channel_id=?", (ctx.channel.id,))
 
         all_settings = cur.fetchall()
-        if all_settings is None:
-            await ctx.respond("There are no settings set on this Discord server.", ephemeral=True)
+        if len(all_settings) == 0:
+            await ctx.respond("There are no settings save right now.", ephemeral=True)
             return
 
         for i in all_settings:

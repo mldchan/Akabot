@@ -67,7 +67,12 @@ class AutoReact(discord.Cog):
 
         # List
         cur.execute("SELECT * FROM auto_react WHERE channel_id = ?", (ctx.channel.id,))
-        for i in cur.fetchall():
+        all_settings = cur.fetchall()
+        if len(all_settings) == 0:
+            await ctx.respond("There are no settings save right now.", ephemeral=True)
+            return
+
+        for i in all_settings:
             # Format: **{id}**: {trigger} -> {reply}
 
             current_group_msg += f"**ID: `{i[0]}`**: Trigger: `{i[2]}` -> Will react with `{i[3]}`\n"
