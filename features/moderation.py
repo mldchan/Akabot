@@ -53,7 +53,10 @@ class Moderation(discord.Cog):
             return
 
         if send_dm and user.can_send():
-            await user.send(f'You have been kicked from {ctx.guild.name} for {reason} by {ctx.user.display_name}.')
+            try:
+                await user.send(f'You have been kicked from {ctx.guild.name} for {reason} by {ctx.user.display_name}.')
+            except discord.Forbidden:
+                pass
 
         await user.kick(user, reason=reason)
 
@@ -84,7 +87,10 @@ class Moderation(discord.Cog):
             return
 
         if send_dm and user.can_send():
-            await user.send(f'You have been banned from {ctx.guild.name} for {reason} by {ctx.user.display_name}.')
+            try:
+                await user.send(f'You have been banned from {ctx.guild.name} for {reason} by {ctx.user.display_name}.')
+            except discord.Forbidden:
+                pass
 
         await user.ban(user, reason=reason)
 
@@ -132,11 +138,17 @@ class Moderation(discord.Cog):
 
         if send_dm and user.can_send():
             if dm_has_updated:
-                await user.send(
+                try:
+                    await user.send(
                 f'Your timeout in {ctx.guild.name} was changed to {pretty_time_delta(total_seconds)} by {ctx.user.display_name} for {reason}.')
+                except discord.Forbidden:
+                    pass
             else:
-                await user.send(
+                try:
+                    await user.send(
                 f'You have been timed out from {ctx.guild.name} for {reason} by {ctx.user.display_name} for {pretty_time_delta(total_seconds)}.')
+                except discord.Forbidden:
+                    pass
 
         await user.timeout_for(datetime.timedelta(seconds=total_seconds), reason=reason)
 
@@ -169,8 +181,11 @@ class Moderation(discord.Cog):
             return
 
         if send_dm and user.can_send():
-            await user.send(
+            try:
+                await user.send(
                 f'Your timeout in {ctx.guild.name} has been removed for {reason} by {ctx.user.display_name}.')
+            except discord.Forbidden:
+                pass
 
         await user.remove_timeout(user, reason=reason)
 
