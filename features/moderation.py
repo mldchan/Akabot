@@ -58,7 +58,7 @@ class Moderation(discord.Cog):
             except discord.Forbidden:
                 pass
 
-        await user.kick(user, reason=reason)
+        await user.kick(reason=reason)
 
         ephemerality = get_setting(ctx.guild.id, "moderation_ephemeral", "true")
         await ctx.respond(f'Successfully kicked {user.mention} for {reason}.', ephemeral=ephemerality == "true")
@@ -92,7 +92,7 @@ class Moderation(discord.Cog):
             except discord.Forbidden:
                 pass
 
-        await user.ban(user, reason=reason)
+        await user.ban(reason=reason)
 
         ephemerality = get_setting(ctx.guild.id, "moderation_ephemeral", "true")
         await ctx.respond(f'Successfully banned {user.mention} for {reason}.', ephemeral=ephemerality == "true")
@@ -187,7 +187,7 @@ class Moderation(discord.Cog):
             except discord.Forbidden:
                 pass
 
-        await user.remove_timeout(user, reason=reason)
+        await user.remove_timeout(reason=reason)
 
         ephemerality = get_setting(ctx.guild.id, "moderation_ephemeral", "true")
         await ctx.respond(f'Successfully unmuted {user.mention} for {reason}.', ephemeral=ephemerality == "true")
