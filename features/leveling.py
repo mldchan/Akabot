@@ -208,7 +208,7 @@ class Leveling(discord.Cog):
         # Create message
         logging_embed = discord.Embed(title="Leveling XP weekend event changed")
         logging_embed.add_field(name="User", value=f"{ctx.user.mention}")
-        logging_embed.add_field(name="Enabled", value=f"{"Enabled" if old_weekend_event else "Disabled"} -> {"Enabled" if enabled else "Disabled"}")
+        logging_embed.add_field(name="Enabled", value="{old} -> {new}".format(old=("Enabled" if old_weekend_event else "Disabled"), new=("Enabled" if enabled else "Disabled")))
         
         # Send to logs
         await log_into_logs(ctx.guild, logging_embed)

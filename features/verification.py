@@ -155,7 +155,7 @@ class VerificationMath(discord.ui.View):
 
     def message_content(self) -> str:
         # Create a message
-        return f"To get verified, you'll need to pass a simple verification procedure:\n\n***{self.a} {self.op} {self.b} = ?***"
+        return f"To get verified, you'll need to pass a simple verification procedure:\n\n`{self.a} {self.op} {self.b} = ?`"
     
     @discord.ui.button(label="Answer", style=discord.ButtonStyle.primary)
     async def respond(self, btn: discord.Button, ctx: discord.ApplicationContext):

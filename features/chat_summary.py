@@ -333,7 +333,7 @@ class ChatSummary(discord.Cog):
 
         # Create logging embed
         logging_embed = discord.Embed(title="Chat Summary date format changed")
-        logging_embed.add_field(name="Count Edits", value=f"{"Yes" if old_count_edits == "True" else "No"} -> {"Yes" if countedits else "No"}")
+        logging_embed.add_field(name="Count Edits", value="{old} -> {new}".format(old=("Yes" if old_count_edits == "True" else "No"), new=("Yes" if countedits else "No")))
         logging_embed.add_field(name="User", value=f"{ctx.user.mention}")
 
         # Send

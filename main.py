@@ -5,7 +5,7 @@ from discord.ext import commands as discord_commands_ext
 
 from features import welcoming, leveling, antiraid, chat_streaks, chat_revive, chat_summary, reaction_roles, \
     feedback_cmd, logging_mod, admin_cmds, giveaways, feedback_cmd, moderation, cleanup_task, verification, velky_stompies, \
-    auto_response, auto_react
+    roles_on_join
 from utils.blocked import BlockedUserError, BlockedServerError
 
 logger = logging.getLogger("Akatsuki")
@@ -19,14 +19,13 @@ file_handler.setLevel(logging.DEBUG)
 file_handler.setFormatter(logging.Formatter("%(asctime)s | %(filename)s:%(lineno)d %(funcName)s %(name)s %(levelname)s | %(message)s"))
 logger.addHandler(file_handler)
 
-BOT_VERSION = "3.2"
+BOT_VERSION = "3.1"
 
 with open('config.json', 'r', encoding='utf8') as f:
     data = json.load(f)
 
 intents = discord.Intents.default()
 intents.members = True
-intents.message_content = True
 
 bot = discord.Bot(intents=intents)
 
@@ -88,7 +87,6 @@ bot.add_cog(giveaways.Giveaways(bot))
 bot.add_cog(moderation.Moderation(bot))
 bot.add_cog(verification.Verification(bot))
 bot.add_cog(velky_stompies.VelkyStompies())
-bot.add_cog(auto_response.AutoResponse(bot))
-bot.add_cog(auto_react.AutoReact(bot))
+bot.add_cog(roles_on_join.RolesOnJoin(bot))
 
 bot.run(data['token'])
