@@ -7,7 +7,7 @@ from utils.blocked import is_blocked
 
 class VelkyStompies(discord.Cog):
 
-    @discord.slash_command(name="stompies", description="Stompies")
+    @discord.slash_command(name="stompies", description="Velky's stompies command")
     async def velky_stompies(self, ctx: discord.ApplicationContext):
         if get_setting(ctx.guild.id, "stompies_enabled", "True") == "False":
             await ctx.respond("The command is disabled", ephemeral=True)
@@ -17,8 +17,8 @@ class VelkyStompies(discord.Cog):
 
     stompies_settings_group = discord.SlashCommandGroup("stompies_settings", "Stompies commands")
 
-    @stompies_settings_group.command(name="enable", description="Set enabled state")
-    @discord.option(name="enabled", description="Whether the stompies are enabled", type=bool)
+    @stompies_settings_group.command(name="enable", description="Set the enabled state of the Velky Stompies command")
+    @discord.option(name="enabled", description="Whether the Velky stompies command is enabled", type=bool)
     @discord.default_permissions(manage_guild=True)
     @is_blocked()
     async def stompies_enable(self, ctx: discord.ApplicationContext, enabled: bool):
