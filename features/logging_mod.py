@@ -7,6 +7,11 @@ from utils.blocked import is_blocked
 from utils.settings import get_setting, set_setting
 from utils.logging import log_into_logs
 
+def str_channel_type(channel_type: discord.ChannelType) -> str:
+    text = channel_type.name.replace('_', ' ').capitalize()
+    if 'thread' not in text:
+        text = text + ' Channel'
+    return text
 
 class Logging(discord.Cog):
     def __init__(self, bot: discord.Bot) -> None:
@@ -124,27 +129,43 @@ class Logging(discord.Cog):
     @discord.Cog.listener()
     @is_blocked()
     async def on_guild_channel_update(self, before: discord.abc.GuildChannel, after: discord.abc.GuildChannel):
-        embed = discord.Embed(title=f"#{after.name} Channel Updated", color=discord.Color.blue())
+        embed = discord.Embed(title=f"{str_channel_type(after.type)} \"{after.name}\" was edited", color=discord.Color.blue())
+        
         if before.name != after.name:
             embed.add_field(name="Name", value=f'{before.name} -> {after.name}')
         if hasattr(before, 'topic') or hasattr(after, 'topic'):
             if before.topic != after.topic:
-                embed.add_field(name="Topic", value=f'{before.topic} -> {after.topic}')
+                # Before topic
+                before_topic = before.topic if hasattr(before, 'topic') else 'None'
+                if len(before_topic) == 0:
+                    before_topic = 'None'
+                
+                # After topic
+                after_topic = after.topic if hasattr(after, 'topic') else 'None'
+                if len(after_topic) == 0:
+                    after_topic = 'None'
+
+                # Add field
+                embed.add_field(name="Topic", value=f'{before_topic} -> {after_topic}')
+                
         if before.category != after.category:
             embed.add_field(name="Category", value=f'{before.category} -> {after.category}')
+        
         if len(embed.fields) > 0:
             await log_into_logs(after.guild, embed)
 
     @discord.Cog.listener()
     @is_blocked()
     async def on_guild_channel_create(self, channel: discord.abc.GuildChannel):
-        embed = discord.Embed(title=f"#{channel.name} Channel Created", color=discord.Color.green())
+        embed = discord.Embed(title=f"{str_channel_type(channel.type)} \"{channel.name}\" was created", color=discord.Color.green())
+
         await log_into_logs(channel.guild, embed)
 
     @discord.Cog.listener()
     @is_blocked()
     async def on_guild_channel_delete(self, channel: discord.abc.GuildChannel):
-        embed = discord.Embed(title=f"#{channel.name} Channel Deleted", color=discord.Color.red())
+        embed = discord.Embed(title=f"{str_channel_type(channel.type)} \"{channel.name}\" was deleted", color=discord.Color.red())
+
         await log_into_logs(channel.guild, embed)
 
     @discord.Cog.listener()
