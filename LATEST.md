@@ -2,3 +2,4 @@
 
 - Added `/donate/`
 - Better Giveaways
+- Chat Streaks leaderboard

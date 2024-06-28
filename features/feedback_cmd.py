@@ -79,7 +79,7 @@ class SupportCmd(discord.Cog):
     @is_blocked()
     @analytics("donate")
     async def donate(self, ctx: discord.ApplicationContext):
-        await ctx.respond("You can donate to the bot [here](<https://ko-fi.com/akatsuki2555>)")
+        await ctx.respond("You can donate to the bot [here](<https://ko-fi.com/akatsuki2555>)", ephemeral=True)
 
     @discord.slash_command(name="changelog", description="Get the bot's changelog")
     @is_blocked()
@@ -88,7 +88,7 @@ class SupportCmd(discord.Cog):
         with open("LATEST.md", "r") as f:
             changelog = f.read()
         
-        await ctx.respond(changelog)
+        await ctx.respond(changelog, ephemeral=True)
 
     feedback_subcommand = discord.SlashCommandGroup(name="feedback", description="Give feedback for the bot")
 
