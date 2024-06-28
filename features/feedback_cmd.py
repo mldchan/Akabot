@@ -75,6 +75,12 @@ class SupportCmd(discord.Cog):
             ephemeral=True
         )
 
+    @discord.slash_command(name="donate", description="Donate to the bot to support it")
+    @is_blocked()
+    @analytics("donate")
+    async def donate(self, ctx: discord.ApplicationContext):
+        await ctx.respond("You can donate to the bot [here](<https://ko-fi.com/akatsuki2555>)")
+
     feedback_subcommand = discord.SlashCommandGroup(name="feedback", description="Give feedback for the bot")
 
     @feedback_subcommand.command(name="bug", description="Report a bug")
