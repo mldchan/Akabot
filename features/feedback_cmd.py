@@ -81,6 +81,15 @@ class SupportCmd(discord.Cog):
     async def donate(self, ctx: discord.ApplicationContext):
         await ctx.respond("You can donate to the bot [here](<https://ko-fi.com/akatsuki2555>)")
 
+    @discord.slash_command(name="changelog", description="Get the bot's changelog")
+    @is_blocked()
+    @analytics("changelog")
+    async def changelog(self, ctx: discord.ApplicationContext):
+        with open("LATEST.md", "r") as f:
+            changelog = f.read()
+        
+        await ctx.respond(changelog)
+
     feedback_subcommand = discord.SlashCommandGroup(name="feedback", description="Give feedback for the bot")
 
     @feedback_subcommand.command(name="bug", description="Report a bug")
