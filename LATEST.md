@@ -1,5 +1,5 @@
 # Changelog for 3.11
 
-- Added `/donate/`
-- Better Giveaways
+- Added `/donate` and `/changelog`
+- Better Giveaways: Winner count, minutes, close (end early)
 - Chat Streaks leaderboard
