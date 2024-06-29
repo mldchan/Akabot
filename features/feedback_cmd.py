@@ -86,7 +86,7 @@ class FeatureModal(discord.ui.Modal):
 
     async def callback(self, interaction: discord.Interaction):
         requests.post(f"https://api.github.com/repos/{self.gh_info['git_user']}/{self.gh_info['git_repo']}/issues", headers={
-            "Authorization": f"token {self.gh_info["token"]}",
+            "Authorization": f"token {self.gh_info['token']}",
             "Accept": "application/vnd.github.v3+json"
         }, json={
             "title": self.title_input.value,
