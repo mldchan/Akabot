@@ -472,7 +472,7 @@ class Logging(discord.Cog):
     logging_subcommand = discord.SlashCommandGroup(name='logging', description='Logging settings')
 
     @logging_subcommand.command(name="list", description="List the logging settings")
-    @commands_ext.has_permissions(manage_guild=True)
+    @discord.default_permissions(manage_guild=True)
     @commands_ext.guild_only()
     @is_blocked()
     async def list_settings(self, ctx: discord.ApplicationContext):

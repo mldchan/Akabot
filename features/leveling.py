@@ -152,7 +152,7 @@ class Leveling(discord.Cog):
     leveling_subcommand = discord.SlashCommandGroup(name='leveling', description='Leveling settings')
 
     @leveling_subcommand.command(name="list", description="List the leveling settings")
-    @commands_ext.has_permissions(manage_guild=True)
+    @discord.default_permissions(manage_guild=True)
     @commands_ext.guild_only()
     @is_blocked()
     @analytics("leveling list")
@@ -169,7 +169,7 @@ class Leveling(discord.Cog):
         await ctx.respond(embed=embed, ephemeral=True)
 
     @leveling_subcommand.command(name='multiplier', description='Set the leveling multiplier')
-    @commands_ext.has_permissions(manage_guild=True)
+    @discord.default_permissions(manage_guild=True)
     @commands_ext.guild_only()
     @discord.option(name="multiplier", description="The multiplier to set", type=int)
     @is_blocked()
@@ -193,7 +193,7 @@ class Leveling(discord.Cog):
         await ctx.respond(f'Successfully set the leveling multiplier to {multiplier}.', ephemeral=True)
 
     @leveling_subcommand.command(name='weekend_event', description='Set the weekend event')
-    @commands_ext.has_permissions(manage_guild=True)
+    @discord.default_permissions(manage_guild=True)
     @commands_ext.guild_only()
     @discord.option(name="enabled", description="Whether the weekend event is enabled", type=bool)
     @is_blocked()
@@ -217,7 +217,7 @@ class Leveling(discord.Cog):
         await ctx.respond(f'Successfully set the weekend event to {enabled}.', ephemeral=True)
 
     @leveling_subcommand.command(name='weekend_event_multiplier', description='Set the weekend event multiplier')
-    @commands_ext.has_permissions(manage_guild=True)
+    @discord.default_permissions(manage_guild=True)
     @commands_ext.guild_only()
     @discord.option(name="weekend_event_multiplier", description="The multiplier to set", type=int)
     @is_blocked()
@@ -240,7 +240,7 @@ class Leveling(discord.Cog):
                                         ephemeral=True)
 
     @leveling_subcommand.command(name='set_reward', description='Set a role for a level')
-    @commands_ext.has_permissions(manage_guild=True)
+    @discord.default_permissions(manage_guild=True)
     @commands_ext.guild_only()
     @discord.option(name="level", description="The level to set the reward for", type=int)
     @discord.option(name='role', description='The role to set', type=discord.Role)
@@ -269,7 +269,7 @@ class Leveling(discord.Cog):
         await ctx.respond(f'Successfully set the reward for level {level} to {role.mention}.', ephemeral=True)
 
     @leveling_subcommand.command(name='remove_reward', description='Remove a role for a level')
-    @commands_ext.has_permissions(manage_guild=True)
+    @discord.default_permissions(manage_guild=True)
     @commands_ext.guild_only()
     @discord.option(name="level", description="The level to remove the reward for", type=int)
     @is_blocked()

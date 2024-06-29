@@ -54,7 +54,7 @@ class AntiRaid(discord.Cog):
     antiraid_subcommand = discord.SlashCommandGroup(name='antiraid', description='Manage the antiraid settings')
 
     @antiraid_subcommand.command(name="join_threshold", description="Set the join threshold for the antiraid system")
-    @commands_ext.has_permissions(manage_guild=True)
+    @discord.default_permissions(manage_guild=True)
     @commands_ext.guild_only()
     @discord.option(name='people', description='The number of people joining...', type=int)
     @discord.option(name='per', description='...per the number of seconds to check', type=int)
@@ -82,7 +82,7 @@ class AntiRaid(discord.Cog):
         await ctx.respond(f'Successfully set the join threshold to {people} per {per} seconds.', ephemeral=True)
 
     @antiraid_subcommand.command(name="list", description="List the antiraid settings")
-    @commands_ext.has_permissions(manage_guild=True)
+    @discord.default_permissions(manage_guild=True)
     @commands_ext.guild_only()
     @is_blocked()
     @analytics("antiraid list")

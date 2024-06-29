@@ -149,7 +149,7 @@ class ChatStreaks(discord.Cog):
 
     @streaks_subcommand.command(name="alerts", description="Show/hide the chat streak alerts")
     @commands_ext.guild_only()
-    @commands_ext.has_permissions(manage_guild=True)
+    @discord.default_permissions(manage_guild=True)
     @is_blocked()
     @analytics("streaks alerts")
     async def toggle_alerts(self, ctx: discord.ApplicationContext, value: bool):
@@ -171,7 +171,7 @@ class ChatStreaks(discord.Cog):
 
     @streaks_subcommand.command(name="list", description="List the chat streak options.")
     @commands_ext.guild_only()
-    @commands_ext.has_permissions(manage_guild=True)
+    @discord.default_permissions(manage_guild=True)
     @is_blocked()
     @analytics("streaks list")
     async def list_settings(self, ctx: discord.ApplicationContext):
@@ -185,7 +185,7 @@ class ChatStreaks(discord.Cog):
 
     @streaks_subcommand.command(name="reset", description="Reset streak for a specific user")
     @commands_ext.guild_only()
-    @commands_ext.has_permissions(manage_guild=True)
+    @discord.default_permissions(manage_guild=True)
     @discord.option(name='user', description='The user to reset the streak for', type=discord.Member)
     @is_blocked()
     @analytics("streaks reset")
@@ -206,7 +206,7 @@ class ChatStreaks(discord.Cog):
 
     @streaks_subcommand.command(name="streak", description="Get someone's streak, to get yours, /streak.")
     @commands_ext.guild_only()
-    @commands_ext.has_permissions(manage_guild=True)
+    @discord.default_permissions(manage_guild=True)
     @discord.option(name='user', description='The user to get the streak for', type=discord.Member)
     @is_blocked()
     @analytics("streaks streak")

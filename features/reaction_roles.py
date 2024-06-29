@@ -59,7 +59,7 @@ class ReactionRoles(discord.Cog):
         return view
 
     @create_reaction_role_subcommand.command(name="normal", description="Create a normal reaction role")
-    @commands_ext.has_permissions(manage_roles=True)
+    @discord.default_permissions(manage_roles=True)
     @commands_ext.guild_only()
     @commands_ext.bot_has_permissions(send_messages=True)
     @is_blocked()
@@ -73,7 +73,7 @@ class ReactionRoles(discord.Cog):
         await interaction.response.send_message("Reaction role has been created!", ephemeral=True)
 
     @create_reaction_role_subcommand.command(name="add_only", description="Create an add only reaction role")
-    @commands_ext.has_permissions(manage_roles=True)
+    @discord.default_permissions(manage_roles=True)
     @commands_ext.guild_only()
     @commands_ext.bot_has_permissions(send_messages=True)
     @is_blocked()
@@ -87,7 +87,7 @@ class ReactionRoles(discord.Cog):
         await interaction.response.send_message("Reaction role has been created!", ephemeral=True)
 
     @create_reaction_role_subcommand.command(name="remove_only", description="Create a remove only reaction role")
-    @commands_ext.has_permissions(manage_roles=True)
+    @discord.default_permissions(manage_roles=True)
     @commands_ext.guild_only()
     @commands_ext.bot_has_permissions(send_messages=True)
     @is_blocked()
@@ -101,7 +101,7 @@ class ReactionRoles(discord.Cog):
         await interaction.response.send_message("Reaction role has been created!", ephemeral=True)
 
     @create_reaction_role_subcommand.command(name="single", description="Create a single choice only reaction role")
-    @commands_ext.has_permissions(manage_roles=True)
+    @discord.default_permissions(manage_roles=True)
     @commands_ext.guild_only()
     @commands_ext.bot_has_permissions(send_messages=True)
     @is_blocked()
