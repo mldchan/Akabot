@@ -26,6 +26,7 @@ with open('config.json', 'r', encoding='utf8') as f:
 
 intents = discord.Intents.default()
 intents.members = True
+intents.message_content = True
 
 bot = discord.Bot(intents=intents)
 
@@ -43,7 +44,12 @@ async def on_application_command_error(ctx: discord.ApplicationContext, error):
     logging.warning(error)
 
     if isinstance(error, discord_commands_ext.CommandOnCooldown):
-        await ctx.respond(f'Cooldown! Try again after {error.retry_after} seconds.', ephemeral=True)
+        minutes = int(error.retry_after / 60)
+        seconds = int(error.retry_after % 60)
+        if minutes > 0:
+            await ctx.respond(f'Cooldown! Try again after {minutes} minutes and {seconds} seconds.', ephemeral=True)
+        else:
+            await ctx.respond(f'Cooldown! Try again after {seconds} seconds.', ephemeral=True)
         return
 
     if isinstance(error, discord_commands_ext.MissingPermissions):
@@ -80,7 +86,7 @@ bot.add_cog(chat_streaks.ChatStreaks(bot))
 bot.add_cog(chat_revive.ChatRevive(bot))
 bot.add_cog(chat_summary.ChatSummary(bot))
 bot.add_cog(reaction_roles.ReactionRoles(bot))
-bot.add_cog(feedback_cmd.SupportCmd(bot))
+bot.add_cog(feedback_cmd.SupportCmd(bot, gh_info=data["github"]))
 bot.add_cog(logging_mod.Logging(bot))
 bot.add_cog(admin_cmds.AdminCommands(bot))
 bot.add_cog(giveaways.Giveaways(bot))

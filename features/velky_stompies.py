@@ -6,7 +6,6 @@ from discord.ext import commands
 from utils.blocked import is_blocked
 
 class VelkyStompies(discord.Cog):
-
     @discord.slash_command(name="stompies", description="Velky's stompies command")
     async def velky_stompies(self, ctx: discord.ApplicationContext):
         if get_setting(ctx.guild.id, "stompies_enabled", "True") == "False":
