@@ -93,7 +93,5 @@ bot.add_cog(moderation.Moderation(bot))
 bot.add_cog(verification.Verification(bot))
 bot.add_cog(velky_stompies.VelkyStompies())
 bot.add_cog(roles_on_join.RolesOnJoin(bot))
-bot.add_cog(auto_react.AutoReact(bot))
-bot.add_cog(auto_response.AutoResponse(bot))
 
 bot.run(data['token'])
