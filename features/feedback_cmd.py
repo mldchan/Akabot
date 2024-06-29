@@ -1,12 +1,15 @@
 import logging
 
 import discord
+from discord.ui.input_text import InputText
 from discord.ui.item import Item
+from discord.ext import commands as cmds_ext
 
 from database import conn as db
 from utils.analytics import analytics
 from utils.blocked import is_blocked
 
+import requests
 
 def db_init():
     cur = db.cursor()
@@ -44,9 +47,60 @@ class PrivacyPolicyView(discord.ui.View):
 
         self.add_item(button1)
 
+class BugReportModal(discord.ui.Modal):
+    def __init__(self, gh_info: dict) -> None:
+        super().__init__(title="Bug Report", timeout=600)
+
+        self.gh_info = gh_info
+
+        self.title_input = InputText(label="Title", style=discord.InputTextStyle.short, max_length=100, min_length=8, required=True)
+        self.description_input = InputText(label="Description", style=discord.InputTextStyle.long, max_length=1000, min_length=20, required=True)
+
+        self.add_item(self.title_input)
+        self.add_item(self.description_input)
+
+    async def callback(self, interaction: discord.Interaction):
+        requests.post(f"https://api.github.com/repos/{self.gh_info['git_user']}/{self.gh_info['git_repo']}/issues", headers={
+            "Authorization": f"token {self.gh_info['token']}",
+            "Accept": "application/vnd.github.v3+json"
+        }, json={
+            "title": self.title_input.value,
+            "body": self.description_input.value,
+            "labels": ["bug", "in-bot"]
+        })
+
+        await interaction.respond("Bug report submitted!", ephemeral=True)
+
+
+class FeatureModal(discord.ui.Modal):
+    def __init__(self, gh_info: dict) -> None:
+        super().__init__(title="Feature Request", timeout=600)
+
+        self.gh_info = gh_info
+
+        self.title_input = InputText(placeholder="Title", style=discord.InputTextStyle.short, max_length=100, min_length=8, required=True)
+        self.description_input = InputText(placeholder="Description", style=discord.InputTextStyle.long, max_length=1000, min_length=20, required=True)
+
+        self.add_item(self.title_input)
+        self.add_item(self.description_input)
+
+    async def callback(self, interaction: discord.Interaction):
+        requests.post(f"https://api.github.com/repos/{self.gh_info['git_user']}/{self.gh_info['git_repo']}/issues", headers={
+            "Authorization": f"token {self.gh_info["token"]}",
+            "Accept": "application/vnd.github.v3+json"
+        }, json={
+            "title": self.title_input.value,
+            "body": self.description_input.value,
+            "labels": ["enhancement", "in-bot"]
+        })
+
+        await interaction.respond("Feature request submitted!", ephemeral=True)
+
+
 class SupportCmd(discord.Cog):
-    def __init__(self, bot):
+    def __init__(self, bot: discord.Bot, gh_info: dict):
         self.bot = bot
+        self.gh_info = gh_info
 
     @discord.slash_command(name="website", help="Get the website link")
     @is_blocked()
@@ -93,15 +147,17 @@ class SupportCmd(discord.Cog):
     feedback_subcommand = discord.SlashCommandGroup(name="feedback", description="Give feedback for the bot")
 
     @feedback_subcommand.command(name="bug", description="Report a bug")
+    @cmds_ext.cooldown(1, 300, cmds_ext.BucketType.user)
     @is_blocked()
     @analytics("feedback bug")
-    async def report_bug(self, ctx: discord.ApplicationContext, bug: str):
-        add_feature_report('bug', ctx.user.id, bug)
-        await ctx.respond("Thank you for reporting the bug!")
+    async def report_bug(self, ctx: discord.ApplicationContext):
+        modal = BugReportModal(self.gh_info)
+        await ctx.response.send_modal(modal)
 
     @feedback_subcommand.command(name="feature", description="Suggest a feature")
+    @cmds_ext.cooldown(1, 300, cmds_ext.BucketType.user)
     @is_blocked()
     @analytics("feedback feature")
-    async def suggest_feature(self, ctx: discord.ApplicationContext, feature: str):
-        add_feature_report('feature', ctx.user.id, feature)
-        await ctx.respond("Thank you for suggesting the feature!")
+    async def suggest_feature(self, ctx: discord.ApplicationContext):
+        modal = FeatureModal(self.gh_info)
+        await ctx.response.send_modal(modal)
