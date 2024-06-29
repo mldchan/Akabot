@@ -5,7 +5,7 @@ from discord.ext import commands as discord_commands_ext
 
 from features import welcoming, leveling, antiraid, chat_streaks, chat_revive, chat_summary, reaction_roles, \
     feedback_cmd, logging_mod, admin_cmds, giveaways, feedback_cmd, moderation, cleanup_task, verification, velky_stompies, \
-    roles_on_join, auto_react, auto_response
+    roles_on_join
 from utils.blocked import BlockedUserError, BlockedServerError
 
 logger = logging.getLogger("Akatsuki")
@@ -44,7 +44,12 @@ async def on_application_command_error(ctx: discord.ApplicationContext, error):
     logging.warning(error)
 
     if isinstance(error, discord_commands_ext.CommandOnCooldown):
-        await ctx.respond(f'Cooldown! Try again after {error.retry_after} seconds.', ephemeral=True)
+        minutes = int(error.retry_after / 60)
+        seconds = int(error.retry_after % 60)
+        if minutes > 0:
+            await ctx.respond(f'Cooldown! Try again after {minutes} minutes and {seconds} seconds.', ephemeral=True)
+        else:
+            await ctx.respond(f'Cooldown! Try again after {seconds} seconds.', ephemeral=True)
         return
 
     if isinstance(error, discord_commands_ext.MissingPermissions):
@@ -81,7 +86,7 @@ bot.add_cog(chat_streaks.ChatStreaks(bot))
 bot.add_cog(chat_revive.ChatRevive(bot))
 bot.add_cog(chat_summary.ChatSummary(bot))
 bot.add_cog(reaction_roles.ReactionRoles(bot))
-bot.add_cog(feedback_cmd.SupportCmd(bot))
+bot.add_cog(feedback_cmd.SupportCmd(bot, gh_info=data["github"]))
 bot.add_cog(logging_mod.Logging(bot))
 bot.add_cog(admin_cmds.AdminCommands(bot))
 bot.add_cog(giveaways.Giveaways(bot))
@@ -89,7 +94,5 @@ bot.add_cog(moderation.Moderation(bot))
 bot.add_cog(verification.Verification(bot))
 bot.add_cog(velky_stompies.VelkyStompies())
 bot.add_cog(roles_on_join.RolesOnJoin(bot))
-bot.add_cog(auto_react.AutoReact(bot))
-bot.add_cog(auto_response.AutoResponse(bot))
 
 bot.run(data['token'])
