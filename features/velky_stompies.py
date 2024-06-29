@@ -19,6 +19,7 @@ class VelkyStompies(discord.Cog):
     @stompies_settings_group.command(name="enable", description="Set the enabled state of the Velky Stompies command")
     @discord.option(name="enabled", description="Whether the Velky stompies command is enabled", type=bool)
     @discord.default_permissions(manage_guild=True)
+    @commands.has_permissions(manage_guild=True)
     @is_blocked()
     async def stompies_enable(self, ctx: discord.ApplicationContext, enabled: bool):
         old_value = get_setting(ctx.guild.id, "stompies_enabled", str(enabled)) == "True"

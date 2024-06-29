@@ -73,6 +73,7 @@ class ChatRevive(discord.Cog):
 
     @chat_revive_subcommand.command(name="set", description="Set revive settings for a channel")
     @commands_ext.guild_only()
+    @discord.default_permissions(manage_guild=True)
     @commands_ext.has_permissions(manage_guild=True)
     @commands_ext.bot_has_permissions(send_messages=True)
     @is_blocked()
@@ -117,6 +118,7 @@ class ChatRevive(discord.Cog):
 
     @chat_revive_subcommand.command(name="remove", description="List the revive settings")
     @commands_ext.guild_only()
+    @discord.default_permissions(manage_guild=True)
     @commands_ext.has_permissions(manage_guild=True)
     @is_blocked()
     @analytics("chatrevive remove")
@@ -144,6 +146,7 @@ class ChatRevive(discord.Cog):
 
     @chat_revive_subcommand.command(name="list", description="List the revive settings")
     @commands_ext.guild_only()
+    @discord.default_permissions(manage_guild=True)
     @commands_ext.has_permissions(manage_guild=True)
     @is_blocked()
     @analytics("chatrevive list")

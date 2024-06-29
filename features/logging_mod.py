@@ -472,6 +472,7 @@ class Logging(discord.Cog):
     logging_subcommand = discord.SlashCommandGroup(name='logging', description='Logging settings')
 
     @logging_subcommand.command(name="list", description="List the logging settings")
+    @discord.default_permissions(manage_guild=True)
     @commands_ext.has_permissions(manage_guild=True)
     @commands_ext.guild_only()
     @is_blocked()
