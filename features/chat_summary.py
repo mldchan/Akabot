@@ -60,6 +60,9 @@ class ChatSummary(discord.Cog):
     async def on_message(self, message: discord.Message):
         if message.guild is None:
             return
+        
+        if message.author.bot:
+            return
 
         logger = logging.getLogger("Akatsuki")
 
@@ -94,6 +97,9 @@ class ChatSummary(discord.Cog):
     @is_blocked()
     async def on_message_edit(self, old_message: discord.Message, new_message: discord.Message):
         if new_message.guild is None:
+            return
+        
+        if new_message.author.bot:
             return
         
         countedits = get_setting(new_message.guild.id, "chatsummary_countedits", "False")

@@ -19,7 +19,7 @@ file_handler.setLevel(logging.DEBUG)
 file_handler.setFormatter(logging.Formatter("%(asctime)s | %(filename)s:%(lineno)d %(funcName)s %(name)s %(levelname)s | %(message)s"))
 logger.addHandler(file_handler)
 
-BOT_VERSION = "3.1"
+BOT_VERSION = "3.11"
 
 with open('config.json', 'r', encoding='utf8') as f:
     data = json.load(f)

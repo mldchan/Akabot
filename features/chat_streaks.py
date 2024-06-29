@@ -220,3 +220,27 @@ class ChatStreaks(discord.Cog):
     async def get_streak_command(self, ctx: discord.ApplicationContext):
         (_, streak, _) = self.streak_storage.set_streak(ctx.guild.id, ctx.user.id)
         await ctx.respond(f'Your current streak is {streak} days.', ephemeral=True)
+
+    # Leaderboard
+
+    @streaks_subcommand.command(name="leaderboard", description="Get the chat streak leaderboard")
+    @commands_ext.guild_only()
+    @is_blocked()
+    @analytics("streaks leaderboard")
+    async def streaks_lb(self, ctx: discord.ApplicationContext):
+        cur = db.cursor()
+        cur.execute(
+            'SELECT member_id, MAX(julianday(last_message) - julianday(start_time)) FROM chat_streaks WHERE guild_id = ? GROUP BY member_id ORDER BY MAX(julianday(last_message) - julianday(start_time)) DESC LIMIT 10',
+            (ctx.guild.id,))
+        rows = cur.fetchall()
+        cur.close()
+
+        message = "# Chat Streak Leaderboard\n\n"
+
+        for i, row in enumerate(rows):
+            member = ctx.guild.get_member(row[0])
+            if member is None:
+                continue
+            message += f"{i + 1}. {member.mention} - {row[1]:.0f} days\n"
+
+        await ctx.respond(message, ephemeral=True)
