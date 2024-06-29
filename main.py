@@ -26,7 +26,6 @@ with open('config.json', 'r', encoding='utf8') as f:
 
 intents = discord.Intents.default()
 intents.members = True
-intents.message_content = True
 
 bot = discord.Bot(intents=intents)
 
