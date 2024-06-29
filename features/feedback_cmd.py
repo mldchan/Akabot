@@ -78,8 +78,8 @@ class FeatureModal(discord.ui.Modal):
 
         self.gh_info = gh_info
 
-        self.title_input = InputText(placeholder="Title", style=discord.InputTextStyle.short, max_length=100, min_length=8, required=True)
-        self.description_input = InputText(placeholder="Description", style=discord.InputTextStyle.long, max_length=1000, min_length=20, required=True)
+        self.title_input = InputText(label="Title", style=discord.InputTextStyle.short, max_length=100, min_length=8, required=True)
+        self.description_input = InputText(label="Description", style=discord.InputTextStyle.long, max_length=1000, min_length=20, required=True)
 
         self.add_item(self.title_input)
         self.add_item(self.description_input)
