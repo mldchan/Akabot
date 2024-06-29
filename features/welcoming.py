@@ -72,6 +72,7 @@ class Welcoming(discord.Cog):
 
     @welcome_subcommands.command(name="list", description="List the welcoming settings")
     @discord.default_permissions(manage_guild=True)
+    @commands_ext.has_permissions(manage_guild=True)
     @commands_ext.guild_only()
     @is_blocked()
     @analytics("welcome list")
@@ -91,6 +92,7 @@ class Welcoming(discord.Cog):
 
     @welcome_subcommands.command(name='channel', description="Set the welcoming channel")
     @discord.default_permissions(manage_guild=True)
+    @commands_ext.has_permissions(manage_guild=True)
     @commands_ext.guild_only()
     @commands_ext.bot_has_permissions(view_channel=True, send_messages=True)
     @is_blocked()
@@ -119,6 +121,7 @@ class Welcoming(discord.Cog):
 
     @welcome_subcommands.command(name='type', description="Set whether you want to use message content or embed")
     @discord.default_permissions(manage_guild=True)
+    @commands_ext.has_permissions(manage_guild=True)
     @commands_ext.guild_only()
     @discord.option(name="message_type", description="The type of the message (embed or text)",
                     choices=['embed', 'text'])
@@ -144,6 +147,7 @@ class Welcoming(discord.Cog):
 
     @welcome_subcommands.command(name='title', description="Set the title of the welcoming message")
     @discord.default_permissions(manage_guild=True)
+    @commands_ext.has_permissions(manage_guild=True)
     @commands_ext.guild_only()
     @discord.option(name="title", description="The title of the message")
     @is_blocked()
@@ -168,6 +172,7 @@ class Welcoming(discord.Cog):
 
     @welcome_subcommands.command(name='text', description="Set the text of the welcoming message")
     @discord.default_permissions(manage_guild=True)
+    @commands_ext.has_permissions(manage_guild=True)
     @commands_ext.guild_only()
     @discord.option(name="text", description="The content of the message or description of the embed")
     @is_blocked()
@@ -195,6 +200,7 @@ class Welcoming(discord.Cog):
 
     @goodbye_subcommands.command(name="list", description="List the goodbye settings")
     @discord.default_permissions(manage_guild=True)
+    @commands_ext.has_permissions(manage_guild=True)
     @commands_ext.guild_only()
     @is_blocked()
     @analytics("goodbye list")
@@ -214,6 +220,7 @@ class Welcoming(discord.Cog):
 
     @goodbye_subcommands.command(name='channel', description="Set the goodbye channel")
     @discord.default_permissions(manage_guild=True)
+    @commands_ext.has_permissions(manage_guild=True)
     @commands_ext.guild_only()
     @commands_ext.bot_has_permissions(view_channel=True, send_messages=True)
     @is_blocked()
@@ -238,6 +245,7 @@ class Welcoming(discord.Cog):
         
     @goodbye_subcommands.command(name='type', description="Set whether you want to use message content or embed")
     @discord.default_permissions(manage_guild=True)
+    @commands_ext.has_permissions(manage_guild=True)
     @commands_ext.guild_only()
     @discord.option(name="message_type", description="The type of the message (embed or text)", choices=['embed', 'text'])
     @is_blocked()
@@ -262,6 +270,7 @@ class Welcoming(discord.Cog):
 
     @goodbye_subcommands.command(name='title', description="Set the title of the goodbye message")
     @discord.default_permissions(manage_guild=True)
+    @commands_ext.has_permissions(manage_guild=True)
     @commands_ext.guild_only()
     @discord.option(name="title", description="The title of the message")
     @is_blocked()
@@ -286,6 +295,7 @@ class Welcoming(discord.Cog):
 
     @goodbye_subcommands.command(name='text', description="Set the text of the goodbye message")
     @discord.default_permissions(manage_guild=True)
+    @commands_ext.has_permissions(manage_guild=True)
     @commands_ext.guild_only()
     @discord.option(name="text", description="The content of the message or description of the embed")
     @is_blocked()

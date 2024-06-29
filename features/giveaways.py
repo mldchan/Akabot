@@ -59,6 +59,7 @@ class Giveaways(discord.Cog):
 
     @giveaways_group.command(name="new", description="Create a new giveaway")
     @discord.default_permissions(manage_guild=True)
+    @commands_ext.has_permissions(manage_guild=True)
     @commands_ext.bot_has_guild_permissions(add_reactions=True, read_message_history=True, send_messages=True)
     @commands_ext.guild_only()
     @is_blocked()
@@ -89,6 +90,7 @@ class Giveaways(discord.Cog):
 
     @giveaways_group.command(name="end", description="End a giveaway IRREVERSIBLY")
     @discord.default_permissions(manage_guild=True)
+    @commands_ext.has_permissions(manage_guild=True)
     @commands_ext.bot_has_guild_permissions(add_reactions=True, read_message_history=True, send_messages=True)
     @commands_ext.guild_only()
     @is_blocked()
