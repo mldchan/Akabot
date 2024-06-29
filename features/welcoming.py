@@ -71,6 +71,7 @@ class Welcoming(discord.Cog):
     welcome_subcommands = discord.SlashCommandGroup(name="welcome", description="Change the welcoming message")
 
     @welcome_subcommands.command(name="list", description="List the welcoming settings")
+    @discord.default_permissions(manage_guild=True)
     @commands_ext.has_permissions(manage_guild=True)
     @commands_ext.guild_only()
     @is_blocked()
@@ -90,6 +91,7 @@ class Welcoming(discord.Cog):
         await ctx.respond(embed=embed, ephemeral=True)
 
     @welcome_subcommands.command(name='channel', description="Set the welcoming channel")
+    @discord.default_permissions(manage_guild=True)
     @commands_ext.has_permissions(manage_guild=True)
     @commands_ext.guild_only()
     @commands_ext.bot_has_permissions(view_channel=True, send_messages=True)
@@ -118,6 +120,7 @@ class Welcoming(discord.Cog):
         await ctx.respond(f'Welcoming channel set to {channel.mention}!', ephemeral=True)
 
     @welcome_subcommands.command(name='type', description="Set whether you want to use message content or embed")
+    @discord.default_permissions(manage_guild=True)
     @commands_ext.has_permissions(manage_guild=True)
     @commands_ext.guild_only()
     @discord.option(name="message_type", description="The type of the message (embed or text)",
@@ -143,6 +146,7 @@ class Welcoming(discord.Cog):
         await ctx.respond(f'Welcoming message type set to {message_type}!', ephemeral=True)
 
     @welcome_subcommands.command(name='title', description="Set the title of the welcoming message")
+    @discord.default_permissions(manage_guild=True)
     @commands_ext.has_permissions(manage_guild=True)
     @commands_ext.guild_only()
     @discord.option(name="title", description="The title of the message")
@@ -167,6 +171,7 @@ class Welcoming(discord.Cog):
         await ctx.respond(f'Welcoming message title set to {title}!', ephemeral=True)
 
     @welcome_subcommands.command(name='text', description="Set the text of the welcoming message")
+    @discord.default_permissions(manage_guild=True)
     @commands_ext.has_permissions(manage_guild=True)
     @commands_ext.guild_only()
     @discord.option(name="text", description="The content of the message or description of the embed")
@@ -194,6 +199,7 @@ class Welcoming(discord.Cog):
     goodbye_subcommands = discord.SlashCommandGroup(name="goodbye", description="Change the goodbye message")
 
     @goodbye_subcommands.command(name="list", description="List the goodbye settings")
+    @discord.default_permissions(manage_guild=True)
     @commands_ext.has_permissions(manage_guild=True)
     @commands_ext.guild_only()
     @is_blocked()
@@ -213,6 +219,7 @@ class Welcoming(discord.Cog):
         await ctx.respond(embed=embed, ephemeral=True)
 
     @goodbye_subcommands.command(name='channel', description="Set the goodbye channel")
+    @discord.default_permissions(manage_guild=True)
     @commands_ext.has_permissions(manage_guild=True)
     @commands_ext.guild_only()
     @commands_ext.bot_has_permissions(view_channel=True, send_messages=True)
@@ -237,6 +244,7 @@ class Welcoming(discord.Cog):
         await ctx.respond(f'Goodbye channel set to {channel.mention}!', ephemeral=True)
         
     @goodbye_subcommands.command(name='type', description="Set whether you want to use message content or embed")
+    @discord.default_permissions(manage_guild=True)
     @commands_ext.has_permissions(manage_guild=True)
     @commands_ext.guild_only()
     @discord.option(name="message_type", description="The type of the message (embed or text)", choices=['embed', 'text'])
@@ -261,6 +269,7 @@ class Welcoming(discord.Cog):
         await ctx.respond(f'Goodbye message type set to {message_type}!', ephemeral=True)
 
     @goodbye_subcommands.command(name='title', description="Set the title of the goodbye message")
+    @discord.default_permissions(manage_guild=True)
     @commands_ext.has_permissions(manage_guild=True)
     @commands_ext.guild_only()
     @discord.option(name="title", description="The title of the message")
@@ -285,6 +294,7 @@ class Welcoming(discord.Cog):
         await ctx.respond(f'Goodbye message title set to {title}!', ephemeral=True)
 
     @goodbye_subcommands.command(name='text', description="Set the text of the goodbye message")
+    @discord.default_permissions(manage_guild=True)
     @commands_ext.has_permissions(manage_guild=True)
     @commands_ext.guild_only()
     @discord.option(name="text", description="The content of the message or description of the embed")

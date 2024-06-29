@@ -219,6 +219,7 @@ class ChatSummary(discord.Cog):
 
     @chat_summary_subcommand.command(name="add", description="Add a channel to count to chat summary")
     @commands_ext.guild_only()
+    @discord.default_permissions(manage_guild=True)
     @commands_ext.has_permissions(manage_guild=True)
     @commands_ext.bot_has_permissions(send_messages=True)
     @is_blocked()
@@ -261,6 +262,7 @@ class ChatSummary(discord.Cog):
 
     @chat_summary_subcommand.command(name="remove", description="Remove a channel from being counted to chat summary")
     @commands_ext.guild_only()
+    @discord.default_permissions(manage_guild=True)
     @commands_ext.has_permissions(manage_guild=True)
     @is_blocked()
     @analytics("chatsummary remove")
@@ -303,6 +305,7 @@ class ChatSummary(discord.Cog):
 
     @chat_summary_subcommand.command(name="dateformat", description="Set the date format of Chat Streak messages.")
     @commands_ext.guild_only()
+    @discord.default_permissions(manage_guild=True)
     @commands_ext.has_permissions(manage_guild=True)
     @discord.option(name="format", description="Format", choices=["YYYY/MM/DD", "DD/MM/YYYY", "DD. MM. YYYY", "YYYY/DD/MM", "MM/DD/YYYY"])
     @is_blocked()
@@ -327,6 +330,7 @@ class ChatSummary(discord.Cog):
     
     @chat_summary_subcommand.command(name="countedits", description="Enable or disable counting of message edits as sent messages.")
     @commands_ext.guild_only()
+    @discord.default_permissions(manage_guild=True)
     @commands_ext.has_permissions(manage_guild=True)
     @is_blocked()
     @analytics("chatsummary countedits")
@@ -353,6 +357,7 @@ class ChatSummary(discord.Cog):
     # The commented code below is for testing purposes
     # @chat_summary_subcommand.command(name="test", description="Test command for testing purposes")
     # @commands_ext.guild_only()
+    # @discord.default_permissions(manage_guild=True)
     # @commands_ext.has_permissions(manage_guild=True)
     # @is_blocked()
     # async def test_summarize(self, ctx: discord.ApplicationContext):
