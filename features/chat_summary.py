@@ -1,9 +1,9 @@
 import datetime
-import logging
 
 import discord
 from discord.ext import commands as commands_ext
 from discord.ext import tasks
+import sentry_sdk
 
 from database import conn as db
 from utils.analytics import analytics
@@ -15,7 +15,6 @@ from utils.logging import log_into_logs
 class ChatSummary(discord.Cog):
     def __init__(self, bot: discord.Bot) -> None:
         super().__init__()
-        logger = logging.getLogger("Akatsuki")
 
         cur = db.cursor()
         cur.execute("PRAGMA table_info(chat_summary)")
@@ -64,8 +63,6 @@ class ChatSummary(discord.Cog):
         if message.author.bot:
             return
 
-        logger = logging.getLogger("Akatsuki")
-
         cur = db.cursor()
         cur.execute('SELECT * FROM chat_summary WHERE guild_id = ? AND channel_id = ?',
                     (message.guild.id, message.channel.id))
@@ -106,9 +103,6 @@ class ChatSummary(discord.Cog):
         if countedits == "False":
             return
 
-        logger = logging.getLogger("Akatsuki")
-
-
         cur = db.cursor()
         cur.execute('SELECT * FROM chat_summary WHERE guild_id = ? AND channel_id = ?',
                     (old_message.guild.id, old_message.channel.id))
@@ -138,7 +132,6 @@ class ChatSummary(discord.Cog):
 
     @tasks.loop(minutes=1)
     async def summarize(self):
-        logger = logging.getLogger("Akatsuki")
         now = datetime.datetime.now(datetime.UTC)
 
         if now.hour != 0 or now.minute != 0:
@@ -204,8 +197,8 @@ class ChatSummary(discord.Cog):
 
             try:
                 await channel.send(chat_summary_message)
-            except:
-                logger.error(f"Error while sending chat summary message in {guild.id} in {channel.id}")
+            except Exception as e:
+                sentry_sdk.capture_exception(e)
 
             cur.execute('UPDATE chat_summary SET messages = 0 WHERE guild_id = ? AND channel_id = ?', (i[0], i[1]))
             cur.execute(
@@ -361,7 +354,6 @@ class ChatSummary(discord.Cog):
     # @commands_ext.has_permissions(manage_guild=True)
     # @is_blocked()
     # async def test_summarize(self, ctx: discord.ApplicationContext):
-    #     logger = logging.getLogger("Akatsuki")
 
     #     cur = db.cursor()
     #     cur.execute('SELECT guild_id, channel_id, messages FROM chat_summary WHERE enabled = 1')
@@ -423,8 +415,8 @@ class ChatSummary(discord.Cog):
 
     #         try:
     #             await channel.send(chat_summary_message)
-    #         except:
-    #             logger.error(f"Error while sending chat summary message in {guild.id} in {channel.id}")
+    #         except Exception as e:
+    #            sentry_sdk.capture_exception(e)
 
     #         cur.execute('UPDATE chat_summary SET messages = 0 WHERE guild_id = ? AND channel_id = ?', (i[0], i[1]))
     #         cur.execute(

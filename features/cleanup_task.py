@@ -16,12 +16,8 @@ class DbCleanupTask(discord.Cog):
         now = datetime.datetime.now(datetime.UTC)
 
         if now.weekday() == 6 and now.hour == 0 and now.minute == 0:
-            print("Cleaning up db...")
-
             cur = conn.cursor()
             cur.execute("vacuum")
             cur.close()
             conn.commit()
-
-            print("Cleaned up DB")
 

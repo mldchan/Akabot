@@ -1,4 +1,3 @@
-import logging
 import time
 
 import discord
@@ -41,7 +40,6 @@ class ChatRevive(discord.Cog):
 
     @tasks.loop(minutes=1)
     async def revive_channels(self):
-        logger = logging.getLogger("Akatsuki")
         for guild in self.bot.guilds:
             cur = db.cursor()
             cur.execute('SELECT * FROM chat_revive WHERE guild_id = ?', (guild.id,))

@@ -1,5 +1,4 @@
 import json
-import logging
 import discord
 from discord.ext import commands as discord_commands_ext
 
@@ -7,22 +6,21 @@ from features import welcoming, leveling, antiraid, chat_streaks, chat_revive, c
     feedback_cmd, logging_mod, admin_cmds, giveaways, feedback_cmd, moderation, cleanup_task, verification, velky_stompies, \
     roles_on_join
 from utils.blocked import BlockedUserError, BlockedServerError
+import sentry_sdk
+import logging
 
-logger = logging.getLogger("Akatsuki")
-logger.setLevel(logging.DEBUG)
-stream_handler = logging.StreamHandler()
-stream_handler.setFormatter(logging.Formatter("%(asctime)s | %(filename)s:%(lineno)d %(funcName)s %(name)s %(levelname)s | %(message)s"))
-stream_handler.setLevel(logging.INFO)
-logger.addHandler(stream_handler)
-file_handler = logging.FileHandler("data/logs.log", encoding="utf8")
-file_handler.setLevel(logging.DEBUG)
-file_handler.setFormatter(logging.Formatter("%(asctime)s | %(filename)s:%(lineno)d %(funcName)s %(name)s %(levelname)s | %(message)s"))
-logger.addHandler(file_handler)
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
 
-BOT_VERSION = "3.11"
+BOT_VERSION = "3.2"
 
 with open('config.json', 'r', encoding='utf8') as f:
     data = json.load(f)
+
+if 'sentry' in data and data['sentry']['enabled']:
+    sentry_sdk.init(data['sentry']['dsn'])
 
 intents = discord.Intents.default()
 intents.members = True
@@ -33,15 +31,11 @@ bot = discord.Bot(intents=intents)
 @bot.event
 async def on_ready():
     bot.add_view(verification.VerificationView())
-    logger = logging.getLogger("Akatsuki")
-    logger.info('Ready')
     await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.playing, name=f"v{BOT_VERSION}"))
 
 
 @bot.event
 async def on_application_command_error(ctx: discord.ApplicationContext, error):
-    logging.warning(error)
-
     if isinstance(error, discord_commands_ext.CommandOnCooldown):
         minutes = int(error.retry_after / 60)
         seconds = int(error.retry_after % 60)
@@ -75,7 +69,9 @@ async def on_application_command_error(ctx: discord.ApplicationContext, error):
     if isinstance(error, BlockedServerError):
         await ctx.respond(error.reason, ephemeral=True)
         return
-
+    
+    sentry_sdk.capture_exception(error)
+    raise error
 
 bot.add_cog(cleanup_task.DbCleanupTask())
 bot.add_cog(welcoming.Welcoming(bot))
