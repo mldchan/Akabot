@@ -1,5 +1,4 @@
 import datetime
-import logging
 
 import discord
 from discord.ext import commands as commands_ext
@@ -18,7 +17,6 @@ class ChatStreakStorage:
     """
 
     def __init__(self) -> None:
-        logger = logging.getLogger("Akatsuki")
         cur = db.cursor()
         cur.execute(
             'CREATE TABLE IF NOT EXISTS chat_streaks (guild_id INTEGER, member_id INTEGER, last_message DATETIME, start_time DATETIME)')
@@ -44,8 +42,6 @@ class ChatStreakStorage:
             str: The state of the streak
         """
 
-        logger = logging.getLogger("Akatsuki")
-
         cur = db.cursor()
 
         # Check and start if not existant
@@ -53,7 +49,6 @@ class ChatStreakStorage:
             'SELECT * FROM chat_streaks WHERE guild_id = ? AND member_id = ?', (guild_id, member_id))
         if cur.fetchone() is None:
             start_time = datetime.datetime.now()
-            print("No streak started, starting new streak")
             cur.execute('INSERT INTO chat_streaks (guild_id, member_id, last_message, start_time) VALUES (?, ?, ?, ?)',
                         (guild_id, member_id, start_time, start_time))
             cur.close()
@@ -97,8 +92,6 @@ class ChatStreakStorage:
             member_id (int): Member ID
         """
 
-        logger = logging.getLogger("Akatsuki")
-
         cur = db.cursor()
         cur.execute(
             'SELECT * FROM chat_streaks WHERE guild_id = ? AND member_id = ?', (guild_id, member_id))
@@ -130,8 +123,6 @@ class ChatStreaks(discord.Cog):
 
         (state, old_streak, new_streak) = self.streak_storage.set_streak(
             message.guild.id, message.author.id)
-
-        print("Set streak state", state, "streak", old_streak, "new_day", new_streak)
 
         if get_setting(message.guild.id, 'chat_streak_alerts', 'true') == 'true':
             if state == "expired":

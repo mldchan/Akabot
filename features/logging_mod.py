@@ -1,5 +1,3 @@
-import logging
-
 import discord
 from discord.ext import commands as commands_ext
 

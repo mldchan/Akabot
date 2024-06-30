@@ -1,8 +1,8 @@
 import datetime
-import logging
 
 import discord
 from discord.ext import commands as commands_ext
+import sentry_sdk
 
 from database import conn as db
 from utils.analytics import analytics
@@ -116,8 +116,6 @@ class Leveling(discord.Cog):
         if msg.author.bot:
             return
         
-        logger = logging.getLogger("Akatsuki")
-
         before_level = get_level_for_xp(db_get_user_xp(msg.guild.id, msg.author.id))
         db_add_user_xp(msg.guild.id, msg.author.id, 3)
         after_level = get_level_for_xp(db_get_user_xp(msg.guild.id, msg.author.id))
@@ -133,8 +131,8 @@ class Leveling(discord.Cog):
                 msg2 = await msg.channel.send(
                 f'Congratulations, {msg.author.mention}! You have reached level {after_level}!')
                 await msg2.delete(delay=5)
-            except:
-                logger.error(f"Error while sending leveling message in {msg.guild.id} in {msg.channel.id}")
+            except Exception as e:
+                sentry_sdk.capture_exception(e)
 
     @discord.slash_command(name='level', description='Get the level of a user')
     @commands_ext.guild_only()

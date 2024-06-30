@@ -6,5 +6,15 @@
         "token": "",
         "git_repo": "",
         "git_user": ""
+    },
+    "sentry": {
+        "enabled": false,
+        "dsn": ""
+    },
+    "heartbeat": {
+        "enabled": false,
+        "url": "",
+        "method": "post",
+        "interval": 30
     }
 }
