@@ -63,33 +63,24 @@ def db_add_user_xp(guild_id: int, user_id: int, xp: int):
     cur.close()
     db.commit()
 
-
-def get_xp_for_level(level: int):
-    current = 0
-    xp = 500
-    iter = 0
-    while current < level:
-        if iter >= 10000000:
-            raise OverflowError('Iteration limit reached.')
-        xp *= 2
-        current += 1
-        iter += 1
-
-    return xp
-
-
-def get_level_for_xp(xp: int):
-    current = 0
+def get_level_for_xp(guild_id: int, xp: int):
     level = 0
-    iter = 0
-    while current < xp:
-        if iter >= 10000000:
-            raise OverflowError('Iteration limit reached.')
-        current += 500 * (2 ** level)
+    xp_needed = db_calculate_multiplier(guild_id) * 500
+    while xp >= xp_needed:
         level += 1
-        iter += 1
+        xp -= xp_needed
+        xp_needed = db_calculate_multiplier(guild_id) * 500
 
     return level
+
+def get_xp_for_level(guild_id: int, level: int):
+    xp = 0
+    xp_needed = db_calculate_multiplier(guild_id) * 500
+    for _ in range(level):
+        xp += xp_needed
+        xp_needed = db_calculate_multiplier(guild_id) * 500
+
+    return xp
 
 def db_multiplier_add(guild_id: int, name: str, multiplier: int, start_date_month: int, start_date_day: int, end_date_month: int, end_date_day: int):
     db_init()
@@ -199,7 +190,7 @@ def validate_day(month: int, day: int, year: int) -> bool:
 
 async def update_roles_for_member(guild: discord.Guild, member: discord.Member):
     xp = db_get_user_xp(guild.id, member.id)
-    level = get_level_for_xp(xp)
+    level = get_level_for_xp(guild.id, xp)
 
     for i in range(1, level + 1):  # Add missing roles
         role_id = get_setting(guild.id, f'leveling_reward_{i}', '0')
@@ -232,9 +223,9 @@ class Leveling(discord.Cog):
         if msg.author.bot:
             return
         
-        before_level = get_level_for_xp(db_get_user_xp(msg.guild.id, msg.author.id))
+        before_level = get_level_for_xp(msg.guild.id, db_get_user_xp(msg.guild.id, msg.author.id))
         db_add_user_xp(msg.guild.id, msg.author.id, 3)
-        after_level = get_level_for_xp(db_get_user_xp(msg.guild.id, msg.author.id))
+        after_level = get_level_for_xp(msg.guild.id, db_get_user_xp(msg.guild.id, msg.author.id))
 
         if not msg.channel.permissions_for(msg.guild.me).send_messages:
             return
@@ -257,11 +248,15 @@ class Leveling(discord.Cog):
     async def get_level(self, ctx: discord.ApplicationContext, user: discord.User = None):
         user = user or ctx.user
 
-        level = get_level_for_xp(db_get_user_xp(ctx.guild.id, user.id))
+        level_xp = db_get_user_xp(ctx.guild.id, user.id)
+        level = get_level_for_xp(ctx.guild.id, level_xp)
         multiplier = db_calculate_multiplier(ctx.guild.id)
+        next_level_xp = get_xp_for_level(ctx.guild.id, level + 1)
 
         await ctx.respond(
-            f'{user.mention} is level {level}.\nThe multiplier is currently `{multiplier}x`.',
+            f'{user.mention} is level {level}.\n'
+            f'You have {level_xp} XP. Next milestone is {next_level_xp} XP for level {level + 1}.\n'
+            f'The multiplier is currently `{multiplier}x`.',
             ephemeral=True)
 
     leveling_subcommand = discord.SlashCommandGroup(name='leveling', description='Leveling settings')
