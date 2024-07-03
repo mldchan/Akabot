@@ -25,6 +25,25 @@ def db_calculate_multiplier(guild_id: int):
         if datetime.datetime.now().weekday() in [5, 6]:
             multiplier = str(int(multiplier) * int(weekend_event_multiplier))
 
+    pride_event = get_setting(guild_id, 'pride_event_enabled', 'false')
+    pride_event_multiplier = get_setting(guild_id, 'pride_event_multiplier', '2')
+    if pride_event == 'true':
+        if datetime.datetime.now().month == 6:
+            multiplier = str(int(multiplier) * int(pride_event_multiplier))
+
+    winter_event = get_setting(guild_id, 'winter_event_enabled', 'false')
+    winter_event_multiplier = get_setting(guild_id, 'winter_event_multiplier', '2')
+    if winter_event == 'true':
+        if datetime.datetime.now().month == 12 and datetime.datetime.now().day > 23 or \
+                datetime.datetime.now().month == 1 and datetime.datetime.now().day < 3:
+            multiplier = str(int(multiplier) * int(winter_event_multiplier))
+
+    summer_event = get_setting(guild_id, 'summer_event_enabled', 'false')
+    summer_event_multiplier = get_setting(guild_id, 'summer_event_multiplier', '2')
+    if summer_event == 'true':
+        if datetime.datetime.now().month in [7, 8]:
+            multiplier = str(int(multiplier) * int(summer_event_multiplier))
+
     return multiplier
 
 
@@ -142,9 +161,10 @@ class Leveling(discord.Cog):
         user = user or ctx.user
 
         level = get_level_for_xp(db_get_user_xp(ctx.guild.id, user.id))
+        multiplier = db_calculate_multiplier(ctx.guild.id)
 
         await ctx.respond(
-            f'{user.mention} is level {level}.\nThe multiplier is currently `{str(db_calculate_multiplier(ctx.guild.id))}x`.',
+            f'{user.mention} is level {level}.\nThe multiplier is currently `{multiplier}x`.',
             ephemeral=True)
 
     leveling_subcommand = discord.SlashCommandGroup(name='leveling', description='Leveling settings')
@@ -192,54 +212,131 @@ class Leveling(discord.Cog):
         # Send response
         await ctx.respond(f'Successfully set the leveling multiplier to {multiplier}.', ephemeral=True)
 
-    @leveling_subcommand.command(name='weekend_event', description='Set the weekend event')
+    @leveling_subcommand.command(name='weekend_event', description='Set the weekend event and multiplier')
     @discord.default_permissions(manage_guild=True)
     @commands_ext.has_permissions(manage_guild=True)
     @commands_ext.guild_only()
     @discord.option(name="enabled", description="Whether the weekend event is enabled", type=bool)
-    @is_blocked()
-    @analytics("leveling weekend event")
-    async def set_weekend_event(self, ctx: discord.ApplicationContext, enabled: bool):
-        # Get old setting
-        old_weekend_event = get_setting(ctx.guild.id, "weekend_event_enabled", str(enabled).lower()) == "true"
-
-        # Set setting
-        set_setting(ctx.guild.id, 'weekend_event_enabled', str(enabled).lower())
-
-        # Create message
-        logging_embed = discord.Embed(title="Leveling XP weekend event changed")
-        logging_embed.add_field(name="User", value=f"{ctx.user.mention}")
-        logging_embed.add_field(name="Enabled", value="{old} -> {new}".format(old=("Enabled" if old_weekend_event else "Disabled"), new=("Enabled" if enabled else "Disabled")))
-        
-        # Send to logs
-        await log_into_logs(ctx.guild, logging_embed)
-
-        # Respond
-        await ctx.respond(f'Successfully set the weekend event to {enabled}.', ephemeral=True)
-
-    @leveling_subcommand.command(name='weekend_event_multiplier', description='Set the weekend event multiplier')
-    @discord.default_permissions(manage_guild=True)
-    @commands_ext.has_permissions(manage_guild=True)
-    @commands_ext.guild_only()
     @discord.option(name="weekend_event_multiplier", description="The multiplier to set", type=int)
     @is_blocked()
-    @analytics("leveling weekend event multiplier")
-    async def set_weekend_event_multiplier(self, ctx: discord.ApplicationContext, weekend_event_multiplier: int):
-        old_setting = get_setting(ctx.guild.id, "weekend_event_multiplier", str(weekend_event_multiplier))
+    @analytics("leveling weekend event")
+    async def set_weekend_event(self, ctx: discord.ApplicationContext, enabled: bool, weekend_event_multiplier: int):
+        # Get old settings
+        old_weekend_event = get_setting(ctx.guild.id, "weekend_event_enabled", str(enabled).lower()) == "true"
+        old_multiplier = get_setting(ctx.guild.id, "weekend_event_multiplier", str(weekend_event_multiplier))
 
+        # Set settings
+        set_setting(ctx.guild.id, 'weekend_event_enabled', str(enabled).lower())
         set_setting(ctx.guild.id, 'weekend_event_multiplier', str(weekend_event_multiplier))
 
         # Create message
         logging_embed = discord.Embed(title="Leveling XP weekend event changed")
         logging_embed.add_field(name="User", value=f"{ctx.user.mention}")
-        logging_embed.add_field(name="Multiplier", value=f"{old_setting} -> {str(weekend_event_multiplier)}")
+        logging_embed.add_field(name="Enabled", value="{old} -> {new}".format(old=("Enabled" if old_weekend_event else "Disabled"), new=("Enabled" if enabled else "Disabled")))
+        logging_embed.add_field(name="Multiplier", value=f"{old_multiplier} -> {str(weekend_event_multiplier)}")
 
         # Send to logs
         await log_into_logs(ctx.guild, logging_embed)
 
         # Respond
-        await ctx.respond(f'Successfully set the weekend event multiplier to {weekend_event_multiplier}.',
-                                        ephemeral=True)
+        await ctx.respond(f'Successfully set the weekend event to {enabled} and the multiplier to {weekend_event_multiplier}.', ephemeral=True)
+
+    @leveling_subcommand.command(name='pride_event', description='Set the pride event and multiplier')
+    @discord.default_permissions(manage_guild=True)
+    @commands_ext.has_permissions(manage_guild=True)
+    @commands_ext.guild_only()
+    @discord.option(name="enabled", description="Whether the pride event is enabled", type=bool)
+    @discord.option(name="pride_event_multiplier", description="The multiplier to set", type=int)
+    @is_blocked()
+    @analytics("leveling pride event")
+    async def set_pride_event(self, ctx: discord.ApplicationContext, enabled: bool, pride_event_multiplier: int):
+        # Get old settings
+        old_pride_event = get_setting(ctx.guild.id, "pride_event_enabled", str(enabled).lower()) == "true"
+        old_multiplier = get_setting(ctx.guild.id, "pride_event_multiplier", str(pride_event_multiplier))
+
+        # Set settings
+        set_setting(ctx.guild.id, 'pride_event_enabled', str(enabled).lower())
+        set_setting(ctx.guild.id, 'pride_event_multiplier', str(pride_event_multiplier))
+
+        # Create message
+        logging_embed = discord.Embed(title="Leveling XP pride event changed")
+        logging_embed.add_field(name="User", value=f"{ctx.user.mention}")
+        logging_embed.add_field(name="Enabled", value="{old} -> {new}".format(old=("Enabled" if old_pride_event else "Disabled"), new=("Enabled" if enabled else "Disabled")))
+        logging_embed.add_field(name="Multiplier", value=f"{old_multiplier} -> {str(pride_event_multiplier)}")
+
+        # Send to logs
+        await log_into_logs(ctx.guild, logging_embed)
+
+        # Respond
+        await ctx.respond(f'Successfully set the pride event to {enabled} and the multiplier to {pride_event_multiplier}.', ephemeral=True)
+
+    @leveling_subcommand.command(name='winter_event', description='Set the winter event and multiplier')
+    @discord.default_permissions(manage_guild=True)
+    @commands_ext.has_permissions(manage_guild=True)
+    @commands_ext.guild_only()
+    @discord.option(name="enabled", description="Whether the winter event is enabled", type=bool)
+    @discord.option(name="winter_event_multiplier", description="The multiplier to set", type=int)
+    @is_blocked()
+    @analytics("leveling winter event")
+    async def set_winter_event(self, ctx: discord.ApplicationContext, enabled: bool, winter_event_multiplier: int):
+        # Get old settings
+        old_winter_event = get_setting(ctx.guild.id, "winter_event_enabled", str(enabled).lower()) == "true"
+        old_multiplier = get_setting(ctx.guild.id, "winter_event_multiplier", str(winter_event_multiplier))
+
+        # Set settings
+        set_setting(ctx.guild.id, 'winter_event_enabled', str(enabled).lower())
+        set_setting(ctx.guild.id, 'winter_event_multiplier', str(winter_event_multiplier))
+
+        # Create message
+        logging_embed = discord.Embed(title="Leveling XP winter event changed")
+        logging_embed.add_field(name="User", value=f"{ctx.user.mention}")
+        logging_embed.add_field(name="Enabled", value="{old} -> {new}".format(old=("Enabled" if old_winter_event else "Disabled"), new=("Enabled" if enabled else "Disabled")))
+        logging_embed.add_field(name="Multiplier", value=f"{old_multiplier} -> {str(winter_event_multiplier)}")
+
+        # Send to logs
+        await log_into_logs(ctx.guild, logging_embed)
+
+        # Respond
+        await ctx.respond(f'Successfully set the winter event to {enabled} and the multiplier to {winter_event_multiplier}.', ephemeral=True)
+
+    @leveling_subcommand.command(name='summer_event', description='Set the summer event and multiplier')
+    @discord.default_permissions(manage_guild=True)
+    @commands_ext.has_permissions(manage_guild=True)
+    @commands_ext.guild_only()
+    @discord.option(name="enabled", description="Whether the summer event is enabled", type=bool)
+    @discord.option(name="summer_event_multiplier", description="The multiplier to set", type=int)
+    @is_blocked()
+    @analytics("leveling summer event")
+    async def set_summer_event(self, ctx: discord.ApplicationContext, enabled: bool, summer_event_multiplier: int):
+        # Get old settings
+        old_summer_event = get_setting(ctx.guild.id, "summer_event_enabled", str(enabled).lower()) == "true"
+        old_multiplier = get_setting(ctx.guild.id, "summer_event_multiplier", str(summer_event_multiplier))
+
+        # Set settings
+        set_setting(ctx.guild.id, 'summer_event_enabled', str(enabled).lower())
+        set_setting(ctx.guild.id, 'summer_event_multiplier', str(summer_event_multiplier))
+
+        # Create message
+        logging_embed = discord.Embed(title="Leveling XP summer event changed")
+        logging_embed.add_field(name="User", value=f"{ctx.user.mention}")
+        logging_embed.add_field(name="Enabled", value="{old} -> {new}".format(old=("Enabled" if old_summer_event else "Disabled"), new=("Enabled" if enabled else "Disabled")))
+        logging_embed.add_field(name="Multiplier", value=f"{old_multiplier} -> {str(summer_event_multiplier)}")
+
+        # Send to logs
+        await log_into_logs(ctx.guild, logging_embed)
+
+        # Respond
+        await ctx.respond(f'Successfully set the summer event to {enabled} and the multiplier to {summer_event_multiplier}.', ephemeral=True)
+
+    @leveling_subcommand.command(name='get_multiplier', description='Get the leveling multiplier')
+    @discord.default_permissions(manage_guild=True)
+    @commands_ext.has_permissions(manage_guild=True)
+    @commands_ext.guild_only()
+    @is_blocked()
+    @analytics("leveling get multiplier")
+    async def get_multiplier(self, ctx: discord.ApplicationContext):
+        multiplier = db_calculate_multiplier(ctx.guild.id)
+        await ctx.respond(f'The current leveling multiplier is `{multiplier}x`.', ephemeral=True)
 
     @leveling_subcommand.command(name='set_reward', description='Set a role for a level')
     @discord.default_permissions(manage_guild=True)
