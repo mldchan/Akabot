@@ -9,40 +9,32 @@ from utils.analytics import analytics
 from utils.blocked import is_blocked
 from utils.settings import get_setting, set_setting
 from utils.logging import log_into_logs
+import re
 
 def db_init():
     cur = db.cursor()
     cur.execute("create table if not exists leveling (guild_id int, user_id int, xp int)")
+    cur.execute("create table if not exists leveling_multiplier (guild_id int, name text, multiplier int, start_date text, end_date text)")
     cur.close()
     db.commit()
 
 
 def db_calculate_multiplier(guild_id: int):
-    multiplier = get_setting(guild_id, 'leveling_xp_multiplier', '1')
-    weekend_event = get_setting(guild_id, 'weekend_event_enabled', 'false')
-    weekend_event_multiplier = get_setting(guild_id, 'weekend_event_multiplier', '2')
-    if weekend_event == 'true':
-        if datetime.datetime.now().weekday() in [5, 6]:
-            multiplier = str(int(multiplier) * int(weekend_event_multiplier))
+    multiplier = int(get_setting(guild_id, 'leveling_xp_multiplier', '1'))
 
-    pride_event = get_setting(guild_id, 'pride_event_enabled', 'false')
-    pride_event_multiplier = get_setting(guild_id, 'pride_event_multiplier', '2')
-    if pride_event == 'true':
-        if datetime.datetime.now().month == 6:
-            multiplier = str(int(multiplier) * int(pride_event_multiplier))
+    multipliers = db_multiplier_getall(guild_id)
+    for m in multipliers:
+        start_month, start_day = map(int, m[3].split('-'))
+        end_month, end_day = map(int, m[4].split('-'))
 
-    winter_event = get_setting(guild_id, 'winter_event_enabled', 'false')
-    winter_event_multiplier = get_setting(guild_id, 'winter_event_multiplier', '2')
-    if winter_event == 'true':
-        if datetime.datetime.now().month == 12 and datetime.datetime.now().day > 23 or \
-                datetime.datetime.now().month == 1 and datetime.datetime.now().day < 3:
-            multiplier = str(int(multiplier) * int(winter_event_multiplier))
+        start_date = datetime.datetime(datetime.datetime.now().year, start_month, start_day)
+        end_date = datetime.datetime(datetime.datetime.now().year, end_month, end_day)
+        
+        if end_date < start_date:
+            end_date = end_date.replace(year=end_date.year + 1)
 
-    summer_event = get_setting(guild_id, 'summer_event_enabled', 'false')
-    summer_event_multiplier = get_setting(guild_id, 'summer_event_multiplier', '2')
-    if summer_event == 'true':
-        if datetime.datetime.now().month in [7, 8]:
-            multiplier = str(int(multiplier) * int(summer_event_multiplier))
+        if start_date <= datetime.datetime.now() <= end_date:
+            multiplier *= m[2]
 
     return multiplier
 
@@ -99,6 +91,111 @@ def get_level_for_xp(xp: int):
 
     return level
 
+def db_multiplier_add(guild_id: int, name: str, multiplier: int, start_date_month: int, start_date_day: int, end_date_month: int, end_date_day: int):
+    db_init()
+    cur = db.cursor()
+    cur.execute("INSERT INTO leveling_multiplier (guild_id, name, multiplier, start_date, end_date) VALUES (?, ?, ?, ?, ?)",
+                (guild_id, name, multiplier, '{:02d}-{:02d}'.format(start_date_month, start_date_day), '{:02d}-{:02d}'.format(end_date_month, end_date_day)))
+    cur.close()
+    db.commit()
+
+def db_multiplier_exists(guild_id: int, name: str):
+    db_init()
+    cur = db.cursor()
+    cur.execute("SELECT * FROM leveling_multiplier WHERE guild_id = ? AND name = ?", (guild_id, name))
+    data = cur.fetchone()
+    cur.close()
+    return data is not None
+
+def db_multiplier_change_name(guild_id: int, old_name: str, new_name: str):
+    db_init()
+    cur = db.cursor()
+    cur.execute("UPDATE leveling_multiplier SET name = ? WHERE guild_id = ? AND name = ?", (new_name, guild_id, old_name))
+    cur.close()
+    db.commit()
+
+def db_multiplier_change_multiplier(guild_id: int, name: str, multiplier: int):
+    db_init()
+    cur = db.cursor()
+    cur.execute("UPDATE leveling_multiplier SET multiplier = ? WHERE guild_id = ? AND name = ?", (multiplier, guild_id, name))
+    cur.close()
+    db.commit()
+
+def db_multiplier_change_start_date(guild_id: int, name: str, start_date: datetime.datetime):
+    db_init()
+    cur = db.cursor()
+    cur.execute("UPDATE leveling_multiplier SET start_date = ? WHERE guild_id = ? AND name = ?", (start_date, guild_id, name))
+    cur.close()
+    db.commit()
+
+def db_multiplier_change_end_date(guild_id: int, name: str, end_date: datetime.datetime):
+    db_init()
+    cur = db.cursor()
+    cur.execute("UPDATE leveling_multiplier SET end_date = ? WHERE guild_id = ? AND name = ?", (end_date, guild_id, name))
+    cur.close()
+    db.commit()
+
+def db_multiplier_remove(guild_id: int, name: str):
+    db_init()
+    cur = db.cursor()
+    cur.execute("DELETE FROM leveling_multiplier WHERE guild_id = ? AND name = ?", (guild_id, name))
+    cur.close()
+    db.commit()
+
+def db_multiplier_getall(guild_id: int):
+    db_init()
+    cur = db.cursor()
+    cur.execute("SELECT * FROM leveling_multiplier WHERE guild_id = ?", (guild_id,))
+    data = cur.fetchall()
+    cur.close()
+    return data
+
+def db_multiplier_get(guild_id: int, name: str):
+    db_init()
+    cur = db.cursor()
+    cur.execute("SELECT * FROM leveling_multiplier WHERE guild_id = ? AND name = ?", (guild_id, name))
+    data = cur.fetchone()
+    cur.close()
+    return data
+
+def validate_day(month: int, day: int, year: int) -> bool:
+    """
+    Validates if the given day is correct for the specified month and year.
+
+    Args:
+    - month (int): The month (1-12).
+    - day (int): The day of the month to validate.
+    - year (int): The year, used to check for leap years.
+
+    Returns:
+    - bool: True if the day is valid for the given month and year, False otherwise.
+    """
+
+    # Check for valid month
+    if not 1 <= month <= 12:
+        return False
+
+    # Check for valid day
+    if not 1 <= day <= 31:
+        return False
+
+    # Function to check if a year is a leap year
+    def is_leap_year(year: int) -> bool:
+        return year % 4 == 0 and (year % 100 != 0 or year % 400 == 0)
+
+    # February: check for leap year
+    if month == 2:
+        if is_leap_year(year):
+            return day <= 29
+        else:
+            return day <= 28
+
+    # April, June, September, November: 30 days
+    if month in [4, 6, 9, 11]:
+        return day <= 30
+
+    # For all other months, the day is valid if it's 31 or less
+    return True
 
 async def update_roles_for_member(guild: discord.Guild, member: discord.Member):
     xp = db_get_user_xp(guild.id, member.id)
@@ -177,13 +274,9 @@ class Leveling(discord.Cog):
     @analytics("leveling list")
     async def list_settings(self, ctx: discord.ApplicationContext):
         leveling_xp_multiplier = get_setting(ctx.guild.id, 'leveling_xp_multiplier', '1')
-        weekend_event_enabled = get_setting(ctx.guild.id, 'weekend_event_enabled', 'false')
-        weekend_event_multiplier = get_setting(ctx.guild.id, 'weekend_event_multiplier', '2')
 
         embed = discord.Embed(title='Leveling settings', color=discord.Color.blurple())
         embed.add_field(name='Leveling multiplier', value=f'`{leveling_xp_multiplier}x`')
-        embed.add_field(name='Weekend event', value=weekend_event_enabled)
-        embed.add_field(name='Weekend event multiplier', value=f'`{weekend_event_multiplier}x`')
 
         await ctx.respond(embed=embed, ephemeral=True)
 
@@ -212,121 +305,232 @@ class Leveling(discord.Cog):
         # Send response
         await ctx.respond(f'Successfully set the leveling multiplier to {multiplier}.', ephemeral=True)
 
-    @leveling_subcommand.command(name='weekend_event', description='Set the weekend event and multiplier')
+    @leveling_subcommand.command(name='add_multiplier', description='Add to the leveling multiplier')
     @discord.default_permissions(manage_guild=True)
     @commands_ext.has_permissions(manage_guild=True)
     @commands_ext.guild_only()
-    @discord.option(name="enabled", description="Whether the weekend event is enabled", type=bool)
-    @discord.option(name="weekend_event_multiplier", description="The multiplier to set", type=int)
+    @discord.option(name="name", description="The name of the multiplier", type=str)
+    @discord.option(name="multiplier", description="The multiplication", type=int)
+    @discord.option(name='start_date', description='The start date of the multiplier, in format MM-DD', type=str)
+    @discord.option(name='end_date', description='The end date of the multiplier, in format MM-DD', type=str)
     @is_blocked()
-    @analytics("leveling weekend event")
-    async def set_weekend_event(self, ctx: discord.ApplicationContext, enabled: bool, weekend_event_multiplier: int):
-        # Get old settings
-        old_weekend_event = get_setting(ctx.guild.id, "weekend_event_enabled", str(enabled).lower()) == "true"
-        old_multiplier = get_setting(ctx.guild.id, "weekend_event_multiplier", str(weekend_event_multiplier))
+    @analytics("leveling add multiplier")
+    async def add_multiplier(self, ctx: discord.ApplicationContext, name: str, multiplier: int, start_date: str, end_date: str):
+        # Verify the format of start_date and end_date
+        if not re.match(r'\d{2}-\d{2}', start_date) or not re.match(r'\d{2}-\d{2}', end_date):
+            await ctx.respond('Invalid date format. Please use MM-DD format.', ephemeral=True)
+            return
+        
+        # Verify if the multiplier already exists
+        if db_multiplier_exists(ctx.guild.id, name):
+            await ctx.respond(f'The multiplier with the name {name} already exists.', ephemeral=True)
+            return
 
-        # Set settings
-        set_setting(ctx.guild.id, 'weekend_event_enabled', str(enabled).lower())
-        set_setting(ctx.guild.id, 'weekend_event_multiplier', str(weekend_event_multiplier))
+        # Verify the month and day values
+        start_month, start_day = map(int, start_date.split('-'))
+        end_month, end_day = map(int, end_date.split('-'))
 
-        # Create message
-        logging_embed = discord.Embed(title="Leveling XP weekend event changed")
+        # Use the validate_day method to check if the start and end dates are valid
+        if not validate_day(start_month, start_day, datetime.datetime.now().year):
+            await ctx.respond('Invalid start date.', ephemeral=True)
+            return
+
+        if not validate_day(end_month, end_day, datetime.datetime.now().year):
+            await ctx.respond('Invalid end date.', ephemeral=True)
+            return
+        
+        # Multipliers apply to every year
+        db_multiplier_add(ctx.guild.id, name, multiplier, start_month, start_day, end_month, end_day)
+
+        # Logging embed
+        logging_embed = discord.Embed(title="Leveling XP multiplier added")
         logging_embed.add_field(name="User", value=f"{ctx.user.mention}")
-        logging_embed.add_field(name="Enabled", value="{old} -> {new}".format(old=("Enabled" if old_weekend_event else "Disabled"), new=("Enabled" if enabled else "Disabled")))
-        logging_embed.add_field(name="Multiplier", value=f"{old_multiplier} -> {str(weekend_event_multiplier)}")
+        logging_embed.add_field(name="Name", value=f"{name}")
+        logging_embed.add_field(name="Multiplier", value=f"{multiplier}")
+        logging_embed.add_field(name="Start date", value=f"{start_date}")
+        logging_embed.add_field(name="End date", value=f"{end_date}")
 
-        # Send to logs
+        # Send into logs
         await log_into_logs(ctx.guild, logging_embed)
 
-        # Respond
-        await ctx.respond(f'Successfully set the weekend event to {enabled} and the multiplier to {weekend_event_multiplier}.', ephemeral=True)
+        # Send response
+        await ctx.respond(f'Successfully added the multiplier {name} with a value of {multiplier}.', ephemeral=True)
 
-    @leveling_subcommand.command(name='pride_event', description='Set the pride event and multiplier')
+    @leveling_subcommand.command(name='change_multiplier_name', description='Change the name of a multiplier')
     @discord.default_permissions(manage_guild=True)
     @commands_ext.has_permissions(manage_guild=True)
     @commands_ext.guild_only()
-    @discord.option(name="enabled", description="Whether the pride event is enabled", type=bool)
-    @discord.option(name="pride_event_multiplier", description="The multiplier to set", type=int)
+    @discord.option(name="old_name", description="The old name of the multiplier", type=str)
+    @discord.option(name="new_name", description="The new name of the multiplier", type=str)
     @is_blocked()
-    @analytics("leveling pride event")
-    async def set_pride_event(self, ctx: discord.ApplicationContext, enabled: bool, pride_event_multiplier: int):
-        # Get old settings
-        old_pride_event = get_setting(ctx.guild.id, "pride_event_enabled", str(enabled).lower()) == "true"
-        old_multiplier = get_setting(ctx.guild.id, "pride_event_multiplier", str(pride_event_multiplier))
+    @analytics("leveling change multiplier name")
+    async def change_multiplier_name(self, ctx: discord.ApplicationContext, old_name: str, new_name: str):
+        if not db_multiplier_exists(ctx.guild.id, old_name):
+            await ctx.respond(f'The multiplier with the name {old_name} does not exist.', ephemeral=True)
+            return
 
-        # Set settings
-        set_setting(ctx.guild.id, 'pride_event_enabled', str(enabled).lower())
-        set_setting(ctx.guild.id, 'pride_event_multiplier', str(pride_event_multiplier))
+        # Get old setting
+        old_multiplier = db_multiplier_get(ctx.guild.id, old_name)[2]
 
-        # Create message
-        logging_embed = discord.Embed(title="Leveling XP pride event changed")
+        # Set new setting
+        db_multiplier_change_name(ctx.guild.id, old_name, new_name)
+
+        # Logging embed
+        logging_embed = discord.Embed(title="Leveling XP multiplier name changed")
         logging_embed.add_field(name="User", value=f"{ctx.user.mention}")
-        logging_embed.add_field(name="Enabled", value="{old} -> {new}".format(old=("Enabled" if old_pride_event else "Disabled"), new=("Enabled" if enabled else "Disabled")))
-        logging_embed.add_field(name="Multiplier", value=f"{old_multiplier} -> {str(pride_event_multiplier)}")
+        logging_embed.add_field(name="Old name", value=f"{old_name}")
+        logging_embed.add_field(name="New name", value=f"{new_name}")
 
-        # Send to logs
+        # Send into logs
         await log_into_logs(ctx.guild, logging_embed)
 
-        # Respond
-        await ctx.respond(f'Successfully set the pride event to {enabled} and the multiplier to {pride_event_multiplier}.', ephemeral=True)
+        # Send response
+        await ctx.respond(f'Successfully changed the name of the multiplier from {old_name} to {new_name}.', ephemeral=True)
 
-    @leveling_subcommand.command(name='winter_event', description='Set the winter event and multiplier')
+    @leveling_subcommand.command(name='change_multiplier_multiplier', description='Change the multiplier of a multiplier')
     @discord.default_permissions(manage_guild=True)
     @commands_ext.has_permissions(manage_guild=True)
     @commands_ext.guild_only()
-    @discord.option(name="enabled", description="Whether the winter event is enabled", type=bool)
-    @discord.option(name="winter_event_multiplier", description="The multiplier to set", type=int)
+    @discord.option(name="name", description="The name of the multiplier", type=str)
+    @discord.option(name="multiplier", description="The new multiplier", type=int)
     @is_blocked()
-    @analytics("leveling winter event")
-    async def set_winter_event(self, ctx: discord.ApplicationContext, enabled: bool, winter_event_multiplier: int):
-        # Get old settings
-        old_winter_event = get_setting(ctx.guild.id, "winter_event_enabled", str(enabled).lower()) == "true"
-        old_multiplier = get_setting(ctx.guild.id, "winter_event_multiplier", str(winter_event_multiplier))
+    @analytics("leveling change multiplier multiplier")
+    async def change_multiplier_multiplier(self, ctx: discord.ApplicationContext, name: str, multiplier: int):
+        if not db_multiplier_exists(ctx.guild.id, name):
+            await ctx.respond(f'The multiplier with the name {name} does not exist.', ephemeral=True)
+            return
+        
+        # Get old setting
+        old_multiplier = db_multiplier_get(ctx.guild.id, name)[2]
 
-        # Set settings
-        set_setting(ctx.guild.id, 'winter_event_enabled', str(enabled).lower())
-        set_setting(ctx.guild.id, 'winter_event_multiplier', str(winter_event_multiplier))
+        # Set new setting
+        db_multiplier_change_multiplier(ctx.guild.id, name, multiplier)
 
-        # Create message
-        logging_embed = discord.Embed(title="Leveling XP winter event changed")
+        # Logging embed
+        logging_embed = discord.Embed(title="Leveling XP multiplier multiplier changed")
         logging_embed.add_field(name="User", value=f"{ctx.user.mention}")
-        logging_embed.add_field(name="Enabled", value="{old} -> {new}".format(old=("Enabled" if old_winter_event else "Disabled"), new=("Enabled" if enabled else "Disabled")))
-        logging_embed.add_field(name="Multiplier", value=f"{old_multiplier} -> {str(winter_event_multiplier)}")
+        logging_embed.add_field(name="Name", value=f"{name}")
+        logging_embed.add_field(name="Old multiplier", value=f"{old_multiplier}")
+        logging_embed.add_field(name="New multiplier", value=f"{multiplier}")
 
-        # Send to logs
+        # Send into logs
         await log_into_logs(ctx.guild, logging_embed)
 
-        # Respond
-        await ctx.respond(f'Successfully set the winter event to {enabled} and the multiplier to {winter_event_multiplier}.', ephemeral=True)
+        # Send response
+        await ctx.respond(f'Successfully changed the multiplier of {name} from {old_multiplier} to {multiplier}.', ephemeral=True)
 
-    @leveling_subcommand.command(name='summer_event', description='Set the summer event and multiplier')
+    @leveling_subcommand.command(name='change_multiplier_start_date', description='Change the start date of a multiplier')
     @discord.default_permissions(manage_guild=True)
     @commands_ext.has_permissions(manage_guild=True)
     @commands_ext.guild_only()
-    @discord.option(name="enabled", description="Whether the summer event is enabled", type=bool)
-    @discord.option(name="summer_event_multiplier", description="The multiplier to set", type=int)
+    @discord.option(name="name", description="The name of the multiplier", type=str)
+    @discord.option(name="start_date", description="The new start date of the multiplier, in format MM-DD", type=str)
     @is_blocked()
-    @analytics("leveling summer event")
-    async def set_summer_event(self, ctx: discord.ApplicationContext, enabled: bool, summer_event_multiplier: int):
-        # Get old settings
-        old_summer_event = get_setting(ctx.guild.id, "summer_event_enabled", str(enabled).lower()) == "true"
-        old_multiplier = get_setting(ctx.guild.id, "summer_event_multiplier", str(summer_event_multiplier))
+    @analytics("leveling change multiplier start date")
+    async def change_multiplier_start_date(self, ctx: discord.ApplicationContext, name: str, start_date: str):
+        if not db_multiplier_exists(ctx.guild.id, name):
+            await ctx.respond(f'The multiplier with the name {name} does not exist.', ephemeral=True)
+            return
 
-        # Set settings
-        set_setting(ctx.guild.id, 'summer_event_enabled', str(enabled).lower())
-        set_setting(ctx.guild.id, 'summer_event_multiplier', str(summer_event_multiplier))
+        # Verify the format of start_date
+        if not re.match(r'\d{2}-\d{2}', start_date):
+            await ctx.respond('Invalid date format. Please use MM-DD format.', ephemeral=True)
+            return
 
-        # Create message
-        logging_embed = discord.Embed(title="Leveling XP summer event changed")
+        # Verify the month and day values
+        start_month, start_day = map(int, start_date.split('-'))
+
+        # Use the validate_day method to check if the start date is valid
+        if not validate_day(start_month, start_day, datetime.datetime.now().year):
+            await ctx.respond('Invalid start date.', ephemeral=True)
+            return
+
+        # Set new setting
+        db_multiplier_change_start_date(ctx.guild.id, name, start_date)
+
+        # Logging embed
+        logging_embed = discord.Embed(title="Leveling XP multiplier start date changed")
         logging_embed.add_field(name="User", value=f"{ctx.user.mention}")
-        logging_embed.add_field(name="Enabled", value="{old} -> {new}".format(old=("Enabled" if old_summer_event else "Disabled"), new=("Enabled" if enabled else "Disabled")))
-        logging_embed.add_field(name="Multiplier", value=f"{old_multiplier} -> {str(summer_event_multiplier)}")
+        logging_embed.add_field(name="Name", value=f"{name}")
+        logging_embed.add_field(name="New start date", value=f"{start_date}")
 
-        # Send to logs
+        # Send into logs
         await log_into_logs(ctx.guild, logging_embed)
 
-        # Respond
-        await ctx.respond(f'Successfully set the summer event to {enabled} and the multiplier to {summer_event_multiplier}.', ephemeral=True)
+        # Send response
+        await ctx.respond(f'Successfully changed the start date of {name} to {start_date}.', ephemeral=True)
+
+    @leveling_subcommand.command(name='change_multiplier_end_date', description='Change the end date of a multiplier')
+    @discord.default_permissions(manage_guild=True)
+    @commands_ext.has_permissions(manage_guild=True)
+    @commands_ext.guild_only()
+    @discord.option(name="name", description="The name of the multiplier", type=str)
+    @discord.option(name="end_date", description="The new end date of the multiplier, in format MM-DD", type=str)
+    @is_blocked()
+    @analytics("leveling change multiplier end date")
+    async def change_multiplier_end_date(self, ctx: discord.ApplicationContext, name: str, end_date: str):
+        if not db_multiplier_exists(ctx.guild.id, name):
+            await ctx.respond(f'The multiplier with the name {name} does not exist.', ephemeral=True)
+            return
+
+        # Verify the format of end_date
+        if not re.match(r'\d{2}-\d{2}', end_date):
+            await ctx.respond('Invalid date format. Please use MM-DD format.', ephemeral=True)
+            return
+
+        # Verify the month and day values
+        end_month, end_day = map(int, end_date.split('-'))
+
+        # Use the validate_day method to check if the end date is valid
+        if not validate_day(end_month, end_day, datetime.datetime.now().year):
+            await ctx.respond('Invalid end date.', ephemeral=True)
+            return
+
+        # Set new setting
+        db_multiplier_change_end_date(ctx.guild.id, name, end_date)
+
+        # Logging embed
+        logging_embed = discord.Embed(title="Leveling XP multiplier end date changed")
+        logging_embed.add_field(name="User", value=f"{ctx.user.mention}")
+        logging_embed.add_field(name="Name", value=f"{name}")
+        logging_embed.add_field(name="New end date", value=f"{end_date}")
+        
+        # Send into logs
+        await log_into_logs(ctx.guild, logging_embed)
+
+        # Send response
+        await ctx.respond(f'Successfully changed the end date of {name} to {end_date}.', ephemeral=True)
+
+    @leveling_subcommand.command(name='remove_multiplier', description='Remove a multiplier')
+    @discord.default_permissions(manage_guild=True)
+    @commands_ext.has_permissions(manage_guild=True)
+    @commands_ext.guild_only()
+    @discord.option(name="name", description="The name of the multiplier", type=str)
+    @is_blocked()
+    @analytics("leveling remove multiplier")
+    async def remove_multiplier(self, ctx: discord.ApplicationContext, name: str):
+        if not db_multiplier_exists(ctx.guild.id, name):
+            await ctx.respond(f'The multiplier with the name {name} does not exist.', ephemeral=True)
+            return
+
+        # Get old setting
+        old_multiplier = db_multiplier_get(ctx.guild.id, name)[2]
+
+        # Set new setting
+        db_multiplier_remove(ctx.guild.id, name)
+
+        # Logging embed
+        logging_embed = discord.Embed(title="Leveling XP multiplier removed")
+        logging_embed.add_field(name="User", value=f"{ctx.user.mention}")
+        logging_embed.add_field(name="Name", value=f"{name}")
+        logging_embed.add_field(name="Multiplier", value=f"{old_multiplier}")
+
+        # Send into logs
+        await log_into_logs(ctx.guild, logging_embed)
+
+        # Send response
+        await ctx.respond(f'Successfully removed the multiplier {name}.', ephemeral=True)
+
 
     @leveling_subcommand.command(name='get_multiplier', description='Get the leveling multiplier')
     @discord.default_permissions(manage_guild=True)
