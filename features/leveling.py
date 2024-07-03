@@ -297,7 +297,23 @@ The multiplier is currently `{multiplier}x`.\n'''
     async def list_settings(self, ctx: discord.ApplicationContext):
         leveling_xp_multiplier = get_setting(ctx.guild.id, 'leveling_xp_multiplier', '1')
 
-        embed = discord.Embed(title='Leveling settings', color=discord.Color.blurple())
+        multiplier_list = db_multiplier_getall(ctx.guild.id)
+        multiplier_list_msg = ""
+
+        for i in multiplier_list:
+            multiplier_list_msg += "{name} Multiplier - {multiplier}x - from {start} to {end}\n".format(
+                name=i[1],
+                multiplier=i[2],
+                start=i[3],
+                end=i[4]
+            )
+
+        if len(multiplier_list) != 0:
+            multiplier_list_msg = f'## Multipliers\n{multiplier_list_msg}'
+        else:
+            multiplier_list_msg = 'No custom multipliers set.'
+
+        embed = discord.Embed(title='Leveling settings', color=discord.Color.blurple(), description=multiplier_list_msg)
         embed.add_field(name='Leveling multiplier', value=f'`{leveling_xp_multiplier}x`')
 
         await ctx.respond(embed=embed, ephemeral=True)
@@ -623,7 +639,7 @@ The multiplier is currently `{multiplier}x`.\n'''
     @is_blocked()
     @analytics("leveling remove reward")
     async def remove_reward(self, ctx: discord.ApplicationContext, level: int):
-        # Get old setting
+        # Get old settingF
         old_role_id = get_setting(ctx.guild.id, f"leveling_reward_{level}", '0')
         old_role = ctx.guild.get_role(int(old_role_id))
 
