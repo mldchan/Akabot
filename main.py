@@ -16,7 +16,7 @@ logging.basicConfig(
 )
 logging.captureWarnings(True)
 
-BOT_VERSION = "3.13"
+BOT_VERSION = "3.2"
 
 with open('config.json', 'r', encoding='utf8') as f:
     data = json.load(f)
