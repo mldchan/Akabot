@@ -7,12 +7,14 @@ from features import welcoming, leveling, antiraid, chat_streaks, chat_revive, c
     roles_on_join, heartbeat
 from utils.blocked import BlockedUserError, BlockedServerError
 import sentry_sdk
+from sentry_sdk.integrations.logging import LoggingIntegration
 import logging
 
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
+logging.captureWarnings(True)
 
 BOT_VERSION = "3.12"
 
@@ -20,7 +22,11 @@ with open('config.json', 'r', encoding='utf8') as f:
     data = json.load(f)
 
 if 'sentry' in data and data['sentry']['enabled']:
-    sentry_sdk.init(data['sentry']['dsn'])
+    sentry_sdk.init(data['sentry']['dsn'],
+                    integrations=[LoggingIntegration(level=logging.INFO, event_level=logging.WARN)],
+                    traces_sample_rate=1.0,
+                    profiles_sample_rate=1.0)
+
 
 intents = discord.Intents.default()
 intents.members = True
