@@ -3,7 +3,7 @@ import discord
 from discord.ext import commands as discord_commands_ext
 
 from features import welcoming, leveling, antiraid, chat_streaks, chat_revive, chat_summary, reaction_roles, \
-    feedback_cmd, logging_mod, admin_cmds, giveaways, feedback_cmd, moderation, cleanup_task, verification, velky_stompies, \
+    logging_mod, admin_cmds, giveaways, feedback_cmd, moderation, cleanup_task, verification, velky_stompies, \
     roles_on_join, heartbeat
 from utils.blocked import BlockedUserError, BlockedServerError
 import sentry_sdk

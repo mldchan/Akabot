@@ -9,6 +9,7 @@ from utils.blocked import is_blocked
 
 import requests
 
+
 def db_init():
     cur = db.cursor()
     cur.execute('create table if not exists feature_reports (type text, user_id int, feature text)')
@@ -33,13 +34,16 @@ class VoteView(discord.ui.View):
 
         self.add_item(button1)
 
+
 class PrivacyPolicyView(discord.ui.View):
     def __init__(self):
         super().__init__()
 
-        button1 = discord.ui.Button(label="akatsuki.nekoweb.org", url="https://akatsuki.nekoweb.org/project/akabot/privacy/")
+        button1 = discord.ui.Button(label="akatsuki.nekoweb.org",
+                                    url="https://akatsuki.nekoweb.org/project/akabot/privacy/")
 
         self.add_item(button1)
+
 
 class BugReportModal(discord.ui.Modal):
     def __init__(self, gh_info: dict) -> None:
@@ -47,21 +51,33 @@ class BugReportModal(discord.ui.Modal):
 
         self.gh_info = gh_info
 
-        self.title_input = InputText(label="Title", style=discord.InputTextStyle.short, max_length=100, min_length=8, required=True)
-        self.description_input = InputText(label="Description", style=discord.InputTextStyle.long, max_length=1000, min_length=20, required=True)
+        self.title_input = InputText(label="Title", style=discord.InputTextStyle.short, max_length=100, min_length=8,
+                                     required=True)
+        self.description_input = InputText(label="Description", style=discord.InputTextStyle.long, max_length=1000,
+                                           min_length=20, required=True)
 
         self.add_item(self.title_input)
         self.add_item(self.description_input)
 
     async def callback(self, interaction: discord.Interaction):
-        requests.post(f"https://api.github.com/repos/{self.gh_info['git_user']}/{self.gh_info['git_repo']}/issues", headers={
-            "Authorization": f"token {self.gh_info['token']}",
-            "Accept": "application/vnd.github.v3+json"
-        }, json={
-            "title": self.title_input.value,
-            "body": self.description_input.value,
-            "labels": ["bug", "in-bot"]
-        })
+        issue_body = ("- This bug report was created by {display} ({user} {id}) on Discord\n\n"
+                      "---\n\n"
+                      "### The issue was described by the user as follows:\n\n"
+                      "{desc}".format(display=interaction.user.display_name,
+                                      user=interaction.user.name,
+                                      id=interaction.user.id,
+                                      desc=self.description_input.value))
+
+        requests.post(f"https://api.github.com/repos/{self.gh_info['git_user']}/{self.gh_info['git_repo']}/issues",
+                      headers={
+                          "Authorization": f"token {self.gh_info['token']}",
+                          "Accept": "application/vnd.github.v3+json"
+                      },
+                      json={
+                          "title": "Bug Report: {bug}".format(bug=self.title_input.value),
+                          "body": issue_body,
+                          "labels": ["bug", "in-bot"]
+                      })
 
         await interaction.respond("Bug report submitted!", ephemeral=True)
 
@@ -72,21 +88,33 @@ class FeatureModal(discord.ui.Modal):
 
         self.gh_info = gh_info
 
-        self.title_input = InputText(label="Title", style=discord.InputTextStyle.short, max_length=100, min_length=8, required=True)
-        self.description_input = InputText(label="Description", style=discord.InputTextStyle.long, max_length=1000, min_length=20, required=True)
+        self.title_input = InputText(label="Title", style=discord.InputTextStyle.short, max_length=100, min_length=8,
+                                     required=True)
+        self.description_input = InputText(label="Description", style=discord.InputTextStyle.long, max_length=1000,
+                                           min_length=20, required=True)
 
         self.add_item(self.title_input)
         self.add_item(self.description_input)
 
     async def callback(self, interaction: discord.Interaction):
-        requests.post(f"https://api.github.com/repos/{self.gh_info['git_user']}/{self.gh_info['git_repo']}/issues", headers={
-            "Authorization": f"token {self.gh_info['token']}",
-            "Accept": "application/vnd.github.v3+json"
-        }, json={
-            "title": self.title_input.value,
-            "body": self.description_input.value,
-            "labels": ["enhancement", "in-bot"]
-        })
+        issue_body = ("- This feature request was created by {display} ({user} {id}) on Discord\n\n"
+                      "---\n\n"
+                      "### The issue was described by the user as follows:\n\n"
+                      "{desc}".format(display=interaction.user.display_name,
+                                      user=interaction.user.name,
+                                      id=interaction.user.id,
+                                      desc=self.description_input.value))
+
+        requests.post(f"https://api.github.com/repos/{self.gh_info['git_user']}/{self.gh_info['git_repo']}/issues",
+                      headers={
+                          "Authorization": f"token {self.gh_info['token']}",
+                          "Accept": "application/vnd.github.v3+json"
+                      },
+                      json={
+                          "title": "Feature request: {title}".format(title=self.title_input.value),
+                          "body": issue_body,
+                          "labels": ["enhancement", "in-bot"]
+                      })
 
         await interaction.respond("Feature request submitted!", ephemeral=True)
 
@@ -101,8 +129,8 @@ class SupportCmd(discord.Cog):
     @analytics("website")
     async def website(self, ctx: discord.ApplicationContext):
         await ctx.respond(
-            "You can visit the website [here](<https://akatsuki.nekoweb.org/project/akabot>)") 
-    
+            "You can visit the website [here](<https://akatsuki.nekoweb.org/project/akabot>)")
+
     @discord.slash_command(name="vote", description="Vote on the bot")
     @is_blocked()
     @analytics("vote")
@@ -135,7 +163,7 @@ class SupportCmd(discord.Cog):
     async def changelog(self, ctx: discord.ApplicationContext):
         with open("LATEST.md", "r") as f:
             changelog = f.read()
-        
+
         await ctx.respond(changelog, ephemeral=True)
 
     feedback_subcommand = discord.SlashCommandGroup(name="feedback", description="Give feedback for the bot")
