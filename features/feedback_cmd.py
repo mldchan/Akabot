@@ -9,6 +9,7 @@ from utils.blocked import is_blocked
 
 import requests
 
+
 def db_init():
     cur = db.cursor()
     cur.execute('create table if not exists feature_reports (type text, user_id int, feature text)')
@@ -33,13 +34,16 @@ class VoteView(discord.ui.View):
 
         self.add_item(button1)
 
+
 class PrivacyPolicyView(discord.ui.View):
     def __init__(self):
         super().__init__()
 
-        button1 = discord.ui.Button(label="akatsuki.nekoweb.org", url="https://akatsuki.nekoweb.org/project/akabot/privacy/")
+        button1 = discord.ui.Button(label="akatsuki.nekoweb.org",
+                                    url="https://akatsuki.nekoweb.org/project/akabot/privacy/")
 
         self.add_item(button1)
+
 
 class BugReportModal(discord.ui.Modal):
     def __init__(self, gh_info: dict) -> None:
@@ -47,21 +51,33 @@ class BugReportModal(discord.ui.Modal):
 
         self.gh_info = gh_info
 
-        self.title_input = InputText(label="Title", style=discord.InputTextStyle.short, max_length=100, min_length=8, required=True)
-        self.description_input = InputText(label="Description", style=discord.InputTextStyle.long, max_length=1000, min_length=20, required=True)
+        self.title_input = InputText(label="Title", style=discord.InputTextStyle.short, max_length=100, min_length=8,
+                                     required=True)
+        self.description_input = InputText(label="Description", style=discord.InputTextStyle.long, max_length=1000,
+                                           min_length=20, required=True)
 
         self.add_item(self.title_input)
         self.add_item(self.description_input)
 
     async def callback(self, interaction: discord.Interaction):
-        requests.post(f"https://api.github.com/repos/{self.gh_info['git_user']}/{self.gh_info['git_repo']}/issues", headers={
-            "Authorization": f"token {self.gh_info['token']}",
-            "Accept": "application/vnd.github.v3+json"
-        }, json={
-            "title": self.title_input.value,
-            "body": self.description_input.value,
-            "labels": ["bug", "in-bot"]
-        })
+        issue_body = ("- This bug report was created by {display} ({user} {id}) on Discord\n\n"
+                      "---\n\n"
+                      "### The issue was described by the user as follows:\n\n"
+                      "{desc}".format(display=interaction.user.display_name,
+                                      user=interaction.user.name,
+                                      id=interaction.user.id,
+                                      desc=self.description_input.value))
+
+        requests.post(f"https://api.github.com/repos/{self.gh_info['git_user']}/{self.gh_info['git_repo']}/issues",
+                      headers={
+                          "Authorization": f"token {self.gh_info['token']}",
+                          "Accept": "application/vnd.github.v3+json"
+                      },
+                      json={
+                          "title": "Bug Report: {bug}".format(bug=self.title_input.value),
+                          "body": issue_body,
+                          "labels": ["bug", "in-bot"]
+                      })
 
         await interaction.respond("Bug report submitted!", ephemeral=True)
 
@@ -72,23 +88,72 @@ class FeatureModal(discord.ui.Modal):
 
         self.gh_info = gh_info
 
-        self.title_input = InputText(label="Title", style=discord.InputTextStyle.short, max_length=100, min_length=8, required=True)
-        self.description_input = InputText(label="Description", style=discord.InputTextStyle.long, max_length=1000, min_length=20, required=True)
+        self.title_input = InputText(label="Title", style=discord.InputTextStyle.short, max_length=100, min_length=8,
+                                     required=True)
+        self.description_input = InputText(label="Description", style=discord.InputTextStyle.long, max_length=1000,
+                                           min_length=20, required=True)
 
         self.add_item(self.title_input)
         self.add_item(self.description_input)
 
     async def callback(self, interaction: discord.Interaction):
-        requests.post(f"https://api.github.com/repos/{self.gh_info['git_user']}/{self.gh_info['git_repo']}/issues", headers={
-            "Authorization": f"token {self.gh_info['token']}",
-            "Accept": "application/vnd.github.v3+json"
-        }, json={
-            "title": self.title_input.value,
-            "body": self.description_input.value,
-            "labels": ["enhancement", "in-bot"]
-        })
+        issue_body = ("- This feature request was created by {display} ({user} {id}) on Discord\n\n"
+                      "---\n\n"
+                      "### The issue was described by the user as follows:\n\n"
+                      "{desc}".format(display=interaction.user.display_name,
+                                      user=interaction.user.name,
+                                      id=interaction.user.id,
+                                      desc=self.description_input.value))
+
+        requests.post(f"https://api.github.com/repos/{self.gh_info['git_user']}/{self.gh_info['git_repo']}/issues",
+                      headers={
+                          "Authorization": f"token {self.gh_info['token']}",
+                          "Accept": "application/vnd.github.v3+json"
+                      },
+                      json={
+                          "title": "Feature request: {title}".format(title=self.title_input.value),
+                          "body": issue_body,
+                          "labels": ["enhancement", "in-bot"]
+                      })
 
         await interaction.respond("Feature request submitted!", ephemeral=True)
+
+
+class ConfirmSubmitBugReport(discord.ui.View):
+    def __init__(self, gh_info: dict):
+        super().__init__()
+
+        self.gh_info = gh_info
+
+    @discord.ui.button(label="I agree and want to submit", style=discord.ButtonStyle.primary)
+    async def submit(self, button: discord.ui.Button, interaction: discord.Interaction):
+        modal = BugReportModal(self.gh_info)
+        await interaction.response.send_modal(modal)
+
+    @discord.ui.button(label="I don't agree and prefer to submit on GitHub", style=discord.ButtonStyle.secondary)
+    async def cancel_gh(self, button: discord.ui.Button, interaction: discord.Interaction):
+        self.disable_all_items()
+        await interaction.respond(
+            "You can open a bug report on the [GitHub repository](https://github.com/Akatsuki2555/Akabot/issues/new) directly.",
+            ephemeral=True)
+
+
+class ConfirmSubmitFeatureRequest(discord.ui.View):
+    def __init__(self, gh_info: dict):
+        super().__init__()
+
+        self.gh_info = gh_info
+
+    @discord.ui.button(label="I agree and want to submit", style=discord.ButtonStyle.primary)
+    async def submit(self, button: discord.ui.Button, interaction: discord.Interaction):
+        modal = FeatureModal(self.gh_info)
+        await interaction.response.send_modal(modal)
+
+    @discord.ui.button(label="I don't agree and prefer to submit on GitHub", style=discord.ButtonStyle.secondary)
+    async def cancel_gh(self, button: discord.ui.Button, interaction: discord.Interaction):
+        await interaction.respond(
+            "You can open a feature request on the [GitHub repository](https://github.com/Akatsuki2555/Akabot/issues/new) directly.",
+            ephemeral=True)
 
 
 class SupportCmd(discord.Cog):
@@ -101,8 +166,8 @@ class SupportCmd(discord.Cog):
     @analytics("website")
     async def website(self, ctx: discord.ApplicationContext):
         await ctx.respond(
-            "You can visit the website [here](<https://akatsuki.nekoweb.org/project/akabot>)") 
-    
+            "You can visit the website [here](<https://akatsuki.nekoweb.org/project/akabot>)")
+
     @discord.slash_command(name="vote", description="Vote on the bot")
     @is_blocked()
     @analytics("vote")
@@ -116,7 +181,7 @@ class SupportCmd(discord.Cog):
     @discord.slash_command(name="privacy", description="Privacy policy URL")
     @is_blocked()
     @analytics("privacy policy")
-    async def privacy_policy(str, ctx: discord.ApplicationContext):
+    async def privacy_policy(self, ctx: discord.ApplicationContext):
         await ctx.respond(
             "You can click the button below to view the Privacy Policy:",
             view=PrivacyPolicyView(),
@@ -135,7 +200,7 @@ class SupportCmd(discord.Cog):
     async def changelog(self, ctx: discord.ApplicationContext):
         with open("LATEST.md", "r") as f:
             changelog = f.read()
-        
+
         await ctx.respond(changelog, ephemeral=True)
 
     feedback_subcommand = discord.SlashCommandGroup(name="feedback", description="Give feedback for the bot")
@@ -145,13 +210,35 @@ class SupportCmd(discord.Cog):
     @is_blocked()
     @analytics("feedback bug")
     async def report_bug(self, ctx: discord.ApplicationContext):
-        modal = BugReportModal(self.gh_info)
-        await ctx.response.send_modal(modal)
+        # modal = BugReportModal(self.gh_info)
+        # await ctx.response.send_modal(modal)
+
+        await ctx.respond(content="## Notice before submitting a bug report\n"
+                                  "If you do submit a bug report, the following information will be sent to GitHub issues:\n"
+                                  "- Your Discord display name, username and ID\n"
+                                  "- Any information you provide in the title and description in the form\n"
+                                  "\n"
+                                  "If you don't agree with this, you can open a bug report on the GitHub repository directly.\n"
+                                  "*This was done to prevent spam and abuse of the bug report system.*\n"
+                                  "*If you don't want to submit at all, you can completely ignore this message.*",
+                          ephemeral=True,
+                          view=ConfirmSubmitBugReport(self.gh_info))
 
     @feedback_subcommand.command(name="feature", description="Suggest a feature")
     @cmds_ext.cooldown(1, 300, cmds_ext.BucketType.user)
     @is_blocked()
     @analytics("feedback feature")
     async def suggest_feature(self, ctx: discord.ApplicationContext):
-        modal = FeatureModal(self.gh_info)
-        await ctx.response.send_modal(modal)
+        # modal = FeatureModal(self.gh_info)
+        # await ctx.response.send_modal(modal)
+
+        await ctx.respond(content="## Notice before submitting a feature request\n"
+                                  "If you do submit a feature request, the following information will be sent to GitHub issues:\n"
+                                  "- Your Discord display name, username and ID\n"
+                                  "- Any information you provide in the title and description in the form\n"
+                                  "\n"
+                                  "If you don't agree with this, you can open a feature request on the GitHub repository directly.\n"
+                                  "*This was done to prevent spam and abuse of the feature request system.*\n"
+                                  "*If you don't want to submit at all, you can completely ignore this message.*",
+                          ephemeral=True,
+                          view=ConfirmSubmitFeatureRequest(self.gh_info))
