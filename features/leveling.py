@@ -256,6 +256,19 @@ class Leveling(discord.Cog):
 
         msg = ""
         for i in multiplier_list:
+            start_month, start_day = map(int, i[3].split('-'))
+            end_month, end_day = map(int, i[4].split('-'))
+
+            start_date = datetime.datetime(datetime.datetime.now().year, start_month, start_day)
+            end_date = datetime.datetime(datetime.datetime.now().year, end_month, end_day)
+
+            if end_date < start_date:
+                end_date = end_date.replace(year=end_date.year + 1)
+
+            # continue if the multiplier is not active
+            if start_date > datetime.datetime.now() or end_date < datetime.datetime.now():
+                continue
+
             msg += "{name} Multiplier - {multiplier}x - from {start} to {end}\n".format(
                 name=i[1],
                 multiplier=i[2],
@@ -269,7 +282,7 @@ You are on is level {level}.
 You have {level_xp} XP. Next milestone is {next_level_xp} XP for level {level + 1}.
 The multiplier is currently `{multiplier}x`.\n'''
             
-            if len(multiplier_list) > 0:
+            if len(msg) > 0:
                 response += '## Multipliers\n'
                 response += f'{msg}'
 
@@ -280,7 +293,7 @@ The multiplier is currently `{multiplier}x`.\n'''
 {user.mention} has {level_xp} XP. Next milestone is {next_level_xp} XP for level {level + 1}.
 The multiplier is currently `{multiplier}x`.\n'''
 
-            if len(multiplier_list) > 0:
+            if len(msg) > 0:
                 response += '## Multipliers\n'
                 response += f'{msg}'
 
