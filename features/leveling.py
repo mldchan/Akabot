@@ -65,20 +65,20 @@ def db_add_user_xp(guild_id: int, user_id: int, xp: int):
 
 def get_level_for_xp(guild_id: int, xp: int):
     level = 0
-    xp_needed = db_calculate_multiplier(guild_id) * 500
+    xp_needed = db_calculate_multiplier(guild_id) * int(get_setting(guild_id, 'leveling_xp_per_level', '500'))
     while xp >= xp_needed:
         level += 1
         xp -= xp_needed
-        xp_needed = db_calculate_multiplier(guild_id) * 500
+        xp_needed = db_calculate_multiplier(guild_id) * int(get_setting(guild_id, 'leveling_xp_per_level', '500'))
 
     return level
 
 def get_xp_for_level(guild_id: int, level: int):
     xp = 0
-    xp_needed = db_calculate_multiplier(guild_id) * 500
+    xp_needed = db_calculate_multiplier(guild_id) * int(get_setting(guild_id, 'leveling_xp_per_level', '500'))
     for _ in range(level):
         xp += xp_needed
-        xp_needed = db_calculate_multiplier(guild_id) * 500
+        xp_needed = db_calculate_multiplier(guild_id) * int(get_setting(guild_id, 'leveling_xp_per_level', '500'))
 
     return xp
 
@@ -252,12 +252,39 @@ class Leveling(discord.Cog):
         level = get_level_for_xp(ctx.guild.id, level_xp)
         multiplier = db_calculate_multiplier(ctx.guild.id)
         next_level_xp = get_xp_for_level(ctx.guild.id, level + 1)
+        multiplier_list = db_multiplier_getall(ctx.guild.id)
 
-        await ctx.respond(
-            f'{user.mention} is level {level}.\n'
-            f'You have {level_xp} XP. Next milestone is {next_level_xp} XP for level {level + 1}.\n'
-            f'The multiplier is currently `{multiplier}x`.',
-            ephemeral=True)
+        msg = ""
+        for i in multiplier_list:
+            msg += "{name} Multiplier - {multiplier}x - from {start} to {end}\n".format(
+                name=i[1],
+                multiplier=i[2],
+                start=i[3],
+                end=i[4]
+            )
+
+        if user == ctx.user:
+            response = f'''## Level Info
+You are on is level {level}.
+You have {level_xp} XP. Next milestone is {next_level_xp} XP for level {level + 1}.
+The multiplier is currently `{multiplier}x`.\n'''
+            
+            if len(multiplier_list) > 0:
+                response += '## Multipliers\n'
+                response += f'{msg}'
+
+            await ctx.respond(response, ephemeral=True)
+        else:
+            response = f'''## Level Info
+{user.mention} is on is level {level}.
+{user.mention} has {level_xp} XP. Next milestone is {next_level_xp} XP for level {level + 1}.
+The multiplier is currently `{multiplier}x`.\n'''
+
+            if len(multiplier_list) > 0:
+                response += '## Multipliers\n'
+                response += f'{msg}'
+
+            await ctx.respond(response, ephemeral=True)
 
     leveling_subcommand = discord.SlashCommandGroup(name='leveling', description='Leveling settings')
 
@@ -536,6 +563,27 @@ class Leveling(discord.Cog):
     async def get_multiplier(self, ctx: discord.ApplicationContext):
         multiplier = db_calculate_multiplier(ctx.guild.id)
         await ctx.respond(f'The current leveling multiplier is `{multiplier}x`.', ephemeral=True)
+
+    @leveling_subcommand.command(name='set_xp_per_level', description='Set the XP per level')
+    @discord.default_permissions(manage_guild=True)
+    @commands_ext.has_permissions(manage_guild=True)
+    @commands_ext.guild_only()
+    @discord.option(name="xp", description="The XP to set", type=int)
+    @is_blocked()
+    @analytics("leveling set xp per level")
+    async def set_xp_per_level(self, ctx: discord.ApplicationContext, xp: int):
+        old_xp = get_setting(ctx.guild.id, 'leveling_xp_per_level', '500')
+        set_setting(ctx.guild.id, 'leveling_xp_per_level', str(xp))
+        await ctx.respond(f'Successfully set the XP per level to {xp}.', ephemeral=True)
+        
+        # Logging embed
+        logging_embed = discord.Embed(title="XP per level changed")
+        logging_embed.add_field(name="User", value=f"{ctx.user.mention}")
+        logging_embed.add_field(name="Old XP per level", value=f"{old_xp}")
+        logging_embed.add_field(name="New XP per level", value=f"{xp}")
+        
+        # Send into logs
+        await log_into_logs(ctx.guild, logging_embed)
 
     @leveling_subcommand.command(name='set_reward', description='Set a role for a level')
     @discord.default_permissions(manage_guild=True)
