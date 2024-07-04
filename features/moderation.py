@@ -2,6 +2,7 @@ import datetime
 
 import discord
 from discord.ext import commands as commands_ext
+from database import conn
 
 from utils.analytics import analytics
 from utils.blocked import is_blocked
@@ -21,11 +22,71 @@ def pretty_time_delta(seconds: int):
         return '%s%d minutes and %d seconds' % (sign_string, minutes, seconds)
     else:
         return '%s%d seconds' % (sign_string, seconds)
+    
+def get_date_time_str() -> str:
+    # format: yyyy/mm/dd hh:mm
+    return datetime.datetime.now(datetime.UTC).strftime('%Y/%m/%d %H:%M')
+
+def db_init():
+    cur = conn.cursor()
+    cur.execute(
+        'create table if not exists warnings (id integer primary key autoincrement, guild_id int, user_id int, reason text, timestamp str)'
+    )
+    cur.execute(
+        'create table if not exists warnings_actions (id integer primary key autoincrement, guild_id int, warnings int, action text)'
+    )
+    cur.close()
+    conn.commit()
+
+def db_add_warning(guild_id: int, user_id: int, reason: str) -> int:
+    cur = conn.cursor()
+    cur.execute('insert into warnings (guild_id, user_id, reason, timestamp) values (?, ?, ?, ?)',
+                (guild_id, user_id, reason, get_date_time_str()))
+    warning_id = cur.lastrowid
+    cur.close()
+    conn.commit()
+    return warning_id
+
+def db_get_warnings(guild_id: int, user_id: int):
+    cur = conn.cursor()
+    cur.execute('select id, reason, timestamp from warnings where guild_id = ? and user_id = ?', (guild_id, user_id))
+    warnings = cur.fetchall()
+    cur.close()
+    return warnings
+
+def db_remove_warning(guild_id: int, warning_id: int):
+    cur = conn.cursor()
+    cur.execute('delete from warnings where guild_id = ? and id = ?', (guild_id, warning_id))
+    cur.close()
+    conn.commit()
+
+def db_add_warning_action(guild_id: int, action: str, warnings: int):
+    # Add an action to be taken on a user with a certain number of warnings
+    cur = conn.cursor()
+    cur.execute('insert into warnings_actions (guild_id, action, warnings) values (?, ?, ?)',
+                (guild_id, action, warnings))
+    cur.close()
+    conn.commit()
+
+def db_get_warning_actions(guild_id: int):
+    cur = conn.cursor()
+    cur.execute('select id, action, warnings from warnings_actions where guild_id = ?', (guild_id,))
+    actions = cur.fetchall()
+    cur.close()
+    return actions
+
+def db_remove_warning_action(id: int):
+    cur = conn.cursor()
+    cur.execute('delete from warnings_actions where id = ?', (id,))
+    cur.close()
+    conn.commit()
 
 
 class Moderation(discord.Cog):
     def __init__(self, bot: discord.Bot):
         self.bot = bot
+
+        db_init()
 
     moderation_subcommand = discord.SlashCommandGroup(name='moderation', description='Moderation commands')
 
@@ -195,6 +256,166 @@ class Moderation(discord.Cog):
 
         ephemerality = get_setting(ctx.guild.id, "moderation_ephemeral", "true")
         await ctx.respond(f'Successfully unmuted {user.mention} for {reason}.', ephemeral=ephemerality == "true")
+
+    warning_group = discord.SlashCommandGroup(name='warn', description='Warning commands')
+
+    @warning_group.command(name='add', description='Add a warning to a user')
+    @commands_ext.guild_only()
+    @discord.default_permissions(manage_messages=True)
+    @commands_ext.has_permissions(manage_messages=True)
+    @discord.option(name='user', description='The user to warn', type=discord.Member)
+    @discord.option(name='reason', description='The reason for warning', type=str)
+    @is_blocked()
+    @analytics("warn add")
+    async def add_warning(self, ctx: discord.ApplicationContext, user: discord.Member, reason: str):
+        id = db_add_warning(ctx.guild.id, user.id, reason)
+        ephemerality = get_setting(ctx.guild.id, "moderation_ephemeral", "true")
+        await ctx.respond(f'Successfully warned {user.mention} for `{reason}`.\n'
+                          f'The ID of the warning is `{id}`.', ephemeral=ephemerality == "true")
+        
+        # try dm user
+        try:
+            await user.send(f'You have been warned in {ctx.guild.name} for {reason}.')
+        except Exception:
+            pass
+
+        warnings = db_get_warnings(ctx.guild.id, user.id)
+        actions = db_get_warning_actions(ctx.guild.id)
+
+        if not actions:
+            return
+        
+        for action in actions:
+            if len(warnings) == action[2]: # only apply if the number of warnings matches, not if below
+                if action[1] == 'kick':
+                    # try dm user
+                    try:
+                        await user.send(f'You have been kicked from {ctx.guild.name} for reaching {action[2]} warnings.')
+                    except Exception:
+                        pass
+                    await user.kick(reason=f"Kicked for reaching {action[2]} warnings.")
+                elif action[1] == 'ban':
+                    # try dm user
+                    try:
+                        await user.send(f'You have been banned from {ctx.guild.name} for reaching {action[2]} warnings.')
+                    except Exception:
+                        pass
+                    await user.ban(reason=f"Banned for reaching {action[2]} warnings.")
+                elif action[1].startswith('timeout'):
+                    time = action[1].split(' ')[1]
+                    total_seconds = 0
+                    if time == '12h':
+                        total_seconds = 43200
+                    elif time == '1d':
+                        total_seconds = 86400
+                    elif time == '7d':
+                        total_seconds = 604800
+                    elif time == '28d':
+                        total_seconds = 2419200
+
+                    # try dm
+                    try:
+                        await user.send(f'You have been timed out from {ctx.guild.name} for reaching {action[2]} warnings for {pretty_time_delta(total_seconds)}.')
+                    except Exception:
+                        pass
+
+                    await user.timeout_for(datetime.timedelta(seconds=total_seconds), reason=f"Timed out for reaching {action[2]} warnings.")
+
+    @warning_group.command(name='remove', description='Remove a warning from a user')
+    @commands_ext.guild_only()
+    @discord.default_permissions(manage_messages=True)
+    @commands_ext.has_permissions(manage_messages=True)
+    @discord.option(name='user', description='The user to remove the warning from', type=discord.Member)
+    @discord.option(name='id', description='The ID of the warning', type=int)
+    @is_blocked()
+    @analytics("warn remove")
+    async def remove_warning(self, ctx: discord.ApplicationContext, user: discord.Member, id: int):
+        # check: warning exists
+        warnings = db_get_warnings(ctx.guild.id, user.id)
+        if not warnings:
+            await ctx.respond(f'{user.mention} has no warnings.', ephemeral=True)
+            return
+        
+        if id not in [warning[0] for warning in warnings]:
+            await ctx.respond(f'Warning {id} does not exist for {user.mention}.', ephemeral=True)
+            return
+
+        db_remove_warning(ctx.guild.id, id)
+        ephemerality = get_setting(ctx.guild.id, "moderation_ephemeral", "true")
+        await ctx.respond(f'Successfully removed warning `{id}` from {user.mention}.', ephemeral=ephemerality == "true")
+
+    @warning_group.command(name='list', description='List all warnings for a user')
+    @commands_ext.guild_only()
+    @discord.default_permissions(manage_messages=True)
+    @commands_ext.has_permissions(manage_messages=True)
+    @discord.option(name='user', description='The user to list the warnings for', type=discord.Member)
+    @is_blocked()
+    @analytics("warn list")
+    async def list_warnings(self, ctx: discord.ApplicationContext, user: discord.Member):
+        warnings = db_get_warnings(ctx.guild.id, user.id)
+        if not warnings:
+            await ctx.respond(f'{user.mention} has no warnings.', ephemeral=True)
+            return
+
+        warning_str = f'Warnings for {user.mention}:\n'
+        for warning in warnings:
+            warning_str += f'ID `{warning[0]}` with reason `{warning[1]}` on `{warning[2]}`\n'
+        await ctx.respond(warning_str, ephemeral=True)
+
+    warning_actions_group = discord.SlashCommandGroup(name='warn_actions', description='Warning action commands')
+
+    @warning_actions_group.command(name='add', description='Add an action to be taken on a user with a certain number of warnings')
+    @commands_ext.guild_only()
+    @discord.default_permissions(manage_messages=True)
+    @commands_ext.has_permissions(manage_messages=True)
+    @discord.option(name='warnings', description='The number of warnings to trigger the action', type=int)
+    @discord.option(name='action', description='The action to take', type=str, choices=['kick', 'ban', 'timeout 12h', 'timeout 1d', 'timeout 7d', 'timeout 28d'])
+    @is_blocked()
+    @analytics("warn_actions add")
+    async def add_warning_action(self, ctx: discord.ApplicationContext, warnings: int, action: str):
+        db_add_warning_action(ctx.guild.id, action, warnings)
+        ephemerality = get_setting(ctx.guild.id, "moderation_ephemeral", "true")
+        await ctx.respond(f'Successfully added action `{action}` for {warnings} warnings.', ephemeral=ephemerality == "true")
+
+    @warning_actions_group.command(name='list', description='List all actions to be taken on a user with a certain number of warnings')
+    @commands_ext.guild_only()
+    @discord.default_permissions(manage_messages=True)
+    @commands_ext.has_permissions(manage_messages=True)
+    @is_blocked()
+    @analytics("warn_actions list")
+    async def list_warning_actions(self, ctx: discord.ApplicationContext):
+        actions = db_get_warning_actions(ctx.guild.id)
+        if not actions:
+            await ctx.respond('There are no warning actions.', ephemeral=True)
+            return
+
+        action_str = 'Warning actions:\n'
+        for action in actions:
+            action_str += f'ID `{action[0]}` with action `{action[1]}` for {action[2]} warnings\n'
+
+        ephemerality = get_setting(ctx.guild.id, "moderation_ephemeral", "true")
+        await ctx.respond(action_str, ephemeral=ephemerality == "true")
+
+    @warning_actions_group.command(name='remove', description='Remove an action to be taken on a user with a certain number of warnings')
+    @commands_ext.guild_only()
+    @discord.default_permissions(manage_messages=True)
+    @commands_ext.has_permissions(manage_messages=True)
+    @discord.option(name='id', description='The ID of the action', type=int)
+    @is_blocked()
+    @analytics("warn_actions remove")
+    async def remove_warning_action(self, ctx: discord.ApplicationContext, id: int):
+        actions = db_get_warning_actions(ctx.guild.id)
+        if not actions:
+            await ctx.respond('There are no warning actions.', ephemeral=True)
+            return
+
+        if id not in [action[0] for action in actions]:
+            await ctx.respond(f'Action {id} does not exist.', ephemeral=True)
+            return
+
+        db_remove_warning_action(id)
+        ephemerality = get_setting(ctx.guild.id, "moderation_ephemeral", "true")
+        await ctx.respond(f'Successfully removed action `{id}`.', ephemeral=ephemerality == "true")
 
     @moderation_subcommand.command(name="ephemeral", description="Toggle the ephemeral status of a message")
     async def toggle_ephemeral(self, ctx: discord.ApplicationContext, ephemeral: bool):
