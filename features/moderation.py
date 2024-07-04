@@ -273,6 +273,12 @@ class Moderation(discord.Cog):
         await ctx.respond(f'Successfully warned {user.mention} for `{reason}`.\n'
                           f'The ID of the warning is `{id}`.', ephemeral=ephemerality == "true")
         
+        # try dm user
+        try:
+            await user.send(f'You have been warned in {ctx.guild.name} for {reason}.')
+        except Exception:
+            pass
+
         warnings = db_get_warnings(ctx.guild.id, user.id)
         actions = db_get_warning_actions(ctx.guild.id)
 
@@ -280,10 +286,20 @@ class Moderation(discord.Cog):
             return
         
         for action in actions:
-            if len(warnings) >= action[2]:
+            if len(warnings) == action[2]: # only apply if the number of warnings matches, not if below
                 if action[1] == 'kick':
+                    # try dm user
+                    try:
+                        await user.send(f'You have been kicked from {ctx.guild.name} for reaching {action[2]} warnings.')
+                    except Exception:
+                        pass
                     await user.kick(reason=f"Kicked for reaching {action[2]} warnings.")
                 elif action[1] == 'ban':
+                    # try dm user
+                    try:
+                        await user.send(f'You have been banned from {ctx.guild.name} for reaching {action[2]} warnings.')
+                    except Exception:
+                        pass
                     await user.ban(reason=f"Banned for reaching {action[2]} warnings.")
                 elif action[1].startswith('timeout'):
                     time = action[1].split(' ')[1]
@@ -296,6 +312,13 @@ class Moderation(discord.Cog):
                         total_seconds = 604800
                     elif time == '28d':
                         total_seconds = 2419200
+
+                    # try dm
+                    try:
+                        await user.send(f'You have been timed out from {ctx.guild.name} for reaching {action[2]} warnings for {pretty_time_delta(total_seconds)}.')
+                    except Exception:
+                        pass
+
                     await user.timeout_for(datetime.timedelta(seconds=total_seconds), reason=f"Timed out for reaching {action[2]} warnings.")
 
     @warning_group.command(name='remove', description='Remove a warning from a user')
@@ -393,7 +416,6 @@ class Moderation(discord.Cog):
         db_remove_warning_action(id)
         ephemerality = get_setting(ctx.guild.id, "moderation_ephemeral", "true")
         await ctx.respond(f'Successfully removed action `{id}`.', ephemeral=ephemerality == "true")
-
 
     @moderation_subcommand.command(name="ephemeral", description="Toggle the ephemeral status of a message")
     async def toggle_ephemeral(self, ctx: discord.ApplicationContext, ephemeral: bool):
