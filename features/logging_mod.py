@@ -135,12 +135,12 @@ class Logging(discord.Cog):
             if before.topic != after.topic:
                 # Before topic
                 before_topic = before.topic if hasattr(before, 'topic') else 'None'
-                if len(before_topic) == 0:
+                if not before_topic:
                     before_topic = 'None'
                 
                 # After topic
                 after_topic = after.topic if hasattr(after, 'topic') else 'None'
-                if len(after_topic) == 0:
+                if not after_topic:
                     after_topic = 'None'
 
                 # Add field
