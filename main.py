@@ -4,7 +4,7 @@ from discord.ext import commands as discord_commands_ext
 
 from features import welcoming, leveling, antiraid, chat_streaks, chat_revive, chat_summary, reaction_roles, \
     logging_mod, admin_cmds, giveaways, feedback_cmd, moderation, cleanup_task, verification, velky_stompies, \
-    roles_on_join, heartbeat
+    roles_on_join, heartbeat, automod_actions
 from utils.blocked import BlockedUserError, BlockedServerError
 import sentry_sdk
 from sentry_sdk.integrations.logging import LoggingIntegration
@@ -96,5 +96,6 @@ bot.add_cog(verification.Verification(bot))
 bot.add_cog(velky_stompies.VelkyStompies())
 bot.add_cog(roles_on_join.RolesOnJoin(bot))
 bot.add_cog(heartbeat.Heartbeat(heartbeat.HeartbeatData(**data["heartbeat"])))
+bot.add_cog(automod_actions.AutomodActions(bot))
 
 bot.run(data['token'])
