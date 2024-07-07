@@ -240,9 +240,10 @@ class Logging(discord.Cog):
             changed_deny = []
 
             for perm in discord.Permissions.VALID_FLAGS:
-                if before.permissions[perm] == after.permissions[perm]:
+                
+                if dict(before.permissions)[perm] == dict(after.permissions)[perm]:
                     continue
-                if after.permissions[perm]:
+                if dict(after.permissions)[perm]:
                     changed_allow.append(perm)
                 else:
                     changed_deny.append(perm)
