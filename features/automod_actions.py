@@ -109,15 +109,15 @@ class AutomodActions(discord.Cog):
     @discord_commands_ext.bot_has_permissions(manage_guild=True)
     @discord_commands_ext.has_permissions(manage_messages=True)
     @discord.option(name="rule_name", description="Name of the rule, as it is in the settings.")
-    async def automod_actions_remove(self, ctx: discord.ApplicationContext, rule_name: str):        
+    async def automod_actions_remove(self, ctx: discord.ApplicationContext, id: int):        
         # verify action exists, rule_name is NOT rule_id
         
-        logging.info('Removing automod action: {rule_name}'.format(rule_name=rule_name))
+        logging.info('Verifying automod action with ID {id} exists'.format(id=str(id)))
 
         automod_actions = db_get_automod_actions(ctx.guild.id)
         automod_rule = None
         for rule in automod_actions:
-            if rule[1] == rule_name:
+            if rule[0] == id:
                 automod_rule = rule
                 break
 
@@ -127,8 +127,8 @@ class AutomodActions(discord.Cog):
             await ctx.respond("Automod action does not exist.", ephemeral=True)
             return
         
-        logging.info("Removing automod action({guild_id}, {rule_id})".format(guild_id=ctx.guild.id, rule_id=automod_rule[0]))
-        db_remove_automod_action(ctx.guild.id, automod_rule[0])
+        logging.info("Removing automod action({rule_id})".format(rule_id=str(automod_rule[0])))
+        db_remove_automod_action(id)
         await ctx.respond("Automod action removed.", ephemeral=True)
 
     @automod_actions_subcommands.command(name='list', description='List automod actions.')
