@@ -6,6 +6,7 @@ from features import welcoming, leveling, antiraid, chat_streaks, chat_revive, c
     logging_mod, admin_cmds, giveaways, feedback_cmd, moderation, cleanup_task, verification, velky_stompies, \
     roles_on_join, heartbeat, automod_actions
 from utils.blocked import BlockedUserError, BlockedServerError
+from utils.config import get_key
 import sentry_sdk
 from sentry_sdk.integrations.logging import LoggingIntegration
 import logging
@@ -16,13 +17,10 @@ logging.basicConfig(
 )
 logging.captureWarnings(True)
 
-BOT_VERSION = "3.13"
+BOT_VERSION = get_key("Bot_Version", "3.2")
 
-with open('config.json', 'r', encoding='utf8') as f:
-    data = json.load(f)
-
-if 'sentry' in data and data['sentry']['enabled']:
-    sentry_sdk.init(data['sentry']['dsn'],
+if get_key("Sentry_Enabled", "false") == "true":
+    sentry_sdk.init(get_key("Sentry_DSN"),
                     integrations=[LoggingIntegration(level=logging.INFO, event_level=logging.WARN)],
                     traces_sample_rate=1.0,
                     profiles_sample_rate=1.0)
@@ -79,23 +77,44 @@ async def on_application_command_error(ctx: discord.ApplicationContext, error):
     sentry_sdk.capture_exception(error)
     raise error
 
-bot.add_cog(cleanup_task.DbCleanupTask())
-bot.add_cog(welcoming.Welcoming(bot))
-bot.add_cog(leveling.Leveling(bot))
-bot.add_cog(antiraid.AntiRaid(bot))
-bot.add_cog(chat_streaks.ChatStreaks(bot))
-bot.add_cog(chat_revive.ChatRevive(bot))
-bot.add_cog(chat_summary.ChatSummary(bot))
-bot.add_cog(reaction_roles.ReactionRoles(bot))
-bot.add_cog(feedback_cmd.SupportCmd(bot, gh_info=data["github"]))
-bot.add_cog(logging_mod.Logging(bot))
-bot.add_cog(admin_cmds.AdminCommands(bot))
-bot.add_cog(giveaways.Giveaways(bot))
-bot.add_cog(moderation.Moderation(bot))
-bot.add_cog(verification.Verification(bot))
-bot.add_cog(velky_stompies.VelkyStompies())
-bot.add_cog(roles_on_join.RolesOnJoin(bot))
-bot.add_cog(heartbeat.Heartbeat(heartbeat.HeartbeatData(**data["heartbeat"])))
-bot.add_cog(automod_actions.AutomodActions(bot))
+if get_key("Feature_DatabaseCleanupTask", "true") == "true":
+    bot.add_cog(cleanup_task.DbCleanupTask())
+if get_key("Feature_WelcomeGoodbye", "true") == "true":
+    bot.add_cog(welcoming.Welcoming(bot))
+if get_key("Feature_Leveling", "true") == "true":
+    bot.add_cog(leveling.Leveling(bot))
+if get_key("Feature_AntiRaid", "true") == "true":
+    bot.add_cog(antiraid.AntiRaid(bot))
+if get_key("Feature_ChatStreaks", "true") == "true":
+    bot.add_cog(chat_streaks.ChatStreaks(bot))
+if get_key("Feature_ChatRevive", "true") == "true":
+    bot.add_cog(chat_revive.ChatRevive(bot))
+if get_key("Feature_ChatSummary", "true") == "true":
+    bot.add_cog(chat_summary.ChatSummary(bot))
+if get_key("Feature_ReactionRoles", "true") == "true":
+    bot.add_cog(reaction_roles.ReactionRoles(bot))
+if get_key("Feature_Logging", "true") == "true":
+    bot.add_cog(logging_mod.Logging(bot))
+if get_key("Feature_AdminCommands", "true") == "true":
+    bot.add_cog(admin_cmds.AdminCommands(bot))
+if get_key("Feature_Giveaways", "true") == "true":
+    bot.add_cog(giveaways.Giveaways(bot))
+if get_key("Feature_FeedbackCmd", "true") == "true":
+    bot.add_cog(feedback_cmd.SupportCmd(bot))
+if get_key("Feature_Moderation", "true") == "true":
+    bot.add_cog(moderation.Moderation(bot))
+if get_key("Feature_Verification", "true") == "true":
+    bot.add_cog(verification.Verification(bot))
+if get_key("Feature_VelkyStompies", "true") == "true":
+    bot.add_cog(velky_stompies.VelkyStompies())
+if get_key("Feature_RolesOnJoin", "true") == "true":
+    bot.add_cog(roles_on_join.RolesOnJoin(bot))
+if get_key("Feature_Heartbeat", "true") == "true":
+    bot.add_cog(heartbeat.Heartbeat())
+if get_key("Feature_AutomodActions", "true") == "true":
+    bot.add_cog(automod_actions.AutomodActions(bot))
 
-bot.run(data['token'])
+
+bot.run(
+    get_key("Bot_Token")
+)

@@ -3,12 +3,10 @@ import json
 import discord
 
 from utils.blocked import db_add_blocked_server, db_add_blocked_user, db_remove_blocked_server, db_remove_blocked_user
+from utils.config import get_key
 
-with open('config.json', 'r', encoding='utf8') as f:
-    data = json.load(f)
-
-ADMIN_GUILD = int(data["admin_guild"]) or 0
-OWNER_ID = int(data["owner_id"]) or 0
+ADMIN_GUILD = get_key("Admin_AdminGuildID", "0")
+OWNER_ID = get_key("Admin_OwnerID", "0")
 
 
 class AdminCommands(discord.Cog):
