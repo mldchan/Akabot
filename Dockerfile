@@ -9,5 +9,6 @@ COPY utils /app/utils
 COPY database.py /app
 COPY main.py /app/
 COPY config.json /app/
+COPY LATEST.md /app/
 
 CMD ["python", "/app/main.py"]
