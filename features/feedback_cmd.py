@@ -193,13 +193,22 @@ class SupportCmd(discord.Cog):
         await ctx.respond("You can donate to the bot [here](<https://ko-fi.com/akatsuki2555>)", ephemeral=True)
 
     @discord.slash_command(name="changelog", description="Get the bot's changelog")
+    @discord.option(name="version", description="The version to get the changelog for", choices=["3.2", "3.1"])
     @is_blocked()
     @analytics("changelog")
-    async def changelog(self, ctx: discord.ApplicationContext):
-        with open("LATEST.md", "r") as f:
-            changelog = f.read()
+    async def changelog(self, ctx: discord.ApplicationContext, version: str = get_key("Bot_Version", "3.2")):
+        if version == "3.2":
+            with open("LATEST.md", "r") as f:
+                changelog = f.read()
 
-        await ctx.respond(changelog, ephemeral=True)
+            await ctx.respond(changelog, ephemeral=True)
+        elif version == "3.1":
+            with open("LATEST_3.1.md", "r") as f:
+                changelog = f.read()
+
+            await ctx.respond(changelog, ephemeral=True)
+        else:
+            await ctx.respond("Invalid version specified.", ephemeral=True)
 
     feedback_subcommand = discord.SlashCommandGroup(name="feedback", description="Give feedback for the bot")
 
