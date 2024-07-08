@@ -44,7 +44,7 @@ class ReactionRoles(discord.Cog):
 
         self.bot = bot
 
-    create_reaction_role_subcommand = discord.SlashCommandGroup(name="create_reaction_role",
+    reaction_roles_subcommand = discord.SlashCommandGroup(name="reaction_roles",
                                                                 description="Create a reaction role")
 
     def create_view(self, type: str, roles: list[discord.Role]) -> discord.ui.View:
@@ -58,65 +58,75 @@ class ReactionRoles(discord.Cog):
 
         return view
 
-    @create_reaction_role_subcommand.command(name="normal", description="Create a normal reaction role")
+    @reaction_roles_subcommand.command(name="create", description="Create a reaction role")
     @discord.default_permissions(manage_roles=True)
+    @discord.option(name="type", description="Type of reaction role", choices=["normal", "add only", "remove only", "single"])
     @commands_ext.has_permissions(manage_roles=True)
     @commands_ext.guild_only()
     @commands_ext.bot_has_permissions(send_messages=True)
     @is_blocked()
-    @analytics("create_reaction_role normal")
-    async def create_reaction_role_normal(self, interaction: discord.ApplicationContext, message: str, role: discord.Role,
-                                          role_2: discord.Role = None, role_3: discord.Role = None,
-                                          role_4: discord.Role = None, role_5: discord.Role = None) -> None:
-        view = self.create_view('n', [role, role_2, role_3, role_4, role_5])
+    @analytics("create_reaction_role")
+    async def create_reaction_role(self, interaction: discord.ApplicationContext, type: str, message: str,
+                                   role_1: discord.Role, role_2: discord.Role = None, role_3: discord.Role = None,
+                                   role_4: discord.Role = None, role_5: discord.Role = None, role_6: discord.Role = None,
+                                   role_7: discord.Role = None, role_8: discord.Role = None, role_9: discord.Role = None,
+                                   role_10: discord.Role = None) -> None:
+        if type == "single":
+            type = "s"
+        elif type == "add only":
+            type = "a"
+        elif type == "remove only":
+            type = "r"
+        else:
+            type = "n"
+
+        roles = [role_1, role_2, role_3, role_4, role_5, role_6, role_7, role_8, role_9, role_10]
+        view = self.create_view(type, roles)
 
         await interaction.channel.send(content=message, view=view)
         await interaction.response.send_message("Reaction role has been created!", ephemeral=True)
 
-    @create_reaction_role_subcommand.command(name="add_only", description="Create an add only reaction role")
+    @reaction_roles_subcommand.command(name="edit", description="Edit a reaction role")
     @discord.default_permissions(manage_roles=True)
+    @discord.option(name="message", description="Message to edit")
+    @discord.option(name="type", description="Type of reaction role", choices=["normal", "add only", "remove only", "single"])
     @commands_ext.has_permissions(manage_roles=True)
     @commands_ext.guild_only()
     @commands_ext.bot_has_permissions(send_messages=True)
     @is_blocked()
-    @analytics("create_reaction_role add_only")
-    async def create_reaction_role_add(self, interaction: discord.ApplicationContext, message: str, role: discord.Role,
-                                       role_2: discord.Role = None, role_3: discord.Role = None,
-                                       role_4: discord.Role = None, role_5: discord.Role = None) -> None:
-        view = self.create_view('a', [role, role_2, role_3, role_4, role_5])
+    @analytics("edit_reaction_role")
+    async def edit_reaction_role(self, interaction: discord.ApplicationContext, message: str, type: str,
+                                    role_1: discord.Role, role_2: discord.Role = None, role_3: discord.Role = None,
+                                    role_4: discord.Role = None, role_5: discord.Role = None, role_6: discord.Role = None,
+                                    role_7: discord.Role = None, role_8: discord.Role = None, role_9: discord.Role = None,
+                                    role_10: discord.Role = None, content: str = None) -> None:
+        if not message.isdigit():
+            await interaction.response.send_message("Message ID must be a number!", ephemeral=True)
+            return
 
-        await interaction.channel.send(content=message, view=view)
-        await interaction.response.send_message("Reaction role has been created!", ephemeral=True)
+        if type == "single":
+            type = "s"
+        elif type == "add only":
+            type = "a"
+        elif type == "remove only":
+            type = "r"
+        else:
+            type = "n"
 
-    @create_reaction_role_subcommand.command(name="remove_only", description="Create a remove only reaction role")
-    @discord.default_permissions(manage_roles=True)
-    @commands_ext.has_permissions(manage_roles=True)
-    @commands_ext.guild_only()
-    @commands_ext.bot_has_permissions(send_messages=True)
-    @is_blocked()
-    @analytics("create_reaction_role remove_only")
-    async def create_reaction_role_remove(self, interaction: discord.ApplicationContext, message: str, role: discord.Role,
-                                          role_2: discord.Role = None, role_3: discord.Role = None,
-                                          role_4: discord.Role = None, role_5: discord.Role = None) -> None:
-        view = self.create_view('r', [role, role_2, role_3, role_4, role_5])
+        roles = [role_1, role_2, role_3, role_4, role_5, role_6, role_7, role_8, role_9, role_10]
+        view = self.create_view(type, roles)
 
-        await interaction.channel.send(content=message, view=view)
-        await interaction.response.send_message("Reaction role has been created!", ephemeral=True)
+        msg = await interaction.channel.fetch_message(int(message))
+        if msg is None:
+            await interaction.response.send_message("Message not found!", ephemeral=True)
+            return
+        
+        if not content:
+            await msg.edit(view=view)
+        else:
+            await msg.edit(content=content, view=view)
 
-    @create_reaction_role_subcommand.command(name="single", description="Create a single choice only reaction role")
-    @discord.default_permissions(manage_roles=True)
-    @commands_ext.has_permissions(manage_roles=True)
-    @commands_ext.guild_only()
-    @commands_ext.bot_has_permissions(send_messages=True)
-    @is_blocked()
-    @analytics("create_reaction_role single")
-    async def create_reaction_role_single(self, interaction: discord.ApplicationContext, message: str, role: discord.Role,
-                                          role_2: discord.Role = None, role_3: discord.Role = None,
-                                          role_4: discord.Role = None, role_5: discord.Role = None) -> None:
-        view = self.create_view('s', [role, role_2, role_3, role_4, role_5])
-
-        await interaction.channel.send(content=message, view=view)
-        await interaction.response.send_message("Reaction role has been created!", ephemeral=True)
+        await interaction.response.send_message("Reaction role(s) has/have been edited!", ephemeral=True)    
 
     @discord.Cog.listener()
     @is_blocked()
