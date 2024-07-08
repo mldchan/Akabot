@@ -5,6 +5,7 @@ from discord.ext import commands as discord_commands_ext
 from database import conn
 import logging
 
+from utils.config import get_key
 from utils.warning import add_warning
 
 def db_init():
@@ -98,6 +99,12 @@ class AutomodActions(discord.Cog):
     @discord.option(name="action", description="Type of the action.", choices=["ban", "kick", "timeout 1h", "timeout 12h", "timeout 1d", "timeout 7d", "timeout 28d", "DM", "warning"])
     @discord.option(name="message_reason", description="Reason for the action / Message for DM.")
     async def automod_actions_add(self, ctx: discord.ApplicationContext, rule_name: str, action: str, message_reason: str = None):
+        # verify count of rules
+        automod_db_actions = db_get_automod_actions(ctx.guild.id)
+        if len(automod_db_actions) >= int(get_key("AutomodActions_MaxActions", "5")):
+            await ctx.respond("You have reached the maximum number of automod actions.", ephemeral=True)
+            return
+
         automod_actions = await ctx.guild.fetch_auto_moderation_rules()
         # verify rule exists and assign rule_id
 
@@ -116,7 +123,6 @@ class AutomodActions(discord.Cog):
         logging.info("Found rule ID {automod_id} named {automod_name}".format(automod_id=automod_rule.id, automod_name=automod_rule.name))
         
         # Check if there's already a timeout action
-        automod_db_actions = db_get_automod_actions(ctx.guild.id)
         for action in automod_db_actions:
             if action[1] == automod_rule.id and action[3] == action:
                 await ctx.respond("There's already an action for this rule.", ephemeral=True)
