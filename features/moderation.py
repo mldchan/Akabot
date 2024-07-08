@@ -4,6 +4,7 @@ import discord
 from discord.ext import commands as commands_ext
 from database import conn
 
+from utils.config import get_key
 from utils.logging import log_into_logs
 from utils.analytics import analytics
 from utils.blocked import is_blocked
@@ -197,6 +198,39 @@ class Moderation(discord.Cog):
 
         ephemerality = get_setting(ctx.guild.id, "moderation_ephemeral", "true")
         await ctx.respond(f'Successfully unmuted {user.mention} for {reason}.', ephemeral=ephemerality == "true")
+
+    @discord.slash_command(name='purge', description='Purge messages from a channel')
+    @commands_ext.guild_only()
+    @discord.default_permissions(manage_messages=True)
+    @commands_ext.has_permissions(manage_messages=True)
+    @commands_ext.bot_has_permissions(manage_messages=True)
+    @discord.option(name='amount', description='The number of messages to purge')
+    @discord.option(name='include_user', description='Include messages from this user')
+    @discord.option(name='exclude_user', description='Exclude messages from this user')
+    @is_blocked()
+    @analytics("purge")
+    async def purge_messages(self, ctx: discord.ApplicationContext, amount: int, include_user: discord.Member = None, exclude_user: discord.Member = None):
+        await ctx.defer(invisible=True, ephemeral=True)
+        if amount > int(get_key("Moderation_MaxPurge", "1000")):
+            await ctx.respond('The maximum amount of messages to purge is {amount}.'.format(amount), ephemeral=True)
+            return
+        
+        messages = []
+        async for message in ctx.channel.history(limit=amount):
+            if include_user and message.author != include_user:
+                continue
+            if exclude_user and message.author == exclude_user:
+                continue
+            if (datetime.datetime.now(datetime.UTC) - message.created_at).total_seconds() >= 1209600:
+                continue
+            messages.append(message)
+
+        chunks = [messages[i:i+100] for i in range(0, len(messages), 100)]
+        for chunk in chunks:
+            print(chunk)
+            await ctx.channel.delete_messages(chunk)
+
+        await ctx.respond('Successfully purged {messages} messages.'.format(messages=str(len(messages))), ephemeral=True)
 
     warning_group = discord.SlashCommandGroup(name='warn', description='Warning commands')
 
