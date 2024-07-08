@@ -5,6 +5,8 @@ from discord.ext import commands as discord_commands_ext
 from database import conn
 import logging
 
+from utils.warning import add_warning
+
 def db_init():
     cur = conn.cursor()
     cur.execute("create table if not exists automod_actions (id integer primary key autoincrement, guild_id bigint, rule_id bigint, rule_name text, action text)")
@@ -75,6 +77,10 @@ class AutomodActions(discord.Cog):
                         await payload.member.send("Your message was flagged and hidden by the Discord auto-moderation system. The keyword that triggered this action was: `{keyword}`. Please refrain from using this keyword in the future again.".format(keyword=payload.matched_keyword))
                     except discord.Forbidden:
                         logging.info("Could not send DM to member.")
+                elif automod_action[3] == "warning":
+                    logging.info("Sending warning to member for {reason}".format(reason="Automod action."))
+                    await add_warning(payload.member, payload.guild, "Automod action.")
+                    
                         
     automod_actions_subcommands = discord.SlashCommandGroup(name='automod_actions', description='Automod actions management.')
 
@@ -82,7 +88,7 @@ class AutomodActions(discord.Cog):
     @discord_commands_ext.bot_has_permissions(manage_guild=True)
     @discord_commands_ext.has_permissions(manage_messages=True)
     @discord.option(name="rule_name", description="Name of the rule, as it is in the settings.")
-    @discord.option(name="action", description="Type of the action.", choices=["ban", "kick", "timeout 1h", "timeout 12h", "timeout 1d", "timeout 7d", "timeout 28d", "DM"])
+    @discord.option(name="action", description="Type of the action.", choices=["ban", "kick", "timeout 1h", "timeout 12h", "timeout 1d", "timeout 7d", "timeout 28d", "DM", "warning"])
     async def automod_actions_add(self, ctx: discord.ApplicationContext, rule_name: str, action: str):
         automod_actions = await ctx.guild.fetch_auto_moderation_rules()
         # verify rule exists and assign rule_id
