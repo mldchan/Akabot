@@ -21,24 +21,12 @@ class ChatSummary(discord.Cog):
         # Check if the format is correct, there should be 4 columns of info, if not, delete and recreate table.
         chat_summary_cols = len(cur.fetchall())
 
-        # Migrate database if old TODO: remove
-        cur.execute("SELECT * FROM chat_summary")
-        chat_summary_old = cur.fetchall()
-        if chat_summary_cols != 4:
-            cur.execute("DROP TABLE chat_summary")
-
         # Set up new tables
         cur.execute(
             'CREATE TABLE IF NOT EXISTS chat_summary(guild_id INTEGER, channel_id INTEGER, enabled INTEGER, messages INTEGER)')
         cur.execute(
             'CREATE INDEX IF NOT EXISTS chat_summary_i ON chat_summary(guild_id, channel_id)')
-
-        # Paste new data when database is migrating
-        if chat_summary_cols != 4:
-            for i in chat_summary_old:
-                cur.execute("insert into chat_summary(guild_id, channel_id, enabled, messages) values (?, ?, ?, ?)",
-                            (i[0], i[1], i[2], i[3]))
-
+        
         # Create the rest of tables
         cur.execute(
             'CREATE TABLE IF NOT EXISTS chat_summary_members(guild_id INTEGER, channel_id INTEGER, member_id INTEGER, messages INTEGER)')
