@@ -2,15 +2,25 @@ import datetime
 import discord
 from database import conn
 from utils.generic import get_date_time_str, pretty_time_delta
+from utils.settings import get_setting
 
 async def add_warning(user: discord.Member, guild: discord.Guild, reason: str) -> int:
     id = db_add_warning(guild.id, user.id, reason)
 
-    # try dm user
-    try:
-        await user.send(f'You have been warned in {guild.name} for {reason}.')
-    except Exception:
-        pass
+    warning_should_dm = get_setting(guild.id, 'send_warning_message', 'true')
+    if warning_should_dm == 'true':
+        warning_message = get_setting(guild.id, 'warning_message', 'You have been warned in {guild} for {reason}.')
+
+        warning_message.replace('{name}', user.display_name)
+        warning_message.replace('{guild}', guild.name)
+        warning_message.replace('{reason}', reason)
+        warning_message.replace('{warnings}', str(len(db_get_warnings(guild.id, user.id))))
+
+        # try dm user
+        try:
+            await user.send(warning_message)
+        except Exception:
+            pass
 
     warnings = db_get_warnings(guild.id, user.id)
     actions = db_get_warning_actions(guild.id)

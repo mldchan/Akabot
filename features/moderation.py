@@ -4,6 +4,7 @@ import discord
 from discord.ext import commands as commands_ext
 from database import conn
 
+from utils.logging import log_into_logs
 from utils.analytics import analytics
 from utils.blocked import is_blocked
 from utils.settings import get_setting, set_setting
@@ -253,6 +254,41 @@ class Moderation(discord.Cog):
         for warning in warnings:
             warning_str += f'ID `{warning[0]}` with reason `{warning[1]}` on `{warning[2]}`\n'
         await ctx.respond(warning_str, ephemeral=True)
+
+    @warning_group.command(name='message', description='Set the message to be sent to a user when they are warned')
+    @commands_ext.guild_only()
+    @discord.default_permissions(manage_guild=True)
+    @commands_ext.has_permissions(manage_guild=True)
+    @discord.option(name='enable', description='Enable or disable the warning message', type=bool)
+    @discord.option(name='message', description='The message to send to the user.', type=str)
+    @is_blocked()
+    @analytics("warn message")
+    async def set_warning_message(self, ctx: discord.ApplicationContext, enable: bool, message: str):
+        # Get old
+        old_send_warning_message = get_setting(ctx.guild.id, 'send_warning_message', 'true')
+        old_warning_message = get_setting(ctx.guild.id, 'warning_message', 'You have been warned in {guild} for {reason}.')
+
+        # Create logging embed
+        log_embed = discord.Embed(
+            title='Warning Message Update',
+            color=discord.Color.blue()
+        )
+
+        if old_send_warning_message != str(enable).lower():
+            log_embed.add_field(name='Send Warning Message', value=f'{old_send_warning_message} -> {str(enable).lower()}')
+
+        if old_warning_message != message:
+            log_embed.add_field(name='Warning Message', value=f'{old_warning_message} -> {message}')
+
+        # Log the change
+        await log_into_logs(ctx.guild, log_embed)
+
+        # Set settings
+        set_setting(ctx.guild.id, 'send_warning_message', str(enable).lower())
+        set_setting(ctx.guild.id, 'warning_message', message)
+
+        ephemerality = get_setting(ctx.guild.id, "moderation_ephemeral", "true")
+        await ctx.respond(f'Successfully set the warning message to `{message}`.', ephemeral=ephemerality == "true")
 
     warning_actions_group = discord.SlashCommandGroup(name='warn_actions', description='Warning action commands')
 
