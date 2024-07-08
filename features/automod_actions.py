@@ -9,13 +9,13 @@ from utils.warning import add_warning
 
 def db_init():
     cur = conn.cursor()
-    cur.execute("create table if not exists automod_actions (id integer primary key autoincrement, guild_id bigint, rule_id bigint, rule_name text, action text)")
+    cur.execute("create table if not exists automod_actions (id integer primary key autoincrement, guild_id bigint, rule_id bigint, rule_name text, action text, additional text)")
     cur.close()
     conn.commit()
 
-def db_add_automod_action(guild_id: int, rule_id: int, rule_name: str, action: str) -> int:
+def db_add_automod_action(guild_id: int, rule_id: int, rule_name: str, action: str, additional: str = "") -> int:
     cur = conn.cursor()
-    cur.execute("insert into automod_actions(guild_id, rule_id, rule_name, action) values (?, ?, ?, ?)", (guild_id, rule_id, rule_name, action))
+    cur.execute("insert into automod_actions(guild_id, rule_id, rule_name, action, additional) values (?, ?, ?, ?, ?)", (guild_id, rule_id, rule_name, action, additional))
     id = cur.lastrowid
     cur.close()
     conn.commit()
@@ -29,7 +29,7 @@ def db_remove_automod_action(id: int):
 
 def db_get_automod_actions(guild_id: int):
     cur = conn.cursor()
-    cur.execute("select id, rule_id, rule_name, action from automod_actions where guild_id = ?", (guild_id,))
+    cur.execute("select id, rule_id, rule_name, action, additional from automod_actions where guild_id = ?", (guild_id,))
     actions = cur.fetchall()
     cur.close()
     return actions
@@ -46,6 +46,13 @@ class AutomodActions(discord.Cog):
         for automod_action in automod_actions:
             logging.info("Automod action: {automod_action} {rule_id} {check}".format(automod_action=str(automod_action), rule_id=str(payload.rule_id), check=str(automod_action[1] == payload.rule_id)))
             if automod_action[1] == payload.rule_id:
+
+                extra = str(automod_action[4]) # Autocompletion
+
+                extra = extra.replace("{keyword}", payload.matched_keyword)
+                extra = extra.replace("{name}", payload.member.display_name)
+                extra = extra.replace("{guild}", payload.guild.name)
+
                 logging.info("Automod action triggered: {action}".format(action=automod_action[3]))
                 if automod_action[3].startswith("timeout"):
                     if payload.member.timed_out:
@@ -64,23 +71,23 @@ class AutomodActions(discord.Cog):
                         duration = datetime.timedelta(days=28)
 
                     logging.info("Timing out member for {duration}.".format(duration=duration.total_seconds()))
-                    await payload.member.timeout_for(duration, reason="Automod action.")
+                    await payload.member.timeout_for(duration, reason=extra)
                 elif automod_action[3] == "ban":
-                    logging.info("Banning member for {reason}".format(reason="Automod action."))
-                    await payload.member.ban(reason="Automod action.")
+                    logging.info("Banning member for {reason}".format(reason=extra))
+                    await payload.member.ban(reason=extra)
                 elif automod_action[3] == "kick":
-                    logging.info("Kicking member for {reason}".format(reason="Automod action."))
-                    await payload.member.kick(reason="Automod action.")
+                    logging.info("Kicking member for {reason}".format(reason=extra))
+                    await payload.member.kick(reason=extra)
                 elif automod_action[3] == "DM":
-                    logging.info("Sending DM about automod action to member for {reason}".format(reason="Automod action."))
+                    logging.info("Sending DM about automod action to member for {reason}".format(reason=extra))
                     try:
-                        await payload.member.send("Your message was flagged and hidden by the Discord auto-moderation system. The keyword that triggered this action was: `{keyword}`. Please refrain from using this keyword in the future again.".format(keyword=payload.matched_keyword))
+                        await payload.member.send(extra)
                     except discord.Forbidden:
                         logging.info("Could not send DM to member.")
                 elif automod_action[3] == "warning":
-                    logging.info("Sending warning to member for {reason}".format(reason="Automod action."))
-                    await add_warning(payload.member, payload.guild, "Automod action.")
-                    
+                    logging.info("Sending warning to member for {reason}".format(reason=extra))
+                    await add_warning(payload.member, payload.guild, extra)
+
                         
     automod_actions_subcommands = discord.SlashCommandGroup(name='automod_actions', description='Automod actions management.')
 
@@ -89,7 +96,8 @@ class AutomodActions(discord.Cog):
     @discord_commands_ext.has_permissions(manage_messages=True)
     @discord.option(name="rule_name", description="Name of the rule, as it is in the settings.")
     @discord.option(name="action", description="Type of the action.", choices=["ban", "kick", "timeout 1h", "timeout 12h", "timeout 1d", "timeout 7d", "timeout 28d", "DM", "warning"])
-    async def automod_actions_add(self, ctx: discord.ApplicationContext, rule_name: str, action: str):
+    @discord.option(name="message_reason", description="Reason for the action / Message for DM.")
+    async def automod_actions_add(self, ctx: discord.ApplicationContext, rule_name: str, action: str, message_reason: str = None):
         automod_actions = await ctx.guild.fetch_auto_moderation_rules()
         # verify rule exists and assign rule_id
 
@@ -100,12 +108,12 @@ class AutomodActions(discord.Cog):
                 automod_rule = rule
                 break
 
-        logging.info("Found rule ID {automod_id} named {automod_name}".format(automod_id=automod_rule.id, automod_name=automod_rule.name))
-
         if not automod_rule:
             valid_rules = '\n'.join([f"{rule.name}: {rule.description}" for rule in automod_actions])
             await ctx.respond("Automod rule does not exist. Valid rules: {rules}".format(rules=valid_rules), ephemeral=True)
             return
+        
+        logging.info("Found rule ID {automod_id} named {automod_name}".format(automod_id=automod_rule.id, automod_name=automod_rule.name))
         
         # Check if there's already a timeout action
         automod_db_actions = db_get_automod_actions(ctx.guild.id)
@@ -117,9 +125,15 @@ class AutomodActions(discord.Cog):
             if action[1] == automod_rule.id and action[3].startswith("timeout") and action.startswith("timeout"):
                 await ctx.respond("There's already a timeout action for this rule.", ephemeral=True)
                 return
+            
+        # Determine message if not specified
+        if action == "DM" and not message_reason:
+            message_reason = "Your message was flagged and hidden by the Discord auto-moderation system. The keyword that triggered this action was: `{keyword}`. Please refrain from using this keyword in the future again."
+        elif not message_reason:
+            message_reason = "Akabot automod actions action"
         
         logging.info("Adding automod action({guild_id}, {rule_id}, {rule_name}, {action})".format(guild_id=ctx.guild.id, rule_id=automod_rule.id, rule_name=rule_name, action=action))
-        id = db_add_automod_action(ctx.guild.id, automod_rule.id, rule_name, action)
+        id = db_add_automod_action(ctx.guild.id, automod_rule.id, rule_name, action, additional=message_reason)
         await ctx.respond("Automod action added. It's ID is {id}".format(id=id), ephemeral=True)
 
     @automod_actions_subcommands.command(name='remove', description='Remove an automod action.')
