@@ -5,7 +5,7 @@ import discord
 from utils.blocked import db_add_blocked_server, db_add_blocked_user, db_remove_blocked_server, db_remove_blocked_user
 from utils.config import get_key
 
-ADMIN_GUILD = get_key("Admin_AdminGuildID", "0")
+ADMIN_GUILD = get_key("Admin_GuildID", "0")
 OWNER_ID = get_key("Admin_OwnerID", "0")
 
 
@@ -62,3 +62,8 @@ class AdminCommands(discord.Cog):
         await ctx.respond(f"""I am currently in {servers} guilds
 -> {channels} total channels
 -> {members} total members""", ephemeral=True)
+        
+    @admin_subcommand.command(name='test_error', description='Test the error handler')
+    async def test_error(self, ctx: discord.ApplicationContext):
+        await ctx.respond("The bot will throw an error NOW!", ephemeral=True)
+        raise Exception("Testing error")
