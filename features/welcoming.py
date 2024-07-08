@@ -165,7 +165,7 @@ class Welcoming(discord.Cog):
         logging_embed.add_field(name="Title", value=f"{old_welcome_title} -> {title}")
 
         # Send log
-        await log_into_logs(ctx.guild.id, logging_embed)
+        await log_into_logs(ctx.guild, logging_embed)
 
         # Respond
         await ctx.respond(f'Welcoming message title set to {title}!', ephemeral=True)
@@ -190,7 +190,7 @@ class Welcoming(discord.Cog):
         logging_embed.add_field(name="Text", value=f"{old_welcome_text} -> {text}")
 
         # Send log
-        await log_into_logs(ctx.guild.id, logging_embed)
+        await log_into_logs(ctx.guild, logging_embed)
 
         # Respond
         await ctx.respond(f'Welcoming message text set to {text}!', ephemeral=True)
@@ -238,7 +238,7 @@ class Welcoming(discord.Cog):
         logging_embed.add_field(name="Channel", value=f"{old_goodbye_channel} -> {channel.mention}")
 
         # Send log
-        await log_into_logs(ctx.guild.id, logging_embed)
+        await log_into_logs(ctx.guild, logging_embed)
 
         # Respond
         await ctx.respond(f'Goodbye channel set to {channel.mention}!', ephemeral=True)
@@ -263,7 +263,7 @@ class Welcoming(discord.Cog):
         logging_embed.add_field(name="Type", value=f"{old_goodbye_type} -> {message_type}")
 
         # Send log
-        await log_into_logs(ctx.guild.id, logging_embed)
+        await log_into_logs(ctx.guild, logging_embed)
 
         # Respond
         await ctx.respond(f'Goodbye message type set to {message_type}!', ephemeral=True)
@@ -288,7 +288,7 @@ class Welcoming(discord.Cog):
         logging_embed.add_field(name="Title", value=f"{old_goodbye_title} -> {title}")
 
         # Send log
-        await log_into_logs(ctx.guild.id, logging_embed)
+        await log_into_logs(ctx.guild, logging_embed)
 
         # Respond
         await ctx.respond(f'Goodbye message title set to {title}!', ephemeral=True)
@@ -313,7 +313,7 @@ class Welcoming(discord.Cog):
         logging_embed.add_field(name="Text", value=f"{old_goodbye_text} -> {text}")
 
         # Send log
-        await log_into_logs(ctx.guild.id, logging_embed)
+        await log_into_logs(ctx.guild, logging_embed)
 
         # Respond
         await ctx.respond(f'Goodbye message text set to {text}!', ephemeral=True)
