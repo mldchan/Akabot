@@ -107,6 +107,17 @@ class AutomodActions(discord.Cog):
             await ctx.respond("Automod rule does not exist. Valid rules: {rules}".format(rules=valid_rules), ephemeral=True)
             return
         
+        # Check if there's already a timeout action
+        automod_db_actions = db_get_automod_actions(ctx.guild.id)
+        for action in automod_db_actions:
+            if action[1] == automod_rule.id and action[3] == action:
+                await ctx.respond("There's already an action for this rule.", ephemeral=True)
+                return
+
+            if action[1] == automod_rule.id and action[3].startswith("timeout") and action.startswith("timeout"):
+                await ctx.respond("There's already a timeout action for this rule.", ephemeral=True)
+                return
+        
         logging.info("Adding automod action({guild_id}, {rule_id}, {rule_name}, {action})".format(guild_id=ctx.guild.id, rule_id=automod_rule.id, rule_name=rule_name, action=action))
         id = db_add_automod_action(ctx.guild.id, automod_rule.id, rule_name, action)
         await ctx.respond("Automod action added. It's ID is {id}".format(id=id), ephemeral=True)
