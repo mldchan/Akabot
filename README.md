@@ -1,57 +1,56 @@
 # Akabot
 
-Akabot is a Discord bot that provides a wide range of features to enhance your server experience. Developed with care, Akabot offers tools for moderation, community engagement, and server management.
+Akabot is a Discord bot that's made to be customizable and has a lot of features. It's made with Python and uses the `py-cord` library.
 
 ## Features
 
-**Core Features:**
+Individual modules have their documentation listed below.
 
-* **Anti Raid:** Detects large join waves and kicks members to prevent raids.
-* **Chat Revive:** Revives inactive chats by sending messages after a set period of inactivity.
-* **Chat Streaks:** Encourages activity by tracking consecutive messages sent by users.
-* **Chat Summary:** Summarizes the number of messages sent in each channel at the end of every day (UTC).
-* **Leveling:** Tracks user XP from messages, calculates levels, and provides rewards for reaching new levels.
-* **Logging:** Logs various server events, such as member joins, leaves, messages, and moderation actions.
-* **Moderation:** Commands for kicking, banning, muting members, and sending direct messages (DMs).
-* **Reaction Roles:** Create reaction roles using buttons, with customizable behavior settings (normal, add-only, remove-only, single-choice).
-* **Welcome and Goodbye:** Send welcome messages when new members join and goodbye messages when members leave.
-* **Giveaways:** Host simple giveaways with customizable ending dates and rewards.
+- [Anti Raid](https://github.com/Akatsuki2555/Akabot/wiki/Anti-Raid) - The Antiraid module prevents way too many joins in a short period of time.
+- [Automod Actions](https://github.com/Akatsuki2555/Akabot/wiki/Automod-Actions) - Create automod actions for specific rules executing specific actions and perform tasks when a member triggers an automod rule.
+- [Chat Revive](https://github.com/Akatsuki2555/Akabot/wiki/Chat-Revive) - The Chat Revive commands revives commands if there's no seen activity for a set period of time.
+- [Chat Streaks](https://github.com/Akatsuki2555/Akabot/wiki/Chat-Streaks) - The Chat Streaks module counts how many days you've sent a message consecutively in a Discord server.
+- [Chat Summary](https://github.com/Akatsuki2555/Akabot/wiki/Chat-Summary) - The chat summary module counts messages and then sends a message at the end of the day.
+- [Giveaways](https://github.com/Akatsuki2555/Akabot/wiki/Giveaways) - The Giveaways module allows server administrators to create and manage giveaways directly within their Discord server.
+- [Leveling](https://github.com/Akatsuki2555/Akabot/wiki/Leveling) - The Leveling module allows server administrators to implement and manage a leveling system within their Discord server.
+- [Logging](https://github.com/Akatsuki2555/Akabot/wiki/Logging) - This module adds logging for a Discord server. It sends events into a logging channel.
+- [Moderation](https://github.com/Akatsuki2555/Akabot/wiki/Moderation) - This module provides commands to perform moderation actions such as kicking, banning, timing out, and removing timeouts for users in a Discord server.
+- [Reaction Roles](https://github.com/Akatsuki2555/Akabot/wiki/Reaction-Roles) - This module allows users to assign or remove roles by reacting to messages containing specific buttons. It provides commands to create different types of reaction role setups, such as normal, add-only, remove-only, and single-choice reaction roles.
+- [Verification](https://github.com/Akatsuki2555/Akabot/wiki/Verification) - This module adds user verification in Discord servers. It prevents bots from accessing your Discord server.
 
-**Additional Features:**
+## Self-Hosting an instance of your own
 
-* **Feedback System:** Suggest new features directly through the bot using `/feedback suggest`.
+### Docker
 
-**Modules:**
+Setting up an instance with Docker is the easiest way to set Akabot up. It's platform independent so you can start it on anything running Docker.
 
-* **Chat Revive:** Revives inactive chats to promote engagement.
-* **Chat Streaks:** Tracks user streaks based on consecutive messages sent.
-* **Chat Summary:** Provides a daily summary of message activity in each channel.
-* **Leveling:** Manages a leveling system with XP tracking and rewards.
-* **Logging:** Logs server events to a designated channel.
-* **Moderation:** Offers commands for various moderation actions.
-* **Reaction Roles:** Allows users to assign or remove roles by reacting to messages.
-* **Welcome & Goodbye:** Provides customizable welcome and goodbye messages.
-* **Giveaways:** Allows server administrators to host giveaways.
+You can start configuring using this method [here](https://github.com/Akatsuki2555/Akabot/wiki/Self-Host-Using-Docker).
 
-## Getting Started
+### Virtualenv
 
-1. **Invite Akabot to your Discord Server:** [Discord Invite Link](https://discord.com/oauth2/authorize?client_id=1172922944033411243)
-2. **Configure the bot:** Use the provided commands to customize settings and features. 
-3. **Enjoy enhanced server features:** Akabot will automatically start working and provide its functionalities.
+Setting up an instance with Virtualenv can be a bit more tricky, especially if the Python version is not compatible.
 
-## Development & Support
+This method was only tested on Python 3.11 and 3.12. These versions are confirmed to be working on Windows and Linux.
 
-* **Discord Server:** [Discord Server Link](https://akatsuki.nekoweb.org/discord) - Join our Discord server for support, discussions, and development updates.
-* **Open Source:** Akabot is open source!
+You can start configuring using this method [here](https://github.com/Akatsuki2555/Akabot/Self-Host-Using-Virtualenv)
 
-## Privacy Policy
+## Contributing to Akabot
 
-Akabot does not collect or store any personal data or information about its users. Your interactions with the bot are completely private. For more details, please refer to our privacy policy: [Privacy Policy Link](https://akatsuki.nekoweb.org/project/akabot/privacy)
+You can check the [CONTRIBUTING.md](CONTRIBUTING.md) file for more information on how to contribute to the bot.
 
-## Terms of Service
+## Setting up a development environment
 
-By using Akabot, you agree to our Terms of Service: [Terms of Service Link](https://akatsuki.nekoweb.org/project/akabot/tos)
+1. Clone the repository
+2. Switch to the next version branch if you're contributing a new feature or the default branch if you're contributing a bug fix.
+3. Create a Python virtual environment using `python -m venv .venv`
+4. Enable the virtual environment using `source .venv/bin/activate` on Linux or `.venv\Scripts\activate` on Windows
+5. Install the dependencies using `pip install -r requirements.txt`
+6. Copy `config.example.conf` to `config.conf` and fill in the necessary information
+7. Run the bot using `python main.py` and restart it whenever you make changes to the code
+8. Make your changes
+9. Push your changes to your fork
 
-## Contributing
+### Auto restart on changes in code
 
-Akabot is an open-source project, and contributions are welcome! If you have ideas for new features, bug fixes, or improvements, feel free to submit a pull request on GitHub.
+1. To set up Auto-restart, install `nodemo` using `npm install -g nodemon`
+2. Run the bot using `nodemon -e py --exec python main.py` and it will restart the bot whenever you make changes to the code
