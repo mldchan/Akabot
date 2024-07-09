@@ -19,6 +19,10 @@ To contribute code to the bot, you can follow these steps:
 
 Recommended to develop on the newer branch of the bot. The branch that's default is considered "stable" and only receives bug fixes and minor improvements. The newer branch is considered to receive new features and improvements. If you contribute a bug fix, use the default branch. If you contribute a new feature, use the newer branch.
 
+### Financial contributions
+
+If you want to contribute to server costs and support Akatsuki2555 in her development, you can donate to her on [Ko-fi](https://ko-fi.com/akatsuki2555). This is not required but it's appreciated.
+
 ## Versioning
 
 The versioning system works as following:
