@@ -32,7 +32,7 @@ Setting up an instance with Virtualenv can be a bit more tricky, especially if t
 
 This method was only tested on Python 3.11 and 3.12. These versions are confirmed to be working on Windows and Linux.
 
-You can start configuring using this method [here](https://github.com/Akatsuki2555/Akabot/Self-Host-Using-Virtualenv)
+You can start configuring using this method [here](https://github.com/Akatsuki2555/Akabot/wiki/Self-Host-Using-Virtualenv)
 
 ## Contributing to Akabot
 
