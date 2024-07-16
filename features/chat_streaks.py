@@ -9,6 +9,7 @@ from utils.blocked import is_blocked
 from utils.settings import get_setting, set_setting
 from utils.logging import log_into_logs
 from utils.chat_streak_util import get_time_at_midnight
+from utils.per_user_settings import get_per_user_setting
 
 
 class ChatStreakStorage:
@@ -125,58 +126,23 @@ class ChatStreaks(discord.Cog):
         (state, old_streak, new_streak) = self.streak_storage.set_streak(
             message.guild.id, message.author.id)
 
-        if get_setting(message.guild.id, 'chat_streak_alerts', 'true') == 'true':
-            if state == "expired":
-                if old_streak == 0:
-                    return
-                msg = await message.channel.send(f'Your streak of {old_streak:d} days has expired :<')
-                await msg.delete(delay=5)
+        print("Chat streaks", state, old_streak, new_streak)
+        if state == "expired":
+            if old_streak == 0:
+                return
+            if get_per_user_setting(message.author.id, 'chat_streaks_alerts', 'on') == 'off':
+                return
+            msg = await message.channel.send(f'Your streak of {old_streak:d} days has expired :<')
+            await msg.delete(delay=3)
 
-            if state == "updated":
-                msg = await message.channel.send(f'{new_streak:d} days of consecutive  messages! Keep it up :3')
-                await msg.delete(delay=5)
+        if state == "updated":
+            if get_per_user_setting(message.author.id, 'chat_streaks_alerts', 'on') != 'on':
+                return  # Only trigger if the user has the setting on
+            msg = await message.channel.send(f'{new_streak:d} days of consecutive  messages! Keep it up :3')
+            await msg.delete(delay=3)
 
     streaks_subcommand = discord.SlashCommandGroup(
         name='streaks', description='Manage the chat streaks')
-
-    @streaks_subcommand.command(name="alerts", description="Show/hide the chat streak alerts")
-    @commands_ext.guild_only()
-    @discord.default_permissions(manage_guild=True)
-    @commands_ext.has_permissions(manage_guild=True)
-    @is_blocked()
-    @analytics("streaks alerts")
-    async def toggle_alerts(self, ctx: discord.ApplicationContext, value: bool):
-        # Get old value
-        old_value = get_setting(ctx.guild.id, "chat_streak_alerts", str(value)) == "True"
-
-        # Determine if the value has changed and update accordingly
-        if old_value != value:
-            logging_embed = discord.Embed(title="Chat Streaks alerts changed")
-            logging_embed.add_field(name="User", value=f"{ctx.user.mention}")
-            logging_embed.add_field(name="Value", value=f'{"Yes" if old_value else "No"} -> {"Yes" if value else "No"}')
-
-        # Save settings value
-        set_setting(ctx.guild.id, 'chat_streak_alerts', str(value))
-
-        # Respond
-        await ctx.respond(
-            'Succcessfully turned on chat streak alerts' if value else 'Successfully turned off chat streak alerts',
-            ephemeral=True)
-
-    @streaks_subcommand.command(name="list", description="List the chat streak options.")
-    @commands_ext.guild_only()
-    @discord.default_permissions(manage_guild=True)
-    @commands_ext.has_permissions(manage_guild=True)
-    @is_blocked()
-    @analytics("streaks list")
-    async def list_settings(self, ctx: discord.ApplicationContext):
-        alerts = get_setting(ctx.guild.id, 'chat_streak_alerts', 'true')
-
-        embed = discord.Embed(title='Chat Streak settings',
-                              color=discord.Color.blurple())
-        embed.add_field(name='Chat Streak Alerts', value=alerts)
-
-        await ctx.respond(embed=embed, ephemeral=True)
 
     @streaks_subcommand.command(name="reset", description="Reset streak for a specific user")
     @commands_ext.guild_only()
