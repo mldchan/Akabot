@@ -4,7 +4,7 @@ from discord.ext import commands as discord_commands_ext
 
 from features import welcoming, leveling, antiraid, chat_streaks, chat_revive, chat_summary, reaction_roles, \
     logging_mod, admin_cmds, giveaways, feedback_cmd, moderation, cleanup_task, verification, velky_stompies, \
-    roles_on_join, heartbeat, automod_actions
+    roles_on_join, heartbeat, automod_actions, power_outage_announcement
 from utils.blocked import BlockedUserError, BlockedServerError
 from utils.config import get_key
 import sentry_sdk
@@ -113,6 +113,8 @@ if get_key("Feature_Heartbeat", "true") == "true":
     bot.add_cog(heartbeat.Heartbeat())
 if get_key("Feature_AutomodActions", "true") == "true":
     bot.add_cog(automod_actions.AutomodActions(bot))
+if get_key("PowerOutageAnnouncements_Enabled", "false") == "true":
+    bot.add_cog(power_outage_announcement.PowerOutageAnnouncement(bot))
 
 
 bot.run(
