@@ -4,6 +4,7 @@ import logging
 
 from utils.config import get_key
 
+
 class Heartbeat(discord.Cog):
     def __init__(self) -> None:
         self.interval_cnt = 0
@@ -15,7 +16,6 @@ class Heartbeat(discord.Cog):
         else:
             logging.warning("Heartbeat is disabled")
 
-
     @discord.ext.tasks.loop(seconds=1)
     async def heartbeat_task(self):
         self.interval_cnt += 1
@@ -24,12 +24,12 @@ class Heartbeat(discord.Cog):
             self.interval_cnt = 0
             # Send heartbeat
             if get_key("Heartbeat_HTTPMethod", 'post') == "get":
-                requests.get(self.url)
+                requests.get(get_key("Heartbeat_URL", 'https://example.com'))
             elif get_key("Heartbeat_HTTPMethod", 'post') == "post":
-                requests.post(self.url)
+                requests.post(get_key("Heartbeat_URL", 'https://example.com'))
             elif get_key("Heartbeat_HTTPMethod", 'post') == "put":
-                requests.put(self.url)
+                requests.put(get_key("Heartbeat_URL", 'https://example.com'))
             elif get_key("Heartbeat_HTTPMethod", 'post') == "delete":
-                requests.delete(self.url)
+                requests.delete(get_key("Heartbeat_URL", 'https://example.com'))
 
             logging.info("Heartbeat sent")
