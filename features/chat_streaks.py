@@ -8,6 +8,7 @@ from utils.analytics import analytics
 from utils.blocked import is_blocked
 from utils.settings import get_setting, set_setting
 from utils.logging import log_into_logs
+from utils.chat_streak_util import get_time_at_midnight
 
 
 class ChatStreakStorage:
@@ -48,7 +49,7 @@ class ChatStreakStorage:
         cur.execute(
             'SELECT * FROM chat_streaks WHERE guild_id = ? AND member_id = ?', (guild_id, member_id))
         if cur.fetchone() is None:
-            start_time = datetime.datetime.now()
+            start_time = get_time_at_midnight()
             cur.execute('INSERT INTO chat_streaks (guild_id, member_id, last_message, start_time) VALUES (?, ?, ?, ?)',
                         (guild_id, member_id, start_time, start_time))
             cur.close()
@@ -62,19 +63,19 @@ class ChatStreakStorage:
         start_time = datetime.datetime.fromisoformat(result[1])
 
         # Check for streak expiry
-        if datetime.datetime.now() - last_message > datetime.timedelta(days=2):
+        if get_time_at_midnight() - last_message > datetime.timedelta(days=1, hours=1):
             streak = max((last_message - start_time).days, 0)
             cur.execute(
                 'UPDATE chat_streaks SET last_message = ?, start_time = ? WHERE guild_id = ? AND member_id = ?',
-                (datetime.datetime.now(), datetime.datetime.now(), guild_id, member_id))
+                (get_time_at_midnight(), get_time_at_midnight(), guild_id, member_id))
             cur.close()
             db.commit()
             return "expired", streak, 0
 
         before_update = (last_message - start_time).days
         cur.execute('UPDATE chat_streaks SET last_message = ? WHERE guild_id = ? AND member_id = ?',
-                    (datetime.datetime.now(), guild_id, member_id))
-        after_update = (datetime.datetime.now() - start_time).days
+                    (get_time_at_midnight(), guild_id, member_id))
+        after_update = (get_time_at_midnight() - start_time).days
 
         cur.close()
         db.commit()
@@ -96,7 +97,7 @@ class ChatStreakStorage:
         cur.execute(
             'SELECT * FROM chat_streaks WHERE guild_id = ? AND member_id = ?', (guild_id, member_id))
         if not cur.fetchone():
-            start_time = datetime.datetime.now()
+            start_time = get_time_at_midnight()
             cur.execute('INSERT INTO chat_streaks (guild_id, member_id, last_message, start_time) VALUES (?, ?, ?, ?)',
                         (guild_id, member_id, start_time, start_time))
             cur.close()
@@ -104,7 +105,7 @@ class ChatStreakStorage:
             return
 
         cur.execute('UPDATE chat_streaks SET last_message = ?, start_time = ? WHERE guild_id = ? AND member_id = ?',
-                    (datetime.datetime.now(), datetime.datetime.now(), guild_id, member_id))
+                    (get_time_at_midnight(), get_time_at_midnight(), guild_id, member_id))
         cur.close()
         db.commit()
 
@@ -159,7 +160,8 @@ class ChatStreaks(discord.Cog):
 
         # Respond
         await ctx.respond(
-            'Succcessfully turned on chat streak alerts' if value else 'Successfully turned off chat streak alerts', ephemeral=True)
+            'Succcessfully turned on chat streak alerts' if value else 'Successfully turned off chat streak alerts',
+            ephemeral=True)
 
     @streaks_subcommand.command(name="list", description="List the chat streak options.")
     @commands_ext.guild_only()
