@@ -193,12 +193,17 @@ class SupportCmd(discord.Cog):
         await ctx.respond("You can donate to the bot [here](<https://ko-fi.com/akatsuki2555>)", ephemeral=True)
 
     @discord.slash_command(name="changelog", description="Get the bot's changelog")
-    @discord.option(name="version", description="The version to get the changelog for", choices=["3.2", "3.1"])
+    @discord.option(name="version", description="The version to get the changelog for", choices=["3.3", "3.2", "3.1"])
     @is_blocked()
     @analytics("changelog")
-    async def changelog(self, ctx: discord.ApplicationContext, version: str = get_key("Bot_Version", "3.2")):
-        if version == "3.2":
+    async def changelog(self, ctx: discord.ApplicationContext, version: str = get_key("Bot_Version", "3.3")):
+        if version == "3.3":
             with open("LATEST.md", "r") as f:
+                changelog = f.read()
+
+            await ctx.respond(changelog, ephemeral=True)
+        elif version == "3.2":
+            with open("LATEST_3.2.md", "r") as f:
                 changelog = f.read()
 
             await ctx.respond(changelog, ephemeral=True)
