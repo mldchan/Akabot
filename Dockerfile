@@ -9,6 +9,7 @@ COPY utils /app/utils
 COPY database.py /app
 COPY main.py /app/
 COPY config.conf /app/
+COPY LATEST.md /app/
 COPY LATEST_3.2.md /app/
 COPY LATEST_3.1.md /app/
 
