@@ -139,7 +139,7 @@ class AutomodActions(discord.Cog):
         if action == "DM" and not message_reason:
             message_reason = trl(0, ctx.guild.id, "automod_default_dm")
         elif not message_reason:
-            message_reason = trl(0, ctx.guild.id, "Akabot automod actions action")
+            message_reason = trl(0, ctx.guild.id, "automod_default")
 
         action_id = db_add_automod_action(ctx.guild.id, automod_rule.id, rule_name, action, additional=message_reason)
         await ctx.respond(trl(ctx.user.id, ctx.guild.id, "automod_added").format(id=action_id), ephemeral=True)

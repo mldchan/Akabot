@@ -1,5 +1,6 @@
 import discord
 
+from utils.languages import get_language_names, language_name_to_code, get_language_name
 from utils.languages import get_translation_for_key_localized as trl
 from utils.per_user_settings import set_per_user_setting
 
@@ -26,9 +27,11 @@ class PerUserSettings(discord.Cog):
 
     @user_settings_group.command(name='langauge',
                                  description='Set your personal language, applies across servers for you')
-    @discord.option(name='lang', description='Your language', choices=['English'])
+    @discord.option(name='lang', description='Your language', choices=get_language_names())
     async def set_language(self, ctx: discord.ApplicationContext, lang: str):
-        lang_code = 'en'  # This is a fallback option, for now
+        lang_code = language_name_to_code(lang)
+
         set_per_user_setting(ctx.user.id, 'language', lang_code)
-        await ctx.respond(trl(ctx.user.id, ctx.guild.id, "per_user_language_response").format(lang=lang),
+        await ctx.respond(trl(ctx.user.id, ctx.guild.id, "per_user_language_set").format(
+            lang=get_language_name(lang_code, completeness=False)),
                           ephemeral=True)

@@ -124,7 +124,7 @@ class ConfirmSubmitBugReport(discord.ui.View):
     async def cancel_gh(self, button: discord.ui.Button, interaction: discord.Interaction):
         self.disable_all_items()
         await interaction.respond(
-            trl(self.user_id, 0, "feedback_bug_direct"),
+            trl(self.user_id, 0, "feedback_bug_report_direct"),
             ephemeral=True)
 
 

@@ -312,7 +312,7 @@ class Leveling(discord.Cog):
 
             await ctx.respond(response, ephemeral=True)
         else:
-            response = trl(ctx.user.id, ctx.guild.id, "leveling_level_info_other").format(user=user.mention,
+            response = trl(ctx.user.id, ctx.guild.id, "leveling_level_info_another").format(user=user.mention,
                                                                                           level=level,
                                                                                           level_xp=level_xp,
                                                                                           next_level_xp=next_level_xp,
@@ -378,7 +378,7 @@ class Leveling(discord.Cog):
         logging_embed = discord.Embed(title=trl(ctx.user.id, ctx.guild.id, "leveling_set_multiplier_log_title"))
         logging_embed.add_field(name=trl(ctx.user.id, ctx.guild.id, "logging_user"),
                                 value=f"{ctx.user.mention}")
-        logging_embed.add_field(name=trl(ctx.user.id, ctx.guild.id, "leveling_set_multiplier_log_multiplier"),
+        logging_embed.add_field(name=trl(ctx.user.id, ctx.guild.id, "leveling_log_multiplier"),
                                 value=f"{old_multiplier} -> {str(multiplier)}")
 
         # Send to logs
@@ -403,7 +403,7 @@ class Leveling(discord.Cog):
                              end_date: str):
         # Verify the format of start_date and end_date
         if not re.match(r'\d{2}-\d{2}', start_date) or not re.match(r'\d{2}-\d{2}', end_date):
-            await ctx.respond(trl(ctx.user.id, ctx.guild.id, "leveling_add_multiplier_invalid_date_format"),
+            await ctx.respond(trl(ctx.user.id, ctx.guild.id, "leveling_error_invalid_date_format"),
                               ephemeral=True)
             return
 
@@ -420,12 +420,12 @@ class Leveling(discord.Cog):
 
         # Use the validate_day method to check if the start and end dates are valid
         if not validate_day(start_month, start_day, datetime.datetime.now().year):
-            await ctx.respond(trl(ctx.user.id, ctx.guild.id, "leveling_add_multiplier_invalid_start_date"),
+            await ctx.respond(trl(ctx.user.id, ctx.guild.id, "leveling_error_invalid_start_date"),
                               ephemeral=True)
             return
 
         if not validate_day(end_month, end_day, datetime.datetime.now().year):
-            await ctx.respond(trl(ctx.user.id, ctx.guild.id, "leveling_add_multiplier_invalid_end_date"),
+            await ctx.respond(trl(ctx.user.id, ctx.guild.id, "leveling_error_invalid_end_date"),
                               ephemeral=True)
             return
 
@@ -437,11 +437,11 @@ class Leveling(discord.Cog):
         logging_embed.add_field(name=trl(0, ctx.guild.id, "logging_user"),
                                 value=f"{ctx.user.mention}")
         logging_embed.add_field(name=trl(0, ctx.guild.id, "logging_name"), value=f"{name}")
-        logging_embed.add_field(name=trl(0, ctx.guild.id, "leveling_add_multiplier_log_multiplier"),
+        logging_embed.add_field(name=trl(0, ctx.guild.id, "leveling_log_multiplier"),
                                 value=f"{multiplier}")
         logging_embed.add_field(name=trl(0, ctx.guild.id, "leveling_log_start_date"),
                                 value=f"{start_date}")
-        logging_embed.add_field(name=trl(0, ctx.guild.id, "leveling_add_multiplier_log_end_date"), value=f"{end_date}")
+        logging_embed.add_field(name=trl(0, ctx.guild.id, "leveling_error_invalid_end_date"), value=f"{end_date}")
 
         # Send into logs
         await log_into_logs(ctx.guild, logging_embed)
@@ -611,7 +611,7 @@ class Leveling(discord.Cog):
         logging_embed = discord.Embed(title=trl(0, ctx.guild.id, "leveling_end_date_log_title"))
         logging_embed.add_field(name=trl(0, ctx.guild.id, "logging_user"), value=f"{ctx.user.mention}")
         logging_embed.add_field(name=trl(0, ctx.guild.id, "logging_name"), value=f"{name}")
-        logging_embed.add_field(name=trl(0, ctx.guild.id, "logging_end_date_log_new_end_date"), value=f"{end_date}")
+        logging_embed.add_field(name=trl(0, ctx.guild.id, "leveling_error_invalid_end_date"), value=f"{end_date}")
 
         # Send into logs
         await log_into_logs(ctx.guild, logging_embed)
@@ -641,7 +641,7 @@ class Leveling(discord.Cog):
         db_multiplier_remove(ctx.guild.id, name)
 
         # Logging embed
-        logging_embed = discord.Embed(title=trl(ctx.user.id, ctx.guild.id, "logging_remove_log_title"))
+        logging_embed = discord.Embed(title=trl(ctx.user.id, ctx.guild.id, "leveling_remove_multiplier_log_title"))
         logging_embed.add_field(name=trl(ctx.user.id, ctx.guild.id, "logging_user"), value=f"{ctx.user.mention}")
         logging_embed.add_field(name=trl(ctx.user.id, ctx.guild.id, "logging_name"), value=f"{name}")
         logging_embed.add_field(name=trl(ctx.user.id, ctx.guild.id, "leveling_log_multiplier"),

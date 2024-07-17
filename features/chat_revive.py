@@ -82,7 +82,7 @@ class ChatRevive(discord.Cog):
 
         # Permission checks
         if not revival_role.mentionable and not ctx.guild.me.guild_permissions.manage_roles:
-            await ctx.respond(trl(ctx.user.id, ctx.guild.id, "chat_revive_log_set_error_not_mentionable"),
+            await ctx.respond(trl(ctx.user.id, ctx.guild.id, "chat_revive_set_error_not_mentionable"),
                               ephemeral=True)
             return
 
@@ -118,7 +118,7 @@ class ChatRevive(discord.Cog):
 
         # Send back response
         await ctx.respond(
-            trl(ctx.user.id, ctx.guild.id, "chat_revive_log_set_response_success").format(channel=channel.mention),
+            trl(ctx.user.id, ctx.guild.id, "chat_revive_set_response_success").format(channel=channel.mention),
             ephemeral=True)
 
     @chat_revive_subcommand.command(name="remove", description="List the revive settings")

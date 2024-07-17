@@ -81,7 +81,7 @@ class Logging(discord.Cog):
     @discord.Cog.listener()
     @is_blocked()
     async def on_auto_moderation_rule_delete(self, rule: discord.AutoModRule):
-        embed = discord.Embed(title=trl(0, rule.guild.id, "logging_automod_rule_deleted"), color=discord.Color.red())
+        embed = discord.Embed(title=trl(0, rule.guild.id, "logging_automod_rule_delete"), color=discord.Color.red())
         embed.add_field(name=trl(0, rule.guild.id, "logging_rule_name"), value=rule.name)
         await log_into_logs(rule.guild, embed)
 

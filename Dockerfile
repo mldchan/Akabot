@@ -12,6 +12,6 @@ COPY config.conf /app/
 COPY LATEST.md /app/
 COPY LATEST_3.2.md /app/
 COPY LATEST_3.1.md /app/
-COPY en.json /app/lang/en.json
+COPY lang/en.json /app/lang/en.json
 
 CMD ["python", "/app/main.py"]

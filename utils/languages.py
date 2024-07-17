@@ -1,24 +1,10 @@
 import json
 import logging
 import os.path
+from typing import List, Any
 
 from utils.per_user_settings import get_per_user_setting, set_per_user_setting
 from utils.settings import get_setting, set_setting
-
-
-def get_translation_for_key(key: str) -> str:
-    """Get translation for a key in English
-
-    Args:
-        key (str): Key
-
-    Returns:
-        str: Translation
-    """
-    with open("lang/en.json") as f:
-        translations = json.load(f)
-
-    return translations.get(key, key)
 
 
 def get_translation_for_key_localized(user_id: int, guild_id: int, key: str) -> str:
@@ -40,7 +26,7 @@ def get_translation_for_key_localized(user_id: int, guild_id: int, key: str) -> 
             logging.error(
                 "WARNING: User {id} has somehow set the user language to {lang}, which is not a valid language. "
                 "Reset to EN".format(id=user_id, lang=user_lang))
-        with open(f"lang/{user_lang}.json") as f:
+        with open(f"lang/{user_lang}.json", encoding='utf8') as f:
             translations = json.load(f)
 
         if key in translations:
@@ -55,14 +41,112 @@ def get_translation_for_key_localized(user_id: int, guild_id: int, key: str) -> 
                 "WARNING: Server {id} has somehow set the server language to {lang}, which is not a valid language. "
                 "Reset to EN".format(id=guild_id, lang=server_lang))
 
-        with open(f"lang/{server_lang}.json") as f:
+        with open(f"lang/{server_lang}.json", encoding='utf8') as f:
             translations = json.load(f)
 
         if key in translations:
             return translations[key]
 
     # Global (English)
-    with open("lang/en.json") as f:
+    with open("lang/en.json", encoding='utf8') as f:
         translations = json.load(f)
 
     return translations.get(key, key)
+
+
+def get_list_of_languages():
+    """Get a list of languages
+
+    Returns:
+        list: List of languages
+    """
+    languages = []
+    for file in os.listdir("lang"):
+        if file.endswith(".json"):
+            languages.append(file[:-5])
+
+    return languages
+
+
+def get_language_completeness(lang: str) -> int:
+    """Returns the percentage of translations completed
+
+    Returns:
+        int: Percentage of translations completed
+    """
+    # Validate lang exists
+    if not os.path.exists(f"lang/{lang}.json"):
+        raise ValueError("Language does not exist")
+
+    # Load English translations
+    with open("lang/en.json", encoding='utf8') as f:
+        en_translations: dict = json.load(f)
+
+    # Load target language
+    with open(f"lang/{lang}.json", encoding='utf8') as f:
+        lang_translations: dict = json.load(f)
+
+    total = len(en_translations)
+    translated = 0
+
+    for i in zip(en_translations.values(), lang_translations.values()):
+        if i[0].strip() != i[1].strip():
+            translated += 1
+
+    return int((translated / total) * 100)
+
+
+def get_language_name(lang_code: str, completeness: bool = True) -> str:
+    """Get the language name from the language code
+    Format: English - 100%
+
+    Returns:
+        str: Language name
+    """
+
+    if lang_code == 'en':
+        return 'English'
+
+    # Validate lang exists
+    if not os.path.exists(f"lang/{lang_code}.json"):
+        raise ValueError("Language does not exist")
+
+    with open(f"lang/{lang_code}.json", encoding='utf8') as f:
+        name = json.load(f).get("language", lang_code)
+
+    completeness_percent = get_language_completeness(lang_code)
+    if completeness:
+        return f"{name} - {completeness_percent}%"
+    else:
+        return name
+
+def get_language_names() -> list[str]:
+    """Get a list of language names
+
+    Returns:
+        list: List of language names
+    """
+
+    # Generate a list of language names using get_language_name and return it
+
+    languages = []
+    for i in get_list_of_languages():
+        languages.append(get_language_name(i))
+
+    return languages
+
+
+def language_name_to_code(lang_name: str) -> str:
+    """Get the language code from the language name
+
+    Returns:
+        str: Language code
+    """
+
+    # Generate a list of language names using get_language_name and return it
+
+    for i in get_list_of_languages():
+        if get_language_name(i) == lang_name:
+            return i
+
+    return 'en'
