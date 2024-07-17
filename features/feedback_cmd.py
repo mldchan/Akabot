@@ -1,31 +1,12 @@
 import discord
-from discord.ui.input_text import InputText
-from discord.ui.item import Item
+import requests
 from discord.ext import commands as cmds_ext
+from discord.ui.input_text import InputText
 
-from database import conn as db
 from utils.analytics import analytics
 from utils.blocked import is_blocked
-
-import requests
-
 from utils.config import get_key
-
-
-def db_init():
-    cur = db.cursor()
-    cur.execute('create table if not exists feature_reports (type text, user_id int, feature text)')
-    cur.close()
-    db.commit()
-
-
-def add_feature_report(type: str, user_id: int, feature: str):
-    db_init()
-    cur = db.cursor()
-    cur.execute('create table if not exists feature_reports (type text, user_id int, feature text)')
-    cur.execute('insert into feature_reports (type, user_id, feature) values (?, ?, ?)', (type, user_id, feature))
-    cur.close()
-    db.commit()
+from utils.languages import get_translation_for_key_localized as trl
 
 
 class VoteView(discord.ui.View):
@@ -48,12 +29,15 @@ class PrivacyPolicyView(discord.ui.View):
 
 
 class BugReportModal(discord.ui.Modal):
-    def __init__(self) -> None:
+    def __init__(self, user_id: int) -> None:
         super().__init__(title="Bug Report", timeout=600)
 
-        self.title_input = InputText(label="Title", style=discord.InputTextStyle.short, max_length=100, min_length=8,
+        self.user_id = user_id
+        title = trl(user_id, 0, "feedback_form_title")
+        description = trl(user_id, 0, "feedback_form_description")
+        self.title_input = InputText(label=title, style=discord.InputTextStyle.short, max_length=100, min_length=8,
                                      required=True)
-        self.description_input = InputText(label="Description", style=discord.InputTextStyle.long, max_length=1000,
+        self.description_input = InputText(label=description, style=discord.InputTextStyle.long, max_length=1000,
                                            min_length=20, required=True)
 
         self.add_item(self.title_input)
@@ -82,15 +66,19 @@ class BugReportModal(discord.ui.Modal):
                           "labels": ["bug", "in-bot"]
                       })
 
-        await interaction.respond("Bug report submitted!", ephemeral=True)
+        await interaction.respond(trl(self.user_id, 0, "feedback_bug_report_submitted"), ephemeral=True)
 
 
 class FeatureModal(discord.ui.Modal):
-    def __init__(self) -> None:
-        super().__init__(title="Feature Request", timeout=600)
-        self.title_input = InputText(label="Title", style=discord.InputTextStyle.short, max_length=100, min_length=8,
+    def __init__(self, user_id: int) -> None:
+        self.user_id = user_id
+        super().__init__(title=trl(user_id, 0, "feedback_feature_form_title"), timeout=600)
+
+        title = trl(user_id, 0, "feedback_form_title")
+        description = trl(user_id, 0, "feedback_form_description")
+        self.title_input = InputText(label=title, style=discord.InputTextStyle.short, max_length=100, min_length=8,
                                      required=True)
-        self.description_input = InputText(label="Description", style=discord.InputTextStyle.long, max_length=1000,
+        self.description_input = InputText(label=description, style=discord.InputTextStyle.long, max_length=1000,
                                            min_length=20, required=True)
 
         self.add_item(self.title_input)
@@ -119,39 +107,41 @@ class FeatureModal(discord.ui.Modal):
                           "labels": ["enhancement", "in-bot"]
                       })
 
-        await interaction.respond("Feature request submitted!", ephemeral=True)
+        await interaction.respond(trl(self.user_id, 0, "feedback_feature_submitted"), ephemeral=True)
 
 
 class ConfirmSubmitBugReport(discord.ui.View):
-    def __init__(self):
+    def __init__(self, user_id: int):
         super().__init__()
+        self.user_id = user_id
 
     @discord.ui.button(label="I agree and want to submit", style=discord.ButtonStyle.primary)
     async def submit(self, button: discord.ui.Button, interaction: discord.Interaction):
-        modal = BugReportModal()
+        modal = BugReportModal(self.user_id)
         await interaction.response.send_modal(modal)
 
     @discord.ui.button(label="I don't agree and prefer to submit on GitHub", style=discord.ButtonStyle.secondary)
     async def cancel_gh(self, button: discord.ui.Button, interaction: discord.Interaction):
         self.disable_all_items()
         await interaction.respond(
-            "You can open a bug report on the [GitHub repository](https://github.com/Akatsuki2555/Akabot/issues/new) directly.",
+            trl(self.user_id, 0, "feedback_bug_direct"),
             ephemeral=True)
 
 
 class ConfirmSubmitFeatureRequest(discord.ui.View):
-    def __init__(self):
+    def __init__(self, user_id: int):
         super().__init__()
+        self.user_id = user_id
 
     @discord.ui.button(label="I agree and want to submit", style=discord.ButtonStyle.primary)
     async def submit(self, button: discord.ui.Button, interaction: discord.Interaction):
-        modal = FeatureModal()
+        modal = FeatureModal(self.user_id)
         await interaction.response.send_modal(modal)
 
     @discord.ui.button(label="I don't agree and prefer to submit on GitHub", style=discord.ButtonStyle.secondary)
     async def cancel_gh(self, button: discord.ui.Button, interaction: discord.Interaction):
         await interaction.respond(
-            "You can open a feature request on the [GitHub repository](https://github.com/Akatsuki2555/Akabot/issues/new) directly.",
+            trl(self.user_id, 0, "feedback_feature_direct"),
             ephemeral=True)
 
 
@@ -163,15 +153,14 @@ class SupportCmd(discord.Cog):
     @is_blocked()
     @analytics("website")
     async def website(self, ctx: discord.ApplicationContext):
-        await ctx.respond(
-            "You can visit the website [here](<https://akatsuki.nekoweb.org/project/akabot>)")
+        await ctx.respond(trl(ctx.user.id, ctx.guild.id, "feedback_visit_website"), ephemeral=True)
 
     @discord.slash_command(name="vote", description="Vote on the bot")
     @is_blocked()
     @analytics("vote")
     async def vote(self, ctx: discord.ApplicationContext):
         await ctx.respond(
-            "You can click the button below to vote:",
+            trl(ctx.user.id, ctx.guild.id, "feedback_vote"),
             view=VoteView(),
             ephemeral=True
         )
@@ -181,7 +170,7 @@ class SupportCmd(discord.Cog):
     @analytics("privacy policy")
     async def privacy_policy(self, ctx: discord.ApplicationContext):
         await ctx.respond(
-            "You can click the button below to view the Privacy Policy:",
+            trl(ctx.user.id, ctx.guild.id, "feedback_privacy_policy"),
             view=PrivacyPolicyView(),
             ephemeral=True
         )
@@ -190,7 +179,7 @@ class SupportCmd(discord.Cog):
     @is_blocked()
     @analytics("donate")
     async def donate(self, ctx: discord.ApplicationContext):
-        await ctx.respond("You can donate to the bot [here](<https://ko-fi.com/akatsuki2555>)", ephemeral=True)
+        await ctx.respond(trl(ctx.user.id, ctx.guild.id, "feedback_donate"), ephemeral=True)
 
     @discord.slash_command(name="changelog", description="Get the bot's changelog")
     @discord.option(name="version", description="The version to get the changelog for", choices=["3.3", "3.2", "3.1"])
@@ -213,7 +202,7 @@ class SupportCmd(discord.Cog):
 
             await ctx.respond(changelog, ephemeral=True)
         else:
-            await ctx.respond("Invalid version specified.", ephemeral=True)
+            await ctx.respond(trl(ctx.user.id, ctx.guild.id, "feedback_changelog_invalid_version"), ephemeral=True)
 
     feedback_subcommand = discord.SlashCommandGroup(name="feedback", description="Give feedback for the bot")
 
@@ -222,29 +211,15 @@ class SupportCmd(discord.Cog):
     @is_blocked()
     @analytics("feedback bug")
     async def report_bug(self, ctx: discord.ApplicationContext):
-        await ctx.respond(content="## Notice before submitting a bug report\n"
-                                  "If you do submit a bug report, the following information will be sent to GitHub issues:\n"
-                                  "- Your Discord display name, username and ID\n"
-                                  "- Any information you provide in the title and description in the form\n"
-                                  "\n"
-                                  "If you don't agree with this, you can open a bug report on the GitHub repository directly.\n"
-                                  "*This was done to prevent spam and abuse of the bug report system.*\n"
-                                  "*If you don't want to submit at all, you can completely ignore this message.*",
+        await ctx.respond(content=trl(ctx.user.id, ctx.guild.id, "feedback_bug_report_disclaimer"),
                           ephemeral=True,
-                          view=ConfirmSubmitBugReport())
+                          view=ConfirmSubmitBugReport(ctx.user.id))
 
     @feedback_subcommand.command(name="feature", description="Suggest a feature")
     @cmds_ext.cooldown(1, 300, cmds_ext.BucketType.user)
     @is_blocked()
     @analytics("feedback feature")
     async def suggest_feature(self, ctx: discord.ApplicationContext):
-        await ctx.respond(content="## Notice before submitting a feature request\n"
-                                  "If you do submit a feature request, the following information will be sent to GitHub issues:\n"
-                                  "- Your Discord display name, username and ID\n"
-                                  "- Any information you provide in the title and description in the form\n"
-                                  "\n"
-                                  "If you don't agree with this, you can open a feature request on the GitHub repository directly.\n"
-                                  "*This was done to prevent spam and abuse of the feature request system.*\n"
-                                  "*If you don't want to submit at all, you can completely ignore this message.*",
+        await ctx.respond(content=trl(ctx.user.id, ctx.guild.id, "feedback_feature_disclaimer"),
                           ephemeral=True,
-                          view=ConfirmSubmitFeatureRequest())
+                          view=ConfirmSubmitFeatureRequest(ctx.user.id))

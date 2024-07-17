@@ -7,8 +7,8 @@ from discord.ext import tasks
 from database import conn as db
 from utils.analytics import analytics
 from utils.blocked import is_blocked
-
-from utils.logging import log_into_logs
+from utils.languages import get_translation_for_key_localized as trl
+from utils.logging_util import log_into_logs
 
 
 class ChatRevive(discord.Cog):
@@ -79,11 +79,11 @@ class ChatRevive(discord.Cog):
     async def set_revive_settings(self, ctx: discord.ApplicationContext, channel: discord.TextChannel,
                                   revival_minutes: int,
                                   revival_role: discord.Role):
-    
+
         # Permission checks
         if not revival_role.mentionable and not ctx.guild.me.guild_permissions.manage_roles:
-            await ctx.respond('The role must be mentionable in order to continue.',
-                                            ephemeral=True)
+            await ctx.respond(trl(ctx.user.id, ctx.guild.id, "chat_revive_log_set_error_not_mentionable"),
+                              ephemeral=True)
             return
 
         # Database access
@@ -102,17 +102,24 @@ class ChatRevive(discord.Cog):
         db.commit()
 
         # Embed for logs
-        logging_embed = discord.Embed(title="Chat Revive settings set for channel")
-        logging_embed.add_field(name="Channel", value=f"{ctx.channel.mention}", inline=True)
-        logging_embed.add_field(name="User", value=f"{ctx.user.mention}", inline=True)
-        logging_embed.add_field(name="Revival Role", value=f"{revival_role.mention}", inline=False)
-        logging_embed.add_field(name="Revival Time", value=f"{str(revival_minutes)} minutes", inline=True)
+        logging_embed = discord.Embed(title=trl(ctx.user.id, ctx.guild.id, "chat_revive_log_set_title"))
+        logging_embed.add_field(name=trl(ctx.user.id, ctx.guild.id, "chat_revive_log_set_channel"),
+                                value=f"{ctx.channel.mention}", inline=True)
+        logging_embed.add_field(name=trl(ctx.user.id, ctx.guild.id, "chat_revive_log_set_user"),
+                                value=f"{ctx.user.mention}", inline=True)
+        logging_embed.add_field(name=trl(ctx.user.id, ctx.guild.id, "chat_revive_log_set_revival_role"),
+                                value=f"{revival_role.mention}", inline=False)
+        logging_embed.add_field(name=trl(ctx.user.id, ctx.guild.id, "chat_revive_log_set_revival_time"),
+                                value=trl(ctx.user.id, ctx.guild.id, "chat_revive_log_set_revival_time_value").format(
+                                    time=str(revival_minutes)), inline=True)
 
         # Send to logs
         await log_into_logs(ctx.guild, logging_embed)
 
         # Send back response
-        await ctx.respond(f'Successfully set revive settings for {channel.mention}.', ephemeral=True)
+        await ctx.respond(
+            trl(ctx.user.id, ctx.guild.id, "chat_revive_log_set_response_success").format(channel=channel.mention),
+            ephemeral=True)
 
     @chat_revive_subcommand.command(name="remove", description="List the revive settings")
     @commands_ext.guild_only()
@@ -132,15 +139,18 @@ class ChatRevive(discord.Cog):
         db.commit()
 
         # Create embed
-        logging_embed = discord.Embed(title="Chat Revive settings removed for channel")
-        logging_embed.add_field(name="Channel", value=f"{ctx.channel.mention}", inline=True)
-        logging_embed.add_field(name="User", value=f"{ctx.user.mention}", inline=True)
+        logging_embed = discord.Embed(title=trl(ctx.user.id, ctx.guild.id, "chat_revive_remove_log_title"))
+        logging_embed.add_field(name=trl(ctx.user.id, ctx.guild.id, "chat_revive_remove_log_channel"),
+                                value=f"{ctx.channel.mention}", inline=True)
+        logging_embed.add_field(name=trl(ctx.user.id, ctx.guild.id, "chat_revive_remove_log_user"),
+                                value=f"{ctx.user.mention}", inline=True)
 
         # Send to logs
         await log_into_logs(ctx.guild, logging_embed)
 
         # Respond
-        await ctx.respond(f'Successfully removed revive settings for {channel.mention}.', ephemeral=True)
+        await ctx.respond(trl(ctx.user.id, ctx.guild.id, "chat_revive_remove_success").format(channel=channel.mention),
+                          ephemeral=True)
 
     @chat_revive_subcommand.command(name="list", description="List the revive settings")
     @commands_ext.guild_only()
@@ -155,14 +165,16 @@ class ChatRevive(discord.Cog):
         result = cur.fetchone()
 
         if not result:
-            await ctx.respond(f'There are no revive settings for {channel.mention}.', ephemeral=True)
+            await ctx.respond(trl(ctx.user.id, ctx.guild.id, "chat_revive_list_empty").format(channel=channel.mention),
+                              ephemeral=True)
             return
 
         role_id, revival_time = result
         role = ctx.guild.get_role(role_id)
 
-        embed = discord.Embed(title=f'Revive settings for {channel.name}', color=discord.Color.blurple())
-        embed.add_field(name='Role', value=role.mention)
-        embed.add_field(name='Revival time (seconds)', value=revival_time)
+        embed = discord.Embed(title=trl(ctx.user.id, ctx.guild.id, "chat_revive_list_title").format(name=channel.name),
+                              color=discord.Color.blurple())
+        embed.add_field(name=trl(ctx.user.id, ctx.guild.id, "chat_revive_list_role"), value=role.mention)
+        embed.add_field(name=trl(ctx.user.id, ctx.guild.id, "chat_revive_list_time"), value=revival_time)
 
         await ctx.respond(embed=embed, ephemeral=True)

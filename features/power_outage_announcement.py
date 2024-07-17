@@ -32,7 +32,8 @@ class PowerOutageAnnouncement(discord.Cog):
 
         # format things like {pretty_time} and other things into the message
         power_outage_message = power_outage_message.replace("{pretty_time}",
-                                                            pretty_time_delta(time.time() - current_time))
+                                                            pretty_time_delta(time.time() - current_time, server_id=0,
+                                                                              user_id=0))
         power_outage_message = power_outage_message.replace("{outage_time}", pretty_time(current_time))
         power_outage_message = power_outage_message.replace("{now_time}", pretty_time(time.time()))
 

@@ -6,9 +6,9 @@ from discord.ext import commands as commands_ext
 from database import conn as db
 from utils.analytics import analytics
 from utils.blocked import is_blocked
-from utils.settings import get_setting, set_setting
-from utils.logging import log_into_logs
 from utils.chat_streak_util import get_time_at_midnight
+from utils.languages import get_translation_for_key_localized as trl
+from utils.logging_util import log_into_logs
 from utils.per_user_settings import get_per_user_setting
 
 
@@ -126,19 +126,20 @@ class ChatStreaks(discord.Cog):
         (state, old_streak, new_streak) = self.streak_storage.set_streak(
             message.guild.id, message.author.id)
 
-        print("Chat streaks", state, old_streak, new_streak)
         if state == "expired":
             if old_streak == 0:
                 return
             if get_per_user_setting(message.author.id, 'chat_streaks_alerts', 'on') == 'off':
                 return
-            msg = await message.channel.send(f'Your streak of {old_streak:d} days has expired :<')
+            msg = await message.channel.send(
+                trl(message.author.id, message.guild.id, "chat_streaks_expired").format(streak=old_streak))
             await msg.delete(delay=3)
 
         if state == "updated":
             if get_per_user_setting(message.author.id, 'chat_streaks_alerts', 'on') != 'on':
                 return  # Only trigger if the user has the setting on
-            msg = await message.channel.send(f'{new_streak:d} days of consecutive  messages! Keep it up :3')
+            msg = await message.channel.send(
+                trl(message.author.id, message.guild.id, "chat_streaks_updated").format(streak=new_streak))
             await msg.delete(delay=3)
 
     streaks_subcommand = discord.SlashCommandGroup(
@@ -156,15 +157,18 @@ class ChatStreaks(discord.Cog):
         self.streak_storage.reset_streak(ctx.guild.id, user.id)
 
         # Create a embed for logs
-        logging_embed = discord.Embed(title="Chat Streak reset")
-        logging_embed.add_field(name="Admin", value=f'{ctx.user.mention}')
-        logging_embed.add_field(name="Target", value=f'{user.mention}')
+        logging_embed = discord.Embed(title=trl(ctx.user.id, ctx.guild.id, "chat_streaks_reset_log_title"))
+        logging_embed.add_field(name=trl(ctx.user.id, ctx.guild.id, "chat_streaks_reset_log_admin"),
+                                value=f'{ctx.user.mention}')
+        logging_embed.add_field(name=trl(ctx.user.id, ctx.guild.id, "chat_streaks_reset_log_user"),
+                                value=f'{user.mention}')
 
         # Send to log
         await log_into_logs(ctx.guild, logging_embed)
 
         # Respond
-        await ctx.respond(f'Successfully reset the streak for {user.mention}.', ephemeral=True)
+        await ctx.respond(trl(ctx.user.id, ctx.guild.id, "chat_streaks_reset_success").format(user=user.mention),
+                          ephemeral=True)
 
     @streaks_subcommand.command(name="streak", description="Get someone's streak, to get yours, /streak.")
     @commands_ext.guild_only()
@@ -175,14 +179,16 @@ class ChatStreaks(discord.Cog):
     @analytics("streaks streak")
     async def get_user_streak(self, ctx: discord.ApplicationContext, user: discord.Member):
         (_, streak, _) = self.streak_storage.set_streak(ctx.guild.id, user.id)
-        await ctx.respond(f'{user.mention}\'s current streak is {streak} days.', ephemeral=True)
+        await ctx.respond(
+            trl(ctx.user.id, ctx.guild.id, "chat_streaks_streak_admin").format(user=user.mention, streak=str(streak)),
+            ephemeral=True)
 
     @discord.slash_command(name='streak', description='Get your current streak')
     @is_blocked()
     @analytics("streak")
     async def get_streak_command(self, ctx: discord.ApplicationContext):
         (_, streak, _) = self.streak_storage.set_streak(ctx.guild.id, ctx.user.id)
-        await ctx.respond(f'Your current streak is {streak} days.', ephemeral=True)
+        await ctx.respond(trl(ctx.user.id, ctx.guild.id, "chat_streaks_streak").format(streak=streak), ephemeral=True)
 
     # Leaderboard
 
@@ -193,17 +199,23 @@ class ChatStreaks(discord.Cog):
     async def streaks_lb(self, ctx: discord.ApplicationContext):
         cur = db.cursor()
         cur.execute(
-            'SELECT member_id, MAX(julianday(last_message) - julianday(start_time)) FROM chat_streaks WHERE guild_id = ? GROUP BY member_id ORDER BY MAX(julianday(last_message) - julianday(start_time)) DESC LIMIT 10',
+            'SELECT member_id, MAX(julianday(last_message) - julianday(start_time)) '
+            'FROM chat_streaks '
+            'WHERE guild_id = ? '
+            'GROUP BY member_id '
+            'ORDER BY MAX(julianday(last_message) - julianday(start_time)) DESC LIMIT 10',
             (ctx.guild.id,))
         rows = cur.fetchall()
         cur.close()
 
-        message = "# Chat Streak Leaderboard\n\n"
+        message = trl(ctx.user.id, ctx.guild.id, "chat_streak_leaderboard_title")
 
         for i, row in enumerate(rows):
             member = ctx.guild.get_member(row[0])
             if member is None:
                 continue
-            message += f"{i + 1}. {member.mention} - {row[1]:.0f} days\n"
 
+            message += trl(ctx.user.id, ctx.guild.id, "chat_streak_leaderboard_line").format(position=i + 1,
+                                                                                             user=member.mention,
+                                                                                             days=row[1])
         await ctx.respond(message, ephemeral=True)

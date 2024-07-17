@@ -1,7 +1,7 @@
 import discord
 
 from utils.settings import get_setting, set_setting
-from utils.logging import log_into_logs
+from utils.logging_util import log_into_logs
 from discord.ext import commands
 from utils.blocked import is_blocked
 

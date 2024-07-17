@@ -1,5 +1,6 @@
 import discord
 
+from utils.languages import get_translation_for_key_localized as trl
 from utils.per_user_settings import set_per_user_setting
 
 
@@ -14,4 +15,20 @@ class PerUserSettings(discord.Cog):
                     choices=['enabled', 'only when lost', 'off'])
     async def chat_streaks_alerts(self, ctx: discord.ApplicationContext, state: str):
         set_per_user_setting(ctx.user.id, 'chat_streaks_alerts', state)
-        await ctx.respond(f'Chat streaks alerts are now {state}.', ephemeral=True)
+        if state == 'enabled':
+            state = trl(ctx.user.id, ctx.guild.id, "per_user_chat_streak_state_enabled")
+        elif state == 'only when lost':
+            state = trl(ctx.user.id, ctx.guild.id, "per_user_chat_streak_state_only_when_lost")
+        else:
+            state = trl(ctx.user.id, ctx.guild.id, "per_user_chat_streak_state_disabled")
+        await ctx.respond(trl(ctx.user.id, ctx.guild.id, "per_user_chat_streak_response").format(state=state),
+                          ephemeral=True)
+
+    @user_settings_group.command(name='langauge',
+                                 description='Set your personal language, applies across servers for you')
+    @discord.option(name='lang', description='Your language', choices=['English'])
+    async def set_language(self, ctx: discord.ApplicationContext, lang: str):
+        lang_code = 'en'  # This is a fallback option, for now
+        set_per_user_setting(ctx.user.id, 'language', lang_code)
+        await ctx.respond(trl(ctx.user.id, ctx.guild.id, "per_user_language_response").format(lang=lang),
+                          ephemeral=True)

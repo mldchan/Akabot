@@ -5,8 +5,10 @@ from discord.ext import commands as commands_ext
 
 from utils.analytics import analytics
 from utils.blocked import is_blocked
+from utils.languages import get_translation_for_key_localized as trl
+from utils.logging_util import log_into_logs
 from utils.settings import get_setting, set_setting
-from utils.logging import log_into_logs
+
 
 class ViolationCounters:
     past_actions = []
@@ -45,8 +47,8 @@ class AntiRaid(discord.Cog):
 
             if member.can_send():
                 await member.send(
-                    content="You have been kicked from the server for suspected raiding. If you believe this was a mistake, try rejoining in a few minutes.")
-            await member.kick(reason='Suspected raiding')
+                    content=trl(member.id, member.guild.id, "antiraid_kicked_message"))
+            await member.kick(reason=trl(0, member.guild.id, "antiraid_kicked_audit"))
             return
 
         self.violation_counters.add_action('join', member, int(antiraid_join_threshold_per))
@@ -71,16 +73,21 @@ class AntiRaid(discord.Cog):
         set_setting(ctx.guild.id, 'antiraid_join_threshold_per', str(per))
 
         # Create logging embed
-        logging_embed = discord.Embed(title="Antiraid Join Threshold was changed")
-        logging_embed.add_field(name="Join Threshold", value=f"{str(old_join_threshold)} -> {str(people)}", inline=True)
-        logging_embed.add_field(name="Per", value=f"{str(old_join_threshold_per)} -> {str(per)}", inline=True)
-        logging_embed.add_field(name="User", value=f"{ctx.user.mention}", inline=False)
+        logging_embed = discord.Embed(title=trl(0, ctx.guild.id, "logging_antiraid_threshold_changed"))
+        logging_embed.add_field(name=trl(0, ctx.guild.id, "logging_antiraid_threshold_changed_join_threshold"),
+                                value=f"{str(old_join_threshold)} -> {str(people)}", inline=True)
+        logging_embed.add_field(name=trl(0, ctx.guild.id, "logging_antiraid_threshold_changed_per"),
+                                value=f"{str(old_join_threshold_per)} -> {str(per)}", inline=True)
+        logging_embed.add_field(name=trl(0, ctx.guild.id, "logging_antiraid_threshold_changed_user"),
+                                value=f"{ctx.user.mention}", inline=False)
 
         # Send log into logs
         await log_into_logs(ctx.guild, logging_embed)
 
         # Send response to user
-        await ctx.respond(f'Successfully set the join threshold to {people} per {per} seconds.', ephemeral=True)
+        await ctx.respond(
+            trl(ctx.user.id, ctx.guild.id, "antiraid_threshold_changed").format(people=str(people), per=str(per)),
+            ephemeral=True)
 
     @antiraid_subcommand.command(name="list", description="List the antiraid settings")
     @discord.default_permissions(manage_guild=True)
@@ -89,10 +96,12 @@ class AntiRaid(discord.Cog):
     @is_blocked()
     @analytics("antiraid list")
     async def list_settings(self, ctx: discord.ApplicationContext):
-        join_threshold = get_setting(ctx.guild.id, 'antiraid_join_threshold', 5)
-        join_threshold_per = get_setting(ctx.guild.id, 'antiraid_join_threshold_per', 60)
+        join_threshold = get_setting(ctx.guild.id, 'antiraid_join_threshold', '5')
+        join_threshold_per = get_setting(ctx.guild.id, 'antiraid_join_threshold_per', '60')
 
-        embed = discord.Embed(title='Antiraid settings', color=discord.Color.blurple())
-        embed.add_field(name='Join threshold', value=f'{join_threshold} per {join_threshold_per} seconds')
+        embed = discord.Embed(title=trl(ctx.user.id, ctx.guild.id, "antiraid_settings"), color=discord.Color.blurple())
+        embed.add_field(name=trl(ctx.user.id, ctx.guild.id, "antiraid_settings_join_threshold"),
+                        value=trl(ctx.user.id, ctx.guild.id, "antiraid_settings_join_threshold_value").format(
+                            joins=join_threshold, seconds=join_threshold_per), inline=True)
 
         await ctx.respond(embed=embed, ephemeral=True)

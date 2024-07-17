@@ -3,10 +3,12 @@ import random
 
 import discord
 from discord.ext import commands as commands_ext
+from discord.ext import tasks
+
 from database import conn
 from utils.analytics import analytics
 from utils.blocked import is_blocked
-from discord.ext import tasks
+from utils.languages import get_translation_for_key_localized as trl
 
 
 class Giveaways(discord.Cog):
@@ -22,39 +24,6 @@ class Giveaways(discord.Cog):
             "create table if not exists giveaway_participants(id integer primary key, giveaway_id integer, user_id text)"
         )
 
-        # Add winner_count column if it doesn't exist
-        cur.execute(
-            "PRAGMA table_info(giveaways)"
-        )
-        columns = cur.fetchall()
-        column_names = [column[1] for column in columns]
-        if "winner_count" not in column_names:
-            cur.execute(
-                "ALTER TABLE giveaways ADD COLUMN winner_count int"
-            )
-
-        # Update giveaway_participants table to have user_id as text
-        cur.execute(
-            "PRAGMA table_info(giveaway_participants)"
-        )
-        columns = cur.fetchall()
-        column_names = [column[1] for column in columns]
-        if "user_id" in column_names:
-            cur.execute(
-                "ALTER TABLE giveaway_participants RENAME TO giveaway_participants_old"
-            )
-            cur.execute(
-                "create table giveaway_participants(id integer primary key, giveaway_id integer, user_id text)"
-            )
-            cur.execute(
-                "insert into giveaway_participants(giveaway_id, user_id) select giveaway_id, cast(user_id as text) from giveaway_participants_old"
-            )
-            cur.execute(
-                "drop table giveaway_participants_old"
-            )
-
-        conn.commit()
-
         self.giveaway_mng.start()
 
     @giveaways_group.command(name="new", description="Create a new giveaway")
@@ -64,10 +33,11 @@ class Giveaways(discord.Cog):
     @commands_ext.guild_only()
     @is_blocked()
     @analytics("giveaway new")
-    async def giveaway_new(self, ctx: discord.ApplicationContext, item: str, days: int, hours: int, minutes: int, winners: int):
+    async def giveaway_new(self, ctx: discord.ApplicationContext, item: str, days: int, hours: int, minutes: int,
+                           winners: int):
         # Check if the parameters are correct
         if days + hours < 0 or days < 0 or hours < 0 or minutes < 0 or winners < 0:
-            await ctx.respond("Parameters must be positive", ephemeral=True)
+            await ctx.respond(trl(ctx.user.id, ctx.guild.id, "giveaways_error_negative_parameters"), ephemeral=True)
             return
 
         # Determine ending date
@@ -75,7 +45,7 @@ class Giveaways(discord.Cog):
         end_date = end_date + datetime.timedelta(days=days, hours=hours, minutes=minutes)
 
         # Send message
-        msg1 = await ctx.channel.send(f"GIVEAWAY! {item}")
+        msg1 = await ctx.channel.send(trl(0, ctx.guild.id, "giveaways_giveaway_text").format(item=item))
         await msg1.add_reaction("🎉")
 
         # Register giveaway
@@ -86,7 +56,8 @@ class Giveaways(discord.Cog):
         conn.commit()
 
         # Send success message
-        await ctx.respond(f"Created giveaway successfully! Giveaway ID is {str(cur.lastrowid)}", ephemeral=True)
+        await ctx.respond(trl(ctx.user.id, ctx.guild.id, "giveaways_new_success").format(id=cur.lastrowid),
+                          ephemeral=True)
 
     @giveaways_group.command(name="end", description="End a giveaway IRREVERSIBLY")
     @discord.default_permissions(manage_guild=True)
@@ -102,12 +73,12 @@ class Giveaways(discord.Cog):
         cur.execute("select * from giveaways where id=?", (giveaway_id,))
         res = cur.fetchone()
         if res is None:
-            await ctx.respond("Giveaway not found", ephemeral=True)
+            await ctx.respond(trl(ctx.user.id, ctx.guild.id, "giveaways_error_not_found"), ephemeral=True)
             return
-        
+
         await self.process_send_giveaway(giveaway_id)
 
-        await ctx.respond("Ended giveaway successfully!", ephemeral=True)
+        await ctx.respond(trl(ctx.user.id, ctx.guild.id, "giveaways_giveaway_end_success"), ephemeral=True)
 
     @discord.Cog.listener()
     @is_blocked()
@@ -154,10 +125,10 @@ class Giveaways(discord.Cog):
         res = cur.fetchone()
         if res is None:
             return
-        
+
         # Delete giveaway from database
         cur.execute("delete from giveaways where id=?", (giveaway_id,))
-        
+
         # Fetch the channel and message
         chan = await self.bot.fetch_channel(res[1])
         msg = await chan.fetch_message(res[2])
@@ -168,14 +139,25 @@ class Giveaways(discord.Cog):
 
         # Check if there are enough members to select winners
         if len(users) < res[5]:
-            await chan.send("Not enough participants to select winners. Selecting all participants as winners.")
+            await chan.send(trl(0, chan.guild.id, "giveaways_warning_not_enough_participants"))
             winners = users
         else:
             # Determine winners
             winners = random.sample(users, res[5])
 
         # Get channel and send message
-        await chan.send(content=f"The winner{'' if len(winners) == 1 else 's'} of {res[3]} is {', '.join([f'<@{j}>' for j in winners])}")
+        if winners == 1:
+            msg2 = trl(0, chan.guild.id, "giveaways_winner").format(item=res[3], mention=f"<@{winners[0]}>")
+            await chan.send(msg2)
+        else:
+            mentions = ", ".join([f"<@{j}>" for j in winners])
+            last_mention = mentions.rfind(", ")
+            last_mention = mentions[last_mention + 2:]
+            mentions = mentions[:last_mention]
+            msg2 = trl(0, chan.guild.id, "giveaways_winners").format(item=res[3],
+                                                                     mentions=mentions,
+                                                                     last_mention=last_mention)
+            await chan.send(msg2)
 
         # Remove all giveaway participants from the database
         cur.execute("delete from giveaway_participants where giveaway_id=?", (giveaway_id,))
