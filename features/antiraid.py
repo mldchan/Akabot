@@ -89,8 +89,8 @@ class AntiRaid(discord.Cog):
     @is_blocked()
     @analytics("antiraid list")
     async def list_settings(self, ctx: discord.ApplicationContext):
-        join_threshold = get_setting(ctx.guild.id, 'antiraid_join_threshold', 5)
-        join_threshold_per = get_setting(ctx.guild.id, 'antiraid_join_threshold_per', 60)
+        join_threshold = get_setting(ctx.guild.id, 'antiraid_join_threshold', "5")
+        join_threshold_per = get_setting(ctx.guild.id, 'antiraid_join_threshold_per', "60")
 
         embed = discord.Embed(title='Antiraid settings', color=discord.Color.blurple())
         embed.add_field(name='Join threshold', value=f'{join_threshold} per {join_threshold_per} seconds')

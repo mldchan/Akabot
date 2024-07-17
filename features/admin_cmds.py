@@ -1,5 +1,3 @@
-import json
-
 import discord
 
 from utils.blocked import db_add_blocked_server, db_add_blocked_user, db_remove_blocked_server, db_remove_blocked_user

@@ -1,11 +1,10 @@
-import discord
+import datetime
 
 import discord.ext
 import discord.ext.tasks
 
-import datetime
-
 from database import conn
+
 
 class DbCleanupTask(discord.Cog):
     def __init__(self) -> None:
