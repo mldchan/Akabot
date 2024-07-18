@@ -1,6 +1,9 @@
-import json
+import logging
+
 import discord
+import sentry_sdk
 from discord.ext import commands as discord_commands_ext
+from sentry_sdk.integrations.logging import LoggingIntegration
 
 from features import welcoming, leveling, antiraid, chat_streaks, chat_revive, chat_summary, reaction_roles, \
     logging_mod, admin_cmds, giveaways, feedback_cmd, moderation, cleanup_task, verification, velky_stompies, \
@@ -8,9 +11,6 @@ from features import welcoming, leveling, antiraid, chat_streaks, chat_revive, c
     auto_react, auto_response
 from utils.blocked import BlockedUserError, BlockedServerError
 from utils.config import get_key
-import sentry_sdk
-from sentry_sdk.integrations.logging import LoggingIntegration
-import logging
 
 logging.basicConfig(
     level=logging.INFO,
@@ -29,6 +29,7 @@ if get_key("Sentry_Enabled", "false") == "true":
 
 intents = discord.Intents.default()
 intents.members = True
+intents.message_content = True
 
 bot = discord.Bot(intents=intents)
 
