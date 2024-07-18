@@ -223,3 +223,9 @@ class SupportCmd(discord.Cog):
         await ctx.respond(content=trl(ctx.user.id, ctx.guild.id, "feedback_feature_disclaimer"),
                           ephemeral=True,
                           view=ConfirmSubmitFeatureRequest(ctx.user.id))
+
+    @discord.slash_command(name="about", description="Get information about the bot")
+    @is_blocked()
+    @analytics("about")
+    async def about(self, ctx: discord.ApplicationContext):
+        await ctx.respond(trl(ctx.user.id, ctx.guild.id, "feedback_about"), ephemeral=True)
