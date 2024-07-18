@@ -2,6 +2,8 @@ import discord
 from database import conn
 from discord.ext import pages as dc_pages
 
+from utils.languages import get_translation_for_key_localized as trl
+
 
 class AutoResponse(discord.Cog):
     def __init__(self, bot: discord.Bot) -> None:
@@ -35,7 +37,9 @@ class AutoResponse(discord.Cog):
         conn.commit()
 
         # Respond
-        await ctx.respond(f"Added trigger `{trigger}` that will make the bot reply with `{reply}`", ephemeral=True)
+        await ctx.respond(
+            trl(ctx.user.id, ctx.guild.id, "auto_response_add_success").format(trigger=trigger, reply=reply),
+            ephemeral=True)
 
     @auto_response_group.command(name="list", description="List auto response settings")
     async def list_auto_responses(self, ctx: discord.ApplicationContext):
@@ -51,12 +55,14 @@ class AutoResponse(discord.Cog):
 
         all_settings = cur.fetchall()
         if len(all_settings) == 0:
-            await ctx.respond("There are no settings save right now.", ephemeral=True)
+            await ctx.respond(trl(ctx.user.id, ctx.guild.id, "auto_response_list_empty"), ephemeral=True)
             return
 
         for i in all_settings:
             # Format: **{id}**: {trigger} -> {reply}
-            current_group_msg += f"**ID: `{i[0]}`**: Trigger: `{i[2]}` -> Will say `{i[3]}`\n"
+            # current_group_msg += f"**ID: `{i[0]}`**: Trigger: `{i[2]}` -> Will say `{i[3]}`\n"
+            current_group_msg += trl(ctx.user.id, ctx.guild.id, "auto_response_list_row").format(id=i[0], trigger=i[2],
+                                                                                                 reply=i[3])
             current_group += 1
 
             # Split message group
@@ -80,7 +86,7 @@ class AutoResponse(discord.Cog):
         cur.execute("SELECT * FROM auto_response WHERE channel_id=? AND id=?", (ctx.channel.id, id))
         if cur.fetchone() is None:
             await ctx.respond(
-                "The setting was not found. You'll need to run this in the channel where the setting was set.",
+                trl(ctx.user.id, ctx.guild.id, "auto_response_setting_not_found"),
                 ephemeral=True)
             return
 
@@ -92,7 +98,7 @@ class AutoResponse(discord.Cog):
         conn.commit()
 
         # Respond
-        await ctx.respond("The trigger keyword was updated successfully.", ephemeral=True)
+        await ctx.respond(trl(ctx.user.id, ctx.guild.id, "auto_response_keyword_updated"), ephemeral=True)
 
     @auto_response_group.command(name="delete", description="Delete an auto response setting")
     async def delete_auto_response(self, ctx: discord.ApplicationContext, id: int):
@@ -101,7 +107,7 @@ class AutoResponse(discord.Cog):
         cur.execute("SELECT * FROM auto_response WHERE channel_id=? AND id=?", (ctx.channel.id, id))
         if cur.fetchone() is None:
             await ctx.respond(
-                "The setting was not found. You'll need to run this in the channel where the setting was set.",
+                trl(ctx.user.id, ctx.guild.id, "auto_response_setting_not_found"),
                 ephemeral=True)
             return
 
@@ -113,7 +119,7 @@ class AutoResponse(discord.Cog):
         conn.commit()
 
         # Respond
-        await ctx.respond("Deleted the setting successfully.", ephemeral=True)
+        await ctx.respond(trl(ctx.user.id, ctx.guild.id, "auto_response_delete_success"), ephemeral=True)
 
     @auto_response_group.command(name="edit_response", description="Change response for a setting")
     async def edit_response_auto_response(self, ctx: discord.ApplicationContext, id: int, new_response: str):
@@ -122,7 +128,7 @@ class AutoResponse(discord.Cog):
         cur.execute("SELECT * FROM auto_response WHERE channel_id=? AND id=?", (ctx.channel.id, id))
         if cur.fetchone() is None:
             await ctx.respond(
-                "The setting was not found. You'll need to run this in the channel where the setting was set.",
+                trl(ctx.user.id, ctx.guild.id, "auto_response_setting_not_found"),
                 ephemeral=True)
             return
 
@@ -134,7 +140,7 @@ class AutoResponse(discord.Cog):
         conn.commit()
 
         # Respond
-        await ctx.respond("The response text was updated successfully.", ephemeral=True)
+        await ctx.respond(trl(ctx.user.id, ctx.guild.id, "auto_response_text_updated"), ephemeral=True)
 
     @discord.Cog.listener()
     async def on_message(self, msg: discord.Message):
