@@ -2,12 +2,13 @@ import discord
 
 from utils.languages import get_language_names, language_name_to_code, get_language_name
 from utils.languages import get_translation_for_key_localized as trl
-from utils.per_user_settings import set_per_user_setting
+from utils.per_user_settings import set_per_user_setting, db_init
 
 
 class PerUserSettings(discord.Cog):
     def __init__(self, bot: discord.Bot):
         self.bot = bot
+        db_init()
 
     user_settings_group = discord.SlashCommandGroup(name='user_settings', description='Per user settings')
 
@@ -34,4 +35,4 @@ class PerUserSettings(discord.Cog):
         set_per_user_setting(ctx.user.id, 'language', lang_code)
         await ctx.respond(trl(ctx.user.id, ctx.guild.id, "per_user_language_set").format(
             lang=get_language_name(lang_code, completeness=False)),
-                          ephemeral=True)
+            ephemeral=True)
