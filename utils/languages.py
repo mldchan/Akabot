@@ -120,6 +120,7 @@ def get_language_name(lang_code: str, completeness: bool = True) -> str:
     else:
         return name
 
+
 def get_language_names() -> list[str]:
     """Get a list of language names
 
