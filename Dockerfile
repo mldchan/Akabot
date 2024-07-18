@@ -13,5 +13,6 @@ COPY LATEST.md /app/
 COPY LATEST_3.2.md /app/
 COPY LATEST_3.1.md /app/
 COPY lang/ /app/lang/
+COPY docs/ /app/docs/
 
 CMD ["python", "/app/main.py"]
