@@ -8,7 +8,7 @@ from sentry_sdk.integrations.logging import LoggingIntegration
 from features import welcoming, leveling, antiraid, chat_streaks, chat_revive, chat_summary, reaction_roles, \
     logging_mod, admin_cmds, giveaways, feedback_cmd, moderation, cleanup_task, verification, velky_stompies, \
     roles_on_join, heartbeat, automod_actions, power_outage_announcement, per_user_settings, server_language_command, \
-    auto_react, auto_response
+    auto_react, auto_response, bot_help
 from utils.blocked import BlockedUserError, BlockedServerError
 from utils.config import get_key
 
@@ -125,7 +125,8 @@ if get_key("Feature_AutoReact", "true") == "true":
     bot.add_cog(auto_react.AutoReact(bot))
 if get_key("Feature_AutoResponse", "true") == "true":
     bot.add_cog(auto_response.AutoResponse(bot))
-
+if get_key("Feature_HelpCommands", "true") == "true":
+    bot.add_cog(bot_help.Help(bot))
 
 bot.run(
     get_key("Bot_Token")
