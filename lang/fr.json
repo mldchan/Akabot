@@ -395,5 +395,20 @@
   "pretty_time_delta_3": "{hours} heures {minutes} minutes {seconds} secondes",
   "pretty_time_delta_2": "{minutes} minutes {seconds} secondes",
   "pretty_time_delta_1": "{seconds} seconds",
-  "server_language_response": "Définissez la langue du serveur à {lang}."
+  "server_language_response": "Définissez la langue du serveur à {lang}.",
+  "auto_react_emoji_invalid": "Émoticônes invalides, assurez-vous qu'ils proviennent de ce serveur et c'est un emoji",
+  "auto_react_add_success": "Ajout du déclencheur `{trigger}` qui fera réagir le bot avec `{emoji}`",
+  "auto_react_list_empty": "Il n'y a pas de paramètres de réaction automatique.",
+  "auto_react_list_row": "**ID: `{id}`**: Déclenchement : `{trigger}` -> Réagira avec `{emoji}`\n",
+  "auto_react_setting_not_found": "Le paramètre n'a pas été trouvé. Vous devrez l'exécuter dans le canal où le paramètre a été défini.",
+  "auto_react_keyword_updated_success": "Le mot clé du déclencheur a été mis à jour avec succès.",
+  "auto_react_delete_success": "Le paramètre a été supprimé avec succès.",
+  "auto_react_emoji_set_success": "L'emoji de réaction a été mis à jour avec succès.",
+  "auto_response_add_success": "Ajout du déclencheur `{trigger}` qui fera répondre le bot avec `{reply}`",
+  "auto_response_list_empty": "Il n'y a pas de paramètres de réponse automatique.",
+  "auto_response_list_row": "**ID: `{id}`**: Déclenchement : `{trigger}` -> Dira `{reply}`\n",
+  "auto_response_keyword_updated": "Le mot clé du déclencheur a été mis à jour avec succès.",
+  "auto_response_setting_not_found": "Le paramètre n'a pas été trouvé. Vous devrez l'exécuter dans le canal où le paramètre a été défini.",
+  "auto_response_delete_success": "Le paramètre a été supprimé avec succès.",
+  "auto_response_text_updated": "Le texte de réponse a été mis à jour avec succès."
 }
