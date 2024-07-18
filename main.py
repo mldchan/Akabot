@@ -1,15 +1,16 @@
-import json
+import logging
+
 import discord
+import sentry_sdk
 from discord.ext import commands as discord_commands_ext
+from sentry_sdk.integrations.logging import LoggingIntegration
 
 from features import welcoming, leveling, antiraid, chat_streaks, chat_revive, chat_summary, reaction_roles, \
     logging_mod, admin_cmds, giveaways, feedback_cmd, moderation, cleanup_task, verification, velky_stompies, \
-    roles_on_join, heartbeat, automod_actions, power_outage_announcement, per_user_settings, server_language_command
+    roles_on_join, heartbeat, automod_actions, power_outage_announcement, per_user_settings, server_language_command, \
+    bot_help
 from utils.blocked import BlockedUserError, BlockedServerError
 from utils.config import get_key
-import sentry_sdk
-from sentry_sdk.integrations.logging import LoggingIntegration
-import logging
 
 logging.basicConfig(
     level=logging.INFO,
@@ -119,7 +120,8 @@ if get_key("PerUserSettings_Enabled", "true") == "true":
     bot.add_cog(per_user_settings.PerUserSettings(bot))
 if get_key("Feature_ServerLanguageCommand", "true") == "true":
     bot.add_cog(server_language_command.ServerLanguageCommand())
-
+if get_key("Feature_HelpCommands", "true") == "true":
+    bot.add_cog(bot_help.Help(bot))
 
 bot.run(
     get_key("Bot_Token")
