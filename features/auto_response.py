@@ -1,6 +1,7 @@
 import discord
 from database import conn
 from discord.ext import pages as dc_pages
+from discord.ext import commands as discord_commands_ext
 
 from utils.languages import get_translation_for_key_localized as trl
 
@@ -25,6 +26,9 @@ class AutoResponse(discord.Cog):
     @auto_response_group.command(name="add", description="New auto response setting")
     @discord.option(name="trigger", description="The trigger of the message. Can be any text. Case insensitive.")
     @discord.option(name="reply", description="What to reply with. This exact text will be sent")
+    @discord_commands_ext.has_permissions(manage_messages=True)
+    @discord_commands_ext.bot_has_permissions(read_message_history=True, add_reactions=True)
+    @discord.default_permissions(manage_messages=True)
     async def add_auto_response(self, ctx: discord.ApplicationContext, trigger: str, reply: str):
         cur = conn.cursor()
 
@@ -42,6 +46,9 @@ class AutoResponse(discord.Cog):
             ephemeral=True)
 
     @auto_response_group.command(name="list", description="List auto response settings")
+    @discord_commands_ext.has_permissions(manage_messages=True)
+    @discord_commands_ext.bot_has_permissions(read_message_history=True, add_reactions=True)
+    @discord.default_permissions(manage_messages=True)
     async def list_auto_responses(self, ctx: discord.ApplicationContext):
         cur = conn.cursor()
 
@@ -80,6 +87,9 @@ class AutoResponse(discord.Cog):
         await paginator.respond(ctx.interaction, ephemeral=True)
 
     @auto_response_group.command(name="edit_trigger", description="Change trigger for a setting")
+    @discord_commands_ext.has_permissions(manage_messages=True)
+    @discord_commands_ext.bot_has_permissions(read_message_history=True, add_reactions=True)
+    @discord.default_permissions(manage_messages=True)
     async def edit_trigger_auto_response(self, ctx: discord.ApplicationContext, id: int, new_trigger: str):
         cur = conn.cursor()
         # Check if ID exists
@@ -101,6 +111,9 @@ class AutoResponse(discord.Cog):
         await ctx.respond(trl(ctx.user.id, ctx.guild.id, "auto_response_keyword_updated"), ephemeral=True)
 
     @auto_response_group.command(name="delete", description="Delete an auto response setting")
+    @discord_commands_ext.has_permissions(manage_messages=True)
+    @discord_commands_ext.bot_has_permissions(read_message_history=True, add_reactions=True)
+    @discord.default_permissions(manage_messages=True)
     async def delete_auto_response(self, ctx: discord.ApplicationContext, id: int):
         cur = conn.cursor()
         # Check if ID exists
@@ -122,6 +135,9 @@ class AutoResponse(discord.Cog):
         await ctx.respond(trl(ctx.user.id, ctx.guild.id, "auto_response_delete_success"), ephemeral=True)
 
     @auto_response_group.command(name="edit_response", description="Change response for a setting")
+    @discord_commands_ext.has_permissions(manage_messages=True)
+    @discord_commands_ext.bot_has_permissions(read_message_history=True, add_reactions=True)
+    @discord.default_permissions(manage_messages=True)
     async def edit_response_auto_response(self, ctx: discord.ApplicationContext, id: int, new_response: str):
         cur = conn.cursor()
         # Check if ID exists

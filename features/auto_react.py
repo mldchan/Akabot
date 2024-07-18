@@ -1,5 +1,6 @@
 import discord
 from discord.ext import pages as dc_pages
+from discord.ext import commands as discord_commands_ext
 
 from database import conn
 import emoji as emoji_package
@@ -27,6 +28,9 @@ class AutoReact(discord.Cog):
     @auto_react_group.command(name="add", description="New auto react setting")
     @discord.option(name="trigger", description="The trigger of the message. Can be any text. Case insensitive.")
     @discord.option(name="emoji", description="What emoji to react with. You MUST paste an emoji.")
+    @discord_commands_ext.has_permissions(manage_messages=True)
+    @discord_commands_ext.bot_has_permissions(read_message_history=True, add_reactions=True)
+    @discord.default_permissions(manage_messages=True)
     async def add_auto_react(self, ctx: discord.ApplicationContext, trigger: str, emoji_input: str):
         # Parse le emoji
         emoji = discord.PartialEmoji.from_str(emoji_input.strip())
@@ -63,6 +67,9 @@ class AutoReact(discord.Cog):
             ephemeral=True)
 
     @auto_react_group.command(name="list", description="List auto react settings")
+    @discord_commands_ext.has_permissions(manage_messages=True)
+    @discord_commands_ext.bot_has_permissions(read_message_history=True, add_reactions=True)
+    @discord.default_permissions(manage_messages=True)
     async def list_auto_reacts(self, ctx: discord.ApplicationContext):
         cur = conn.cursor()
 
@@ -101,6 +108,9 @@ class AutoReact(discord.Cog):
         await paginator.respond(ctx.interaction, ephemeral=True)
 
     @auto_react_group.command(name="edit_trigger", description="Change trigger for a setting")
+    @discord_commands_ext.has_permissions(manage_messages=True)
+    @discord_commands_ext.bot_has_permissions(read_message_history=True, add_reactions=True)
+    @discord.default_permissions(manage_messages=True)
     async def edit_trigger_auto_react(self, ctx: discord.ApplicationContext, id: int, new_trigger: str):
         cur = conn.cursor()
         # Check if ID exists
@@ -121,6 +131,9 @@ class AutoReact(discord.Cog):
         await ctx.respond(trl(ctx.user.id, ctx.guild.id, "auto_react_keyword_updated_success"), ephemeral=True)
 
     @auto_react_group.command(name="delete", description="Delete an auto react setting")
+    @discord_commands_ext.has_permissions(manage_messages=True)
+    @discord_commands_ext.bot_has_permissions(read_message_history=True, add_reactions=True)
+    @discord.default_permissions(manage_messages=True)
     async def delete_auto_react(self, ctx: discord.ApplicationContext, id: int):
         cur = conn.cursor()
         # Check if ID exists
@@ -142,6 +155,9 @@ class AutoReact(discord.Cog):
         await ctx.respond(trl(ctx.user.id, ctx.guild.id, "auto_react_delete_success"), ephemeral=True)
 
     @auto_react_group.command(name="edit_react_emoji", description="Change react for a setting")
+    @discord_commands_ext.has_permissions(manage_messages=True)
+    @discord_commands_ext.bot_has_permissions(read_message_history=True, add_reactions=True)
+    @discord.default_permissions(manage_messages=True)
     async def edit_response_auto_react(self, ctx: discord.ApplicationContext, id: int, new_emoji: str):
         # Parse le emoji
         emoji = discord.PartialEmoji.from_str(new_emoji.strip())
