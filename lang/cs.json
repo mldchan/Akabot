@@ -395,5 +395,20 @@
   "pretty_time_delta_3": "{hours} hodin {minutes} minut {seconds} sekund",
   "pretty_time_delta_2": "{minutes} minut {seconds} sekund",
   "pretty_time_delta_1": "{seconds} sekund",
-  "server_language_response": "Nastaven jazyk serveru na {lang}."
+  "server_language_response": "Nastaven jazyk serveru na {lang}.",
+  "auto_react_emoji_invalid": "Neplatné emoji, ujistěte se, že je na tomto serveru a je to emoji",
+  "auto_react_add_success": "Přidán spouštěč `{trigger}`, který vyvolá reakci bota s `{emoji}`",
+  "auto_react_list_empty": "Neexistují žádná nastavení automatické reakce.",
+  "auto_react_list_row": "**ID: `{id}`**: Kličové slovo: `{trigger}` -> Bude reagovat s `{emoji}`\n",
+  "auto_react_setting_not_found": "Nastavení nebylo nalezeno. Budete to muset spustit v kanálu, kde bylo nastavení nastaveno.",
+  "auto_react_keyword_updated_success": "Klíčové slovo bylo úspěšně aktualizováno.",
+  "auto_react_delete_success": "Nastavení bylo úspěšně odstraněno.",
+  "auto_react_emoji_set_success": "Emodži bylo úspěšně aktualizováno.",
+  "auto_response_add_success": "Přidáno klíčové slovo `{trigger}`, který způsobí odpověď bota s `{reply}`",
+  "auto_response_list_empty": "Neexistují žádná nastavení automatické reakce.",
+  "auto_response_list_row": "**ID: `{id}`**: Klíčové slovo: `{trigger}` -> Odpoví `{reply}`\n",
+  "auto_response_keyword_updated": "Klíčové slovo bylo úspěšně aktualizováno.",
+  "auto_response_setting_not_found": "Nastavení nebylo nalezeno. Budete to muset spustit v kanálu, kde bylo nastavení nastaveno.",
+  "auto_response_delete_success": "Nastavení bylo úspěšně odstraněno.",
+  "auto_response_text_updated": "Text odpovědi byl úspěšně aktualizován."
 }
