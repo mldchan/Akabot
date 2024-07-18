@@ -309,7 +309,7 @@
   "warn_actions_auto_kick_dm": "You have been kicked from {name} for reaching {warnings} warnings.",
   "warn_actions_auto_kick_reason": "Kicked for reaching {warnings} warnings.",
   "warn_actions_auto_ban_dm": "You have been banned from {name} for reaching {warnings} warnings.",
-    "warn_actions_auto_ban_reason": "Banned for reaching {warnings} warnings.",
+  "warn_actions_auto_ban_reason": "Banned for reaching {warnings} warnings.",
   "warn_actions_auto_timeout_dm": "You have been timed out from {name} for reaching {warnings} warnings for {time}.",
   "warn_actions_auto_timeout_reason": "Timed out for reaching {warnings} warnings.",
   "moderation_ephemeral_on": "Moderation responses are now ephemeral.",
@@ -406,9 +406,9 @@
   "auto_react_emoji_set_success": "The react emoji was updated successfully.",
   "auto_response_add_success": "Added trigger `{trigger}` that will make the bot reply with `{reply}`",
   "auto_response_list_empty": "There are no auto response settings.",
-    "auto_response_list_row": "**ID: `{id}`**: Trigger: `{trigger}` -> Will say `{reply}`\n",
+  "auto_response_list_row": "**ID: `{id}`**: Trigger: `{trigger}` -> Will say `{reply}`\n",
   "auto_response_keyword_updated": "The trigger keyword was updated successfully.",
   "auto_response_setting_not_found": "The setting was not found. You'll need to run this in the channel where the setting was set.",
   "auto_response_delete_success": "Deleted the setting successfully.",
-  "auto_response_text_updated": "The response text was updated successfully.",
+  "auto_response_text_updated": "The response text was updated successfully."
 }
