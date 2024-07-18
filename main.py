@@ -4,7 +4,8 @@ from discord.ext import commands as discord_commands_ext
 
 from features import welcoming, leveling, antiraid, chat_streaks, chat_revive, chat_summary, reaction_roles, \
     logging_mod, admin_cmds, giveaways, feedback_cmd, moderation, cleanup_task, verification, velky_stompies, \
-    roles_on_join, heartbeat, automod_actions, power_outage_announcement, per_user_settings, server_language_command
+    roles_on_join, heartbeat, automod_actions, power_outage_announcement, per_user_settings, server_language_command, \
+    auto_react, auto_response
 from utils.blocked import BlockedUserError, BlockedServerError
 from utils.config import get_key
 import sentry_sdk
@@ -119,6 +120,10 @@ if get_key("PerUserSettings_Enabled", "true") == "true":
     bot.add_cog(per_user_settings.PerUserSettings(bot))
 if get_key("Feature_ServerLanguageCommand", "true") == "true":
     bot.add_cog(server_language_command.ServerLanguageCommand())
+if get_key("Feature_AutoReact", "true") == "true":
+    bot.add_cog(auto_react.AutoReact(bot))
+if get_key("Feature_AutoResponse", "true") == "true":
+    bot.add_cog(auto_response.AutoResponse(bot))
 
 
 bot.run(
