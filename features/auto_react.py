@@ -16,7 +16,7 @@ class AutoReact(discord.Cog):
 
         # Create table
         cur.execute(
-            "CREATE TABLE IF NOT EXISTS auto_react(id integer primary key autoincrement, channel_id integer, trigger_text text, emoji text)")
+            "CREATE TABLE IF NOT EXISTS auto_react(id integer primary key autoincrement, guild_id integer, trigger_text text, emoji text)")
 
         # Save changes
         cur.close()
@@ -50,8 +50,8 @@ class AutoReact(discord.Cog):
         cur = conn.cursor()
 
         # Insert
-        cur.execute("INSERT INTO auto_react(channel_id, trigger_text, emoji) VALUES (?, ?, ?)",
-                    (ctx.channel.id, trigger, str(emoji)))
+        cur.execute("INSERT INTO auto_react(guild_id, trigger_text, emoji) VALUES (?, ?, ?)",
+                    (ctx.guild.id, trigger, str(emoji)))
 
         # Save
         cur.close()
@@ -72,7 +72,7 @@ class AutoReact(discord.Cog):
         current_group_msg = ""
 
         # List
-        cur.execute("SELECT * FROM auto_react WHERE channel_id = ?", (ctx.channel.id,))
+        cur.execute("SELECT * FROM auto_react WHERE guild_id = ?", (ctx.guild.id,))
         all_settings = cur.fetchall()
         if len(all_settings) == 0:
             await ctx.respond(trl(ctx.user.id, ctx.guild.id, "auto_react_list_empty"), ephemeral=True)
@@ -104,7 +104,7 @@ class AutoReact(discord.Cog):
     async def edit_trigger_auto_react(self, ctx: discord.ApplicationContext, id: int, new_trigger: str):
         cur = conn.cursor()
         # Check if ID exists
-        cur.execute("SELECT * FROM auto_react WHERE channel_id=? AND id=?", (ctx.channel.id, id))
+        cur.execute("SELECT * FROM auto_react WHERE guild_id=? AND id=?", (ctx.guild.id, id))
         if cur.fetchone() is None:
             await ctx.respond(trl(ctx.user.id, ctx.guild.id, "auto_react_setting_not_found"),
                               ephemeral=True)
@@ -124,7 +124,7 @@ class AutoReact(discord.Cog):
     async def delete_auto_react(self, ctx: discord.ApplicationContext, id: int):
         cur = conn.cursor()
         # Check if ID exists
-        cur.execute("SELECT * FROM auto_react WHERE channel_id=? AND id=?", (ctx.channel.id, id))
+        cur.execute("SELECT * FROM auto_react WHERE guild_id=? AND id=?", (ctx.guild.id, id))
         if cur.fetchone() is None:
             await ctx.respond(
                 trl(ctx.user.id, ctx.guild.id, "auto_react_setting_not_found"),
@@ -162,7 +162,7 @@ class AutoReact(discord.Cog):
 
         cur = conn.cursor()
         # Check if ID exists
-        cur.execute("SELECT * FROM auto_react WHERE channel_id=? AND id=?", (ctx.channel.id, id))
+        cur.execute("SELECT * FROM auto_react WHERE guild_id=? AND id=?", (ctx.guild.id, id))
         if cur.fetchone() is None:
             await ctx.respond(
                 trl(ctx.user.id, ctx.guild.id, "auto_react_setting_not_found"),
@@ -189,7 +189,7 @@ class AutoReact(discord.Cog):
             return
 
         # Find all created settings
-        cur.execute("SELECT * FROM auto_react WHERE channel_id=?", (msg.channel.id,))
+        cur.execute("SELECT * FROM auto_react WHERE guild_id=?", (msg.guild.id,))
         for i in cur.fetchall():
             # If it contains the message
             if i[2] in msg.content:

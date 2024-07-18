@@ -14,7 +14,7 @@ class AutoResponse(discord.Cog):
 
         # Create table
         cur.execute(
-            "CREATE TABLE IF NOT EXISTS auto_response(id integer primary key autoincrement, channel_id integer, trigger_text text, reply_text text)")
+            "CREATE TABLE IF NOT EXISTS auto_response(id integer primary key autoincrement, guild_id integer, trigger_text text, reply_text text)")
 
         # Save changes
         cur.close()
@@ -29,8 +29,8 @@ class AutoResponse(discord.Cog):
         cur = conn.cursor()
 
         # Insert
-        cur.execute("INSERT INTO auto_response(channel_id, trigger_text, reply_text) VALUES (?, ?, ?)",
-                    (ctx.channel.id, trigger, reply))
+        cur.execute("INSERT INTO auto_response(guild_id, trigger_text, reply_text) VALUES (?, ?, ?)",
+                    (ctx.guild.id, trigger, reply))
 
         # Save
         cur.close()
@@ -51,7 +51,7 @@ class AutoResponse(discord.Cog):
         current_group_msg = ""
 
         # List
-        cur.execute("SELECT * FROM auto_response WHERE channel_id=?", (ctx.channel.id,))
+        cur.execute("SELECT * FROM auto_response WHERE guild_id=?", (ctx.guild.id,))
 
         all_settings = cur.fetchall()
         if len(all_settings) == 0:
@@ -83,7 +83,7 @@ class AutoResponse(discord.Cog):
     async def edit_trigger_auto_response(self, ctx: discord.ApplicationContext, id: int, new_trigger: str):
         cur = conn.cursor()
         # Check if ID exists
-        cur.execute("SELECT * FROM auto_response WHERE channel_id=? AND id=?", (ctx.channel.id, id))
+        cur.execute("SELECT * FROM auto_response WHERE guild_id=? AND id=?", (ctx.guild.id, id))
         if cur.fetchone() is None:
             await ctx.respond(
                 trl(ctx.user.id, ctx.guild.id, "auto_response_setting_not_found"),
@@ -104,7 +104,7 @@ class AutoResponse(discord.Cog):
     async def delete_auto_response(self, ctx: discord.ApplicationContext, id: int):
         cur = conn.cursor()
         # Check if ID exists
-        cur.execute("SELECT * FROM auto_response WHERE channel_id=? AND id=?", (ctx.channel.id, id))
+        cur.execute("SELECT * FROM auto_response WHERE guild_id=? AND id=?", (ctx.guild.id, id))
         if cur.fetchone() is None:
             await ctx.respond(
                 trl(ctx.user.id, ctx.guild.id, "auto_response_setting_not_found"),
@@ -125,7 +125,7 @@ class AutoResponse(discord.Cog):
     async def edit_response_auto_response(self, ctx: discord.ApplicationContext, id: int, new_response: str):
         cur = conn.cursor()
         # Check if ID exists
-        cur.execute("SELECT * FROM auto_response WHERE channel_id=? AND id=?", (ctx.channel.id, id))
+        cur.execute("SELECT * FROM auto_response WHERE guild_id=? AND id=?", (ctx.guild.id, id))
         if cur.fetchone() is None:
             await ctx.respond(
                 trl(ctx.user.id, ctx.guild.id, "auto_response_setting_not_found"),
@@ -152,7 +152,7 @@ class AutoResponse(discord.Cog):
             return
 
         # Find all created settings
-        cur.execute("SELECT * FROM auto_response WHERE channel_id=?", (msg.channel.id,))
+        cur.execute("SELECT * FROM auto_response WHERE guild_id=?", (msg.guild.id,))
         for i in cur.fetchall():
             # If it contains the message
             if i[2] in msg.content:
