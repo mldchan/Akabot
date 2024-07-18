@@ -8,7 +8,7 @@ from utils.languages import get_translation_for_key_localized as trl
 class ServerLanguageCommand(discord.Cog):
 
     @discord.slash_command(name='server_language', description="Change the server language.")
-    @discord.option(name='lang', description="The language to set the server to.", choices=[get_language_names()])
+    @discord.option(name='lang', description="The language to set the server to.", choices=get_language_names())
     async def server_language(self, ctx: discord.ApplicationContext, lang: str):
         lang_code = language_name_to_code(lang)
         set_setting(ctx.guild.id, 'language', lang_code)
