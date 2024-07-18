@@ -309,7 +309,7 @@
   "warn_actions_auto_kick_dm": "You have been kicked from {name} for reaching {warnings} warnings.",
   "warn_actions_auto_kick_reason": "Kicked for reaching {warnings} warnings.",
   "warn_actions_auto_ban_dm": "You have been banned from {name} for reaching {warnings} warnings.",
-    "warn_actions_auto_ban_reason": "Banned for reaching {warnings} warnings.",
+  "warn_actions_auto_ban_reason": "Banned for reaching {warnings} warnings.",
   "warn_actions_auto_timeout_dm": "You have been timed out from {name} for reaching {warnings} warnings for {time}.",
   "warn_actions_auto_timeout_reason": "Timed out for reaching {warnings} warnings.",
   "moderation_ephemeral_on": "Moderation responses are now ephemeral.",
@@ -395,5 +395,6 @@
   "pretty_time_delta_3": "{hours} hours {minutes} minutes {seconds} seconds",
   "pretty_time_delta_2": "{minutes} minutes {seconds} seconds",
   "pretty_time_delta_1": "{seconds} seconds",
-  "server_language_response": "Set the server language to {lang}."
+  "server_language_response": "Set the server language to {lang}.",
+  "feedback_about": "# Akabot\nAkabot is a Discord bot made by a single developer, Akatsuki2555, featuring Anti Raid, Chat Revive, Chat Summary, Chat Streaks, Leveling, Logging, Moderation, Reaction Roles, Welcome messages, Goodbye messages, Giveaways, Automod Actions, Auto React and Auto Response spanning over English, Czech, Japanese, French, German, Spanish, Russian and Hungarian.\nCopyright (C) 2023-2024  Akatsuki2555\n\nThis Discord bot is free software: you can redistribute it and/or modify\nit under the terms of the GNU General Public License as published by\nthe Free Software Foundation, either version 3 of the License, or\n any later version.\n\nThis Discord bot is distributed in the hope that it will be useful,\nbut WITHOUT ANY WARRANTY; without even the implied warranty of\nMERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\nGNU General Public License for more details.\n\nDiscord is a registered trademark of Discord Inc."
 }
