@@ -395,20 +395,5 @@
   "pretty_time_delta_3": "{hours} horas {minutes} minutos {seconds} segundos",
   "pretty_time_delta_2": "{minutes} minutos {seconds} segundos",
   "pretty_time_delta_1": "{seconds} segundos",
-  "server_language_response": "Establecer el idioma del servidor a {lang}.",
-  "auto_react_emoji_invalid": "Emoji no válido, asegúrate de que es de este servidor y es un emoji",
-  "auto_react_add_success": "Se añadió el disparador `{trigger}` que hará que el bot reaccione con `{emoji}`",
-  "auto_react_list_empty": "No hay ajustes de reacción automática.",
-  "auto_react_list_row": "**ID: `{id}`**: Disparador: `{trigger}` -> Retirará con `{emoji}`\n",
-  "auto_react_setting_not_found": "No se encontró la configuración. Necesitará ejecutar esto en el canal donde se estableció la configuración.",
-  "auto_react_keyword_updated_success": "La palabra clave del disparador se ha actualizado correctamente.",
-  "auto_react_delete_success": "Se ha eliminado la configuración correctamente.",
-  "auto_react_emoji_set_success": "El emoji reacciona se actualizó correctamente.",
-  "auto_response_add_success": "Se añadió el disparador `{trigger}` que hará que el bot responda con `{reply}`",
-  "auto_response_list_empty": "No hay ajustes de respuesta automática.",
-  "auto_response_list_row": "**ID: `{id}`**: Disparador: `{trigger}` -> Dirá `{reply}`\n",
-  "auto_response_keyword_updated": "La palabra clave del disparador se ha actualizado correctamente.",
-  "auto_response_setting_not_found": "No se encontró la configuración. Necesitará ejecutar esto en el canal donde se estableció la configuración.",
-  "auto_response_delete_success": "Se ha eliminado la configuración correctamente.",
-  "auto_response_text_updated": "El texto de respuesta se ha actualizado correctamente."
+  "server_language_response": "Establecer el idioma del servidor a {lang}."
 }

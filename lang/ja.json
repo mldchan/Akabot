@@ -395,20 +395,5 @@
   "pretty_time_delta_3": "{hours} 時間 {minutes} 分 {seconds} 秒",
   "pretty_time_delta_2": "{minutes} 分 {seconds} 秒",
   "pretty_time_delta_1": "{seconds} 秒",
-  "server_language_response": "サーバーの言語を {lang} に設定します。",
-  "auto_react_emoji_invalid": "無効な絵文字です。このサーバーからの絵文字であることを確認してください",
-  "auto_react_add_success": "Added trigger `{trigger}` that will make the bot react with `{emoji}`",
-  "auto_react_list_empty": "自動反応設定はありません。",
-  "auto_react_list_row": "**ID: `{id}`**: Trigger: `{trigger}` -> Will react with `{emoji}`\n",
-  "auto_react_setting_not_found": "設定が見つかりませんでした。設定が設定されているチャンネルで実行する必要があります。",
-  "auto_react_keyword_updated_success": "トリガーキーワードが正常に更新されました。",
-  "auto_react_delete_success": "設定を削除しました。",
-  "auto_react_emoji_set_success": "react 絵文字の更新に成功しました。",
-  "auto_response_add_success": "Added trigger `{trigger}` that will make the bot reply with `{reply}`",
-  "auto_response_list_empty": "自動応答設定はありません。",
-  "auto_response_list_row": "**ID: `{id}`**: Trigger: `{trigger}` -> Will say `{reply}`\n",
-  "auto_response_keyword_updated": "トリガーキーワードが正常に更新されました。",
-  "auto_response_setting_not_found": "設定が見つかりませんでした。設定が設定されているチャンネルで実行する必要があります。",
-  "auto_response_delete_success": "設定を削除しました。",
-  "auto_response_text_updated": "返信テキストが正常に更新されました。"
+  "server_language_response": "サーバーの言語を {lang} に設定します。"
 }

@@ -395,20 +395,5 @@
   "pretty_time_delta_3": "{hours} Stunden {minutes} Minuten {seconds} Sekunden",
   "pretty_time_delta_2": "{minutes} Minuten {seconds} Sekunden",
   "pretty_time_delta_1": "{seconds} Sekunden",
-  "server_language_response": "Setze die Server-Sprache auf {lang}.",
-  "auto_react_emoji_invalid": "Ungültiger Emoji, stelle sicher, dass er von diesem Server stammt, und es ist ein Emoji",
-  "auto_react_add_success": "Trigger `{trigger}` hinzugefügt, der den Bot mit `{emoji} ` reagieren lässt",
-  "auto_react_list_empty": "Es gibt keine automatischen Reaktionseinstellungen.",
-  "auto_react_list_row": "**ID: `{id}`**: Trigger: `{trigger}` -> Wird mit `{emoji}`\n reagieren",
-  "auto_react_setting_not_found": "Die Einstellung wurde nicht gefunden. Sie müssen dies in dem Kanal ausführen, in dem die Einstellung festgelegt wurde.",
-  "auto_react_keyword_updated_success": "Das Trigger-Schlüsselwort wurde erfolgreich aktualisiert.",
-  "auto_react_delete_success": "Einstellung erfolgreich gelöscht.",
-  "auto_react_emoji_set_success": "Die Reaktion auf Emoji wurde erfolgreich aktualisiert.",
-  "auto_response_add_success": "Trigger `{trigger}` hinzugefügt, der den Bot mit `{reply} ` antworten wird",
-  "auto_response_list_empty": "Es gibt keine Auto-Antwort-Einstellungen.",
-  "auto_response_list_row": "**ID: `{id}`**: Trigger: `{trigger}` -> Wird `{reply}` sagen\n",
-  "auto_response_keyword_updated": "Das Trigger-Schlüsselwort wurde erfolgreich aktualisiert.",
-  "auto_response_setting_not_found": "Die Einstellung wurde nicht gefunden. Sie müssen dies in dem Kanal ausführen, in dem die Einstellung festgelegt wurde.",
-  "auto_response_delete_success": "Einstellung erfolgreich gelöscht.",
-  "auto_response_text_updated": "Der Antworttext wurde erfolgreich aktualisiert."
+  "server_language_response": "Setze die Server-Sprache auf {lang}."
 }
