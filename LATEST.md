@@ -2,9 +2,6 @@
 
 ## 3.3b4-message-intent
 
-- Added message intent features
-- Added Auto React
-- Added Auto Response
 - Updated translations
 - Added 4 languages
 
