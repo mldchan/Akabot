@@ -28,8 +28,8 @@ def db_calculate_multiplier(guild_id: int):
         end_month, end_day = map(int, m[4].split('-'))
 
         start_date = datetime.datetime(datetime.datetime.now().year, start_month, start_day)
-        end_date = datetime.datetime(datetime.datetime.now().year, end_month, end_day)
-        
+        end_date = datetime.datetime(datetime.datetime.now().year, end_month, end_day, hour=23, minute=59, second=59)
+
         if end_date < start_date:
             end_date = end_date.replace(year=end_date.year + 1)
 
@@ -260,7 +260,7 @@ class Leveling(discord.Cog):
             end_month, end_day = map(int, i[4].split('-'))
 
             start_date = datetime.datetime(datetime.datetime.now().year, start_month, start_day)
-            end_date = datetime.datetime(datetime.datetime.now().year, end_month, end_day)
+            end_date = datetime.datetime(datetime.datetime.now().year, end_month, end_day, hour=23, minute=59, second=59)
 
             if end_date < start_date:
                 end_date = end_date.replace(year=end_date.year + 1)
