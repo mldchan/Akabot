@@ -1,5 +1,9 @@
 # Changelog for 3.3
 
+## 3.3b5-message-intent
+
+- Chat Streaks now reply to the user instead of sending a chat message
+
 ## 3.3b4-message-intent
 
 - Added message intent features
