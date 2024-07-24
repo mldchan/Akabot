@@ -131,14 +131,14 @@ class ChatStreaks(discord.Cog):
                 return
             if get_per_user_setting(message.author.id, 'chat_streaks_alerts', 'on') == 'off':
                 return
-            msg = await message.channel.send(
+            msg = await message.reply(
                 trl(message.author.id, message.guild.id, "chat_streaks_expired").format(streak=old_streak))
             await msg.delete(delay=3)
 
         if state == "updated":
             if get_per_user_setting(message.author.id, 'chat_streaks_alerts', 'on') != 'on':
                 return  # Only trigger if the user has the setting on
-            msg = await message.channel.send(
+            msg = await message.reply(
                 trl(message.author.id, message.guild.id, "chat_streaks_updated").format(streak=new_streak))
             await msg.delete(delay=3)
 
