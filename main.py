@@ -7,10 +7,12 @@ from sentry_sdk.integrations.logging import LoggingIntegration
 
 from features import welcoming, leveling, antiraid, chat_streaks, chat_revive, chat_summary, reaction_roles, \
     logging_mod, admin_cmds, giveaways, feedback_cmd, moderation, cleanup_task, verification, velky_stompies, \
-    roles_on_join, heartbeat, automod_actions, power_outage_announcement, per_user_settings, server_language_command, \
-    bot_help
+    roles_on_join, heartbeat, automod_actions, power_outage_announcement, per_user_settings, server_settings, \
+    auto_react, auto_response, bot_help
 from utils.blocked import BlockedUserError, BlockedServerError
 from utils.config import get_key
+
+from utils.languages import get_translation_for_key_localized as trl
 
 logging.basicConfig(
     level=logging.INFO,
@@ -26,9 +28,9 @@ if get_key("Sentry_Enabled", "false") == "true":
                     traces_sample_rate=1.0,
                     profiles_sample_rate=1.0)
 
-
 intents = discord.Intents.default()
 intents.members = True
+intents.message_content = True
 
 bot = discord.Bot(intents=intents)
 
@@ -45,26 +47,28 @@ async def on_application_command_error(ctx: discord.ApplicationContext, error):
         minutes = int(error.retry_after / 60)
         seconds = int(error.retry_after % 60)
         if minutes > 0:
-            await ctx.respond(f'Cooldown! Try again after {minutes} minutes and {seconds} seconds.', ephemeral=True)
+            await ctx.respond(
+                trl(ctx.user.id, ctx.guild.id, "cooldown_2").format(minutes=str(minutes), seconds=str(seconds)),
+                ephemeral=True)
         else:
-            await ctx.respond(f'Cooldown! Try again after {seconds} seconds.', ephemeral=True)
+            await ctx.respond(trl(ctx.user.id, ctx.guild.id, "cooldown_1").format(seconds=str(seconds)), ephemeral=True)
         return
 
     if isinstance(error, discord_commands_ext.MissingPermissions):
         await ctx.respond(
-            'You do not have the permissions to use this command. Missing: ' + ', '.join(error.missing_permissions),
+            trl(ctx.user.id, ctx.guild.id, "command_no_permission").format(
+                permissions=', '.join(error.missing_permissions)),
             ephemeral=True)
         return
 
     if isinstance(error, discord_commands_ext.NoPrivateMessage):
-        await ctx.respond('This command cannot be used in private messages.', ephemeral=True)
+        await ctx.respond(trl(ctx.user.id, ctx.guild.id, "command_no_private"), ephemeral=True)
         return
 
     if isinstance(error, discord_commands_ext.BotMissingPermissions):
-        await ctx.respond(
-            f"The bot is missing permissions to perform this action.\n"
-            f"Missing: {', '.join(error.missing_permissions)}",
-            ephemeral=True)
+        await ctx.respond(trl(ctx.user.id, ctx.guild.id, "command_bot_no_perm").format(
+            permissions=', '.join(error.missing_permissions)),
+                          ephemeral=True)
         return
 
     if isinstance(error, BlockedUserError):
@@ -74,9 +78,10 @@ async def on_application_command_error(ctx: discord.ApplicationContext, error):
     if isinstance(error, BlockedServerError):
         await ctx.respond(error.reason, ephemeral=True)
         return
-    
+
     sentry_sdk.capture_exception(error)
     raise error
+
 
 if get_key("Feature_DatabaseCleanupTask", "true") == "true":
     bot.add_cog(cleanup_task.DbCleanupTask())
@@ -118,11 +123,13 @@ if get_key("PowerOutageAnnouncements_Enabled", "false") == "true":
     bot.add_cog(power_outage_announcement.PowerOutageAnnouncement(bot))
 if get_key("PerUserSettings_Enabled", "true") == "true":
     bot.add_cog(per_user_settings.PerUserSettings(bot))
-if get_key("Feature_ServerLanguageCommand", "true") == "true":
-    bot.add_cog(server_language_command.ServerLanguageCommand())
+if get_key("Feature_ServerSettings", "true") == "true":
+    bot.add_cog(server_settings.ServerSettings())
+if get_key("Feature_AutoReact", "true") == "true":
+    bot.add_cog(auto_react.AutoReact(bot))
+if get_key("Feature_AutoResponse", "true") == "true":
+    bot.add_cog(auto_response.AutoResponse(bot))
 if get_key("Feature_HelpCommands", "true") == "true":
     bot.add_cog(bot_help.Help(bot))
 
-bot.run(
-    get_key("Bot_Token")
-)
+bot.run(get_key("Bot_Token"))
