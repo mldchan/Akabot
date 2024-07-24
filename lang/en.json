@@ -418,5 +418,5 @@
   "command_no_private": "This command cannot be used in private messages.",
   "command_bot_no_perm": "The bot is missing permissions to perform this action.\nMissing permissions: {permissions}",
   "server_tz_invalid": "Invalid timezone. Please use a valid timezone.",
-  "server_tz_response": "Server timezone set to {tz}."
+  "server_tz_response": "Server timezone set to UTC+{tz}."
 }

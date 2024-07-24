@@ -5,6 +5,7 @@
 - Chat Streaks now reply to the user instead of sending a chat message
 - Leveling now uses UTC time instead of server clock
 - Added server based time (requires testing)
+- Added server settings instead of server language setting
 
 ## 3.3b4-message-intent
 
