@@ -19,7 +19,7 @@ class ServerSettings(discord.Cog):
     @server_settings_group.command(name='tz', description='Timezone setting')
     @discord.option(name='tz', description='Timezone')
     async def tz_setting(self, ctx: discord.ApplicationContext, tz: float):
-        if not re.match(r"^[+-]?\d+(\.[05])?$", str(tz)):
+        if not re.match(r"^[+-]?\d+(\.\d)?$", str(tz)):
             await ctx.respond(trl(ctx.user.id, ctx.guild.id, "server_tz_invalid"), ephemeral=True)
             return
 
