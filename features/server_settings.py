@@ -29,4 +29,8 @@ class ServerSettings(discord.Cog):
             return
 
         set_setting(ctx.guild.id, 'timezone_offset', str(tz))
-        await ctx.respond(trl(ctx.user.id, ctx.guild.id, "server_tz_response").format(tz=tz), ephemeral=True)
+
+        tz_formatted = str(tz)
+        if re.match(r'^[+-]?\d+\.0$', tz_formatted):
+            tz_formatted = tz_formatted[:-2]
+        await ctx.respond(trl(ctx.user.id, ctx.guild.id, "server_tz_response").format(tz=tz_formatted), ephemeral=True)
