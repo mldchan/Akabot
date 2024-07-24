@@ -85,7 +85,7 @@ async def add_warning(user: discord.Member, guild: discord.Guild, reason: str) -
 def db_add_warning(guild_id: int, user_id: int, reason: str) -> int:
     cur = conn.cursor()
     cur.execute('insert into warnings (guild_id, user_id, reason, timestamp) values (?, ?, ?, ?)',
-                (guild_id, user_id, reason, get_date_time_str()))
+                (guild_id, user_id, reason, get_date_time_str(guild_id)))
     warning_id = cur.lastrowid
     cur.close()
     conn.commit()

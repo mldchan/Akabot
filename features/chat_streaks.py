@@ -6,10 +6,10 @@ from discord.ext import commands as commands_ext
 from database import conn as db
 from utils.analytics import analytics
 from utils.blocked import is_blocked
-from utils.chat_streak_util import get_time_at_midnight
 from utils.languages import get_translation_for_key_localized as trl
 from utils.logging_util import log_into_logs
 from utils.per_user_settings import get_per_user_setting
+from utils.tzutil import get_server_midnight_time
 
 
 class ChatStreakStorage:
@@ -50,7 +50,7 @@ class ChatStreakStorage:
         cur.execute(
             'SELECT * FROM chat_streaks WHERE guild_id = ? AND member_id = ?', (guild_id, member_id))
         if cur.fetchone() is None:
-            start_time = get_time_at_midnight()
+            start_time = get_server_midnight_time(guild_id)
             cur.execute('INSERT INTO chat_streaks (guild_id, member_id, last_message, start_time) VALUES (?, ?, ?, ?)',
                         (guild_id, member_id, start_time, start_time))
             cur.close()
@@ -64,19 +64,19 @@ class ChatStreakStorage:
         start_time = datetime.datetime.fromisoformat(result[1])
 
         # Check for streak expiry
-        if get_time_at_midnight() - last_message > datetime.timedelta(days=1, hours=1):
+        if get_server_midnight_time(guild_id) - last_message > datetime.timedelta(days=1, hours=1):
             streak = max((last_message - start_time).days, 0)
             cur.execute(
                 'UPDATE chat_streaks SET last_message = ?, start_time = ? WHERE guild_id = ? AND member_id = ?',
-                (get_time_at_midnight(), get_time_at_midnight(), guild_id, member_id))
+                (get_server_midnight_time(guild_id), get_server_midnight_time(guild_id), guild_id, member_id))
             cur.close()
             db.commit()
             return "expired", streak, 0
 
         before_update = (last_message - start_time).days
         cur.execute('UPDATE chat_streaks SET last_message = ? WHERE guild_id = ? AND member_id = ?',
-                    (get_time_at_midnight(), guild_id, member_id))
-        after_update = (get_time_at_midnight() - start_time).days
+                    (get_server_midnight_time(guild_id), guild_id, member_id))
+        after_update = (get_server_midnight_time(guild_id) - start_time).days
 
         cur.close()
         db.commit()
@@ -98,7 +98,7 @@ class ChatStreakStorage:
         cur.execute(
             'SELECT * FROM chat_streaks WHERE guild_id = ? AND member_id = ?', (guild_id, member_id))
         if not cur.fetchone():
-            start_time = get_time_at_midnight()
+            start_time = get_server_midnight_time(guild_id)
             cur.execute('INSERT INTO chat_streaks (guild_id, member_id, last_message, start_time) VALUES (?, ?, ?, ?)',
                         (guild_id, member_id, start_time, start_time))
             cur.close()
@@ -106,7 +106,7 @@ class ChatStreakStorage:
             return
 
         cur.execute('UPDATE chat_streaks SET last_message = ?, start_time = ? WHERE guild_id = ? AND member_id = ?',
-                    (get_time_at_midnight(), get_time_at_midnight(), guild_id, member_id))
+                    (get_server_midnight_time(guild_id), get_server_midnight_time(guild_id), guild_id, member_id))
         cur.close()
         db.commit()
 
