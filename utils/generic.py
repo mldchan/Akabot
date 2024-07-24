@@ -1,6 +1,7 @@
 import datetime
 
 from utils.languages import get_translation_for_key_localized as trl
+from utils.tzutil import get_now_for_server
 
 
 def pretty_time_delta(seconds: int | float, user_id: int, server_id: int) -> str:
@@ -23,6 +24,6 @@ def pretty_time(seconds_since_epoch: int | float) -> str:
     return datetime.datetime.fromtimestamp(seconds_since_epoch).strftime('%Y/%m/%d %H:%M:%S')
 
 
-def get_date_time_str() -> str:
+def get_date_time_str(guild_id: int) -> str:
     # format: yyyy/mm/dd hh:mm
-    return datetime.datetime.now(datetime.UTC).strftime('%Y/%m/%d %H:%M')
+    return get_now_for_server(guild_id).strftime('%Y/%m/%d %H:%M')

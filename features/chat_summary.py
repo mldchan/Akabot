@@ -11,6 +11,7 @@ from utils.blocked import is_blocked
 from utils.languages import get_translation_for_key_localized as trl
 from utils.logging_util import log_into_logs
 from utils.settings import get_setting, set_setting
+from utils.tzutil import get_now_for_server
 
 
 class ChatSummary(discord.Cog):
@@ -120,14 +121,14 @@ class ChatSummary(discord.Cog):
 
     @tasks.loop(minutes=1)
     async def summarize(self):
-        now = datetime.datetime.now(datetime.UTC)
-
-        if now.hour != 0 or now.minute != 0:
-            return
-
         cur = db.cursor()
         cur.execute('SELECT guild_id, channel_id, messages FROM chat_summary WHERE enabled = 1')
         for i in cur.fetchall():
+            now = get_now_for_server(i[0])
+
+            if now.hour != 0 or now.minute != 0:
+                continue
+
             guild = self.bot.get_guild(i[0])
             if guild is None:
                 continue

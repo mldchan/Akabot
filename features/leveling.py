@@ -11,6 +11,7 @@ from utils.blocked import is_blocked
 from utils.languages import get_translation_for_key_localized as trl
 from utils.logging_util import log_into_logs
 from utils.settings import get_setting, set_setting
+from utils.tzutil import get_now_for_server
 
 
 def db_init():
@@ -30,13 +31,14 @@ def db_calculate_multiplier(guild_id: int):
         start_month, start_day = map(int, m[3].split('-'))
         end_month, end_day = map(int, m[4].split('-'))
 
-        start_date = datetime.datetime(datetime.datetime.now(datetime.UTC).year, start_month, start_day)
-        end_date = datetime.datetime(datetime.datetime.now(datetime.UTC).year, end_month, end_day, hour=23, minute=59, second=59)
+        now = get_now_for_server(guild_id)
+        start_date = datetime.datetime(now.year, start_month, start_day)
+        end_date = datetime.datetime(now.year, end_month, end_day, hour=23, minute=59, second=59)
 
         if end_date < start_date:
             end_date = end_date.replace(year=end_date.year + 1)
 
-        if start_date <= datetime.datetime.now(datetime.UTC) <= end_date:
+        if start_date <= now <= end_date:
             multiplier *= m[2]
 
     return multiplier
@@ -283,14 +285,15 @@ class Leveling(discord.Cog):
             start_month, start_day = map(int, i[3].split('-'))
             end_month, end_day = map(int, i[4].split('-'))
 
-            start_date = datetime.datetime(datetime.datetime.now(datetime.UTC).year, start_month, start_day)
-            end_date = datetime.datetime(datetime.datetime.now(datetime.UTC).year, end_month, end_day, hour=23, minute=59, second=59)
+            now = get_now_for_server(ctx.guild.id)
+            start_date = datetime.datetime(now.year, start_month, start_day)
+            end_date = datetime.datetime(now.year, end_month, end_day, hour=23, minute=59, second=59)
 
             if end_date < start_date:
                 end_date = end_date.replace(year=end_date.year + 1)
 
             # continue if the multiplier is not active
-            if start_date > datetime.datetime.now(datetime.UTC) or end_date < datetime.datetime.now(datetime.UTC):
+            if start_date > now or end_date < now:
                 continue
 
             msg += trl(ctx.user.id, ctx.guild.id, "leveling_level_multiplier_row").format(
@@ -418,13 +421,14 @@ class Leveling(discord.Cog):
         start_month, start_day = map(int, start_date.split('-'))
         end_month, end_day = map(int, end_date.split('-'))
 
+        now = get_now_for_server(ctx.guild.id)
         # Use the validate_day method to check if the start and end dates are valid
-        if not validate_day(start_month, start_day, datetime.datetime.now(datetime.UTC).year):
+        if not validate_day(start_month, start_day, now.year):
             await ctx.respond(trl(ctx.user.id, ctx.guild.id, "leveling_error_invalid_start_date"),
                               ephemeral=True)
             return
 
-        if not validate_day(end_month, end_day, datetime.datetime.now(datetime.UTC).year):
+        if not validate_day(end_month, end_day, now.year):
             await ctx.respond(trl(ctx.user.id, ctx.guild.id, "leveling_error_invalid_end_date"),
                               ephemeral=True)
             return
@@ -551,12 +555,13 @@ class Leveling(discord.Cog):
         # Verify the month and day values
         start_month, start_day = map(int, start_date.split('-'))
 
+        now = get_now_for_server(ctx.guild.id)
         # Use the validate_day method to check if the start date is valid
-        if not validate_day(start_month, start_day, datetime.datetime.now(datetime.UTC).year):
+        if not validate_day(start_month, start_day, now.year):
             await ctx.respond(trl(ctx.user.id, ctx.guild.id, "leveling_error_invalid_start_date"), ephemeral=True)
             return
 
-        start_year = datetime.datetime.now(datetime.UTC).year
+        start_year = now.year
 
         # Set new setting
         db_multiplier_change_start_date(ctx.guild.id, name, datetime.datetime(start_year, start_month, start_day))
@@ -597,12 +602,13 @@ class Leveling(discord.Cog):
         # Verify the month and day values
         end_month, end_day = map(int, end_date.split('-'))
 
+        now = get_now_for_server(ctx.guild.id)
         # Use the validate_day method to check if the end date is valid
-        if not validate_day(end_month, end_day, datetime.datetime.now(datetime.UTC).year):
+        if not validate_day(end_month, end_day, now.year):
             await ctx.respond(trl(ctx.user.id, ctx.guild.id, "leveling_error_invalid_end_date"), ephemeral=True)
             return
 
-        year = datetime.datetime.now(datetime.UTC).year
+        year = now.year
 
         # Set new setting
         db_multiplier_change_end_date(ctx.guild.id, name, datetime.datetime(year, end_month, end_day))

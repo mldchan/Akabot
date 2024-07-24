@@ -9,6 +9,7 @@ from database import conn
 from utils.analytics import analytics
 from utils.blocked import is_blocked
 from utils.languages import get_translation_for_key_localized as trl
+from utils.tzutil import get_now_for_server
 
 
 class Giveaways(discord.Cog):
@@ -41,7 +42,7 @@ class Giveaways(discord.Cog):
             return
 
         # Determine ending date
-        end_date = datetime.datetime.now(datetime.UTC)
+        end_date = get_now_for_server(ctx.guild.id)
         end_date = end_date + datetime.timedelta(days=days, hours=hours, minutes=minutes)
 
         # Send message
@@ -168,7 +169,13 @@ class Giveaways(discord.Cog):
 
         cur.execute("select * from giveaways")
         for i in cur.fetchall():
+            channel_id = i[1]
+            channel = await self.bot.fetch_channel(channel_id)
+
+            time = datetime.datetime.now(datetime.UTC)
+            if channel is not None:
+                time = get_now_for_server(channel.guild.id)
             # Check if the giveaway ended
             end_date = datetime.datetime.fromisoformat(i[4])
-            if datetime.datetime.now(datetime.UTC) > end_date:
+            if time > end_date:
                 await self.process_send_giveaway(i[0])
