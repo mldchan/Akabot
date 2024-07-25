@@ -164,6 +164,8 @@ class ChatSummary(discord.Cog):
                 date = f"{now.year}/{day}/{month}"
             elif date_format == "MM/DD/YYYY":
                 date = f"{month}/{day}/{now.year}"
+            elif date_format == "YYYY年MM月DD日":
+                date = f"{now.year}年{month}月{day}日"
             else:
                 date = f"{now.year}/{month}/{day}"
 
