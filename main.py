@@ -30,7 +30,6 @@ if get_key("Sentry_Enabled", "false") == "true":
 
 intents = discord.Intents.default()
 intents.members = True
-intents.message_content = True
 
 bot = discord.Bot(intents=intents)
 
