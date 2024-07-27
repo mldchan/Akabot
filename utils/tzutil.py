@@ -14,7 +14,7 @@ def get_server_midnight_time(server_id: int) -> datetime:
     """
     tz_offset = get_setting(server_id, "timezone_offset", "0")
     stamp1 = datetime.datetime.now(datetime.UTC).timestamp() // 86400 * 86400 + (86400 * 3) + float(tz_offset) * 3600
-    return datetime.datetime.fromtimestamp(stamp1, datetime.UTC)
+    return datetime.datetime.fromtimestamp(stamp1)
 
 
 def adjust_time_for_server(time: datetime, server_id: int) -> datetime:
