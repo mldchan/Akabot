@@ -297,7 +297,7 @@ class ChatSummary(discord.Cog):
     @commands_ext.guild_only()
     @discord.default_permissions(manage_guild=True)
     @commands_ext.has_permissions(manage_guild=True)
-    @discord.option(name="format", description="Format",
+    @discord.option(name="date_format", description="Format",
                     choices=["YYYY/MM/DD", "DD/MM/YYYY", "DD. MM. YYYY", "YYYY/DD/MM", "MM/DD/YYYY", "YYYY年MM月DD日"])
     @is_blocked()
     @analytics("chatsummary dateformat")
