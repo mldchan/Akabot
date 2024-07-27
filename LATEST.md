@@ -1,28 +1,16 @@
 # Changelog for 3.3
 
-## 3.3b5-message-intent
+In this update, we have made several improvements and added new features to enhance your experience:
 
 - Chat Streaks now reply to the user instead of sending a chat message
 - Leveling now uses UTC time instead of server clock
-- Added server based time (requires testing)
+- Added server based time
 - Added server settings instead of server language setting
-
-## 3.3b4-message-intent
-
 - Added message intent features
 - Added Auto React
 - Added Auto Response
 - Updated translations
 - Added 4 languages
-
-## 3.3b3
-
-- Chat Streak bug fix
-
-idk I forgor about the changelog 😭
-
-## 3.3b1
-
-- Fix bug in Chat Streaks allowing a person to keep their chat streak for 2 days
+- Fixed a bug in Chat Streaks that allowed a person to keep their chat streak for 2 days
 - Added per-user settings
-- Added ability to disable Chat Streaks messages or reduce their frequency
+- Added ability to disable Chat Streaks messages or reduce their frequency.
