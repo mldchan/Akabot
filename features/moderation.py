@@ -116,9 +116,9 @@ class Moderation(discord.Cog):
     @discord.slash_command(name='timeout',
                            description='Time out a user from the server. If a user has a timeout, this will change the timeout.')
     @commands_ext.guild_only()
-    @discord.default_permissions(mute_members=True)
-    @commands_ext.has_permissions(mute_members=True)
-    @commands_ext.bot_has_permissions(mute_members=True)
+    @discord.default_permissions(manage_members=True)
+    @commands_ext.has_permissions(manage_members=True)
+    @commands_ext.bot_has_permissions(manage_members=True)
     @discord.option(name='user', description='The user to time out', type=discord.Member)
     @discord.option(name='reason', description='The reason for timing out', type=str)
     @discord.option(name='send_dm', description='Send a DM to the user', type=bool)
