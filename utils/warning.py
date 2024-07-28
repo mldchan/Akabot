@@ -15,10 +15,10 @@ async def add_warning(user: discord.Member, guild: discord.Guild, reason: str) -
     if warning_should_dm == 'true':
         warning_message = get_setting(guild.id, 'warning_message', 'You have been warned in {guild} for {reason}.')
 
-        warning_message.replace('{name}', user.display_name)
-        warning_message.replace('{guild}', guild.name)
-        warning_message.replace('{reason}', reason)
-        warning_message.replace('{warnings}', str(len(db_get_warnings(guild.id, user.id))))
+        warning_message = warning_message.replace('{name}', user.display_name)
+        warning_message = warning_message.replace('{guild}', guild.name)
+        warning_message = warning_message.replace('{reason}', reason)
+        warning_message = warning_message.replace('{warnings}', str(len(db_get_warnings(guild.id, user.id))))
 
         # try dm user
         try:
