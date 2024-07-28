@@ -128,6 +128,11 @@ class ChatSummary(discord.Cog):
         cur = db.cursor()
         cur.execute('SELECT guild_id, channel_id, messages FROM chat_summary WHERE enabled = 1')
         for i in cur.fetchall():
+            yesterday = get_now_for_server(i[0])
+
+            if yesterday.hour != 0 or yesterday.minute != 0:
+                continue
+
             guild = self.bot.get_guild(i[0])
             if guild is None:
                 continue
@@ -139,32 +144,32 @@ class ChatSummary(discord.Cog):
             if not channel.can_send():
                 continue
 
-            now = datetime.datetime.now(datetime.timezone.utc)
+            yesterday = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=1) # Get yesterday
 
             # Get date format
             date_format = get_setting(guild.id, "chatsummary_dateformat", "YYYY/MM/DD")
 
             # Better formatting for day
-            day = str(now.day)
+            day = str(yesterday.day)
             if len(day) == 1:
                 day = "0" + day
 
             # Better formatting for the month
-            month = str(now.month)
+            month = str(yesterday.month)
             if len(month) == 1:
                 month = "0" + month
 
             # Select appropriate date format
             if date_format == "DD/MM/YYYY":
-                date = f"{day}/{month}/{now.year}"
+                date = f"{day}/{month}/{yesterday.year}"
             elif date_format == "DD. MM. YYYY":
-                date = f"{day}. {month}. {now.year}"
+                date = f"{day}. {month}. {yesterday.year}"
             elif date_format == "YYYY/DD/MM":
-                date = f"{now.year}/{day}/{month}"
+                date = f"{yesterday.year}/{day}/{month}"
             elif date_format == "MM/DD/YYYY":
                 date = f"{month}/{day}/{now.year}"
             else:
-                date = f"{now.year}/{month}/{day}"
+                date = f"{yesterday.year}/{month}/{day}"
 
             chat_summary_message = f'# Chat Summary for {date}:\n'
             chat_summary_message += '\n'
