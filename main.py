@@ -9,7 +9,6 @@ from features import welcoming, leveling, antiraid, chat_streaks, chat_revive, c
     logging_mod, admin_cmds, giveaways, feedback_cmd, moderation, cleanup_task, verification, velky_stompies, \
     roles_on_join, heartbeat, automod_actions, power_outage_announcement, per_user_settings, server_settings, \
     auto_react, auto_response, bot_help
-from utils.blocked import BlockedUserError, BlockedServerError
 from utils.config import get_key
 
 from utils.languages import get_translation_for_key_localized as trl
@@ -30,7 +29,6 @@ if get_key("Sentry_Enabled", "false") == "true":
 
 intents = discord.Intents.default()
 intents.members = True
-intents.message_content = True
 
 bot = discord.Bot(intents=intents)
 
@@ -71,15 +69,8 @@ async def on_application_command_error(ctx: discord.ApplicationContext, error):
                           ephemeral=True)
         return
 
-    if isinstance(error, BlockedUserError):
-        await ctx.respond(error.reason, ephemeral=True)
-        return
-
-    if isinstance(error, BlockedServerError):
-        await ctx.respond(error.reason, ephemeral=True)
-        return
-
     sentry_sdk.capture_exception(error)
+    await ctx.respond(trl(ctx.user.id, ctx.guild.id, "command_error_generic"), ephemeral=True)
     raise error
 
 

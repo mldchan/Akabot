@@ -7,7 +7,6 @@ from discord.ext import tasks
 
 from database import conn
 from utils.analytics import analytics
-from utils.blocked import is_blocked
 from utils.languages import get_translation_for_key_localized as trl
 from utils.tzutil import get_now_for_server
 
@@ -32,7 +31,6 @@ class Giveaways(discord.Cog):
     @commands_ext.has_permissions(manage_guild=True)
     @commands_ext.bot_has_guild_permissions(add_reactions=True, read_message_history=True, send_messages=True)
     @commands_ext.guild_only()
-    @is_blocked()
     @analytics("giveaway new")
     async def giveaway_new(self, ctx: discord.ApplicationContext, item: str, days: int, hours: int, minutes: int,
                            winners: int):
@@ -65,7 +63,6 @@ class Giveaways(discord.Cog):
     @commands_ext.has_permissions(manage_guild=True)
     @commands_ext.bot_has_guild_permissions(add_reactions=True, read_message_history=True, send_messages=True)
     @commands_ext.guild_only()
-    @is_blocked()
     @analytics("giveaway end")
     async def giveaway_end(self, ctx: discord.ApplicationContext, giveaway_id: int):
         cur = conn.cursor()
@@ -82,7 +79,6 @@ class Giveaways(discord.Cog):
         await ctx.respond(trl(ctx.user.id, ctx.guild.id, "giveaways_giveaway_end_success"), ephemeral=True)
 
     @discord.Cog.listener()
-    @is_blocked()
     async def on_reaction_add(self, reaction: discord.Reaction, user: discord.User):
         if user.bot:
             return
@@ -101,7 +97,6 @@ class Giveaways(discord.Cog):
         conn.commit()
 
     @discord.Cog.listener()
-    @is_blocked()
     async def on_reaction_remove(self, reaction: discord.Reaction, user: discord.User):
         if user.bot:
             return

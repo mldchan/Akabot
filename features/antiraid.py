@@ -4,7 +4,6 @@ import discord
 from discord.ext import commands as commands_ext
 
 from utils.analytics import analytics
-from utils.blocked import is_blocked
 from utils.languages import get_translation_for_key_localized as trl
 from utils.logging_util import log_into_logs
 from utils.settings import get_setting, set_setting
@@ -34,7 +33,6 @@ class AntiRaid(discord.Cog):
         self.violation_counters = ViolationCounters()
 
     @discord.Cog.listener()
-    @is_blocked()
     async def on_member_join(self, member: discord.Member):
         self.violation_counters.filter_expired_actions()
 
@@ -61,7 +59,6 @@ class AntiRaid(discord.Cog):
     @commands_ext.guild_only()
     @discord.option(name='people', description='The number of people joining...', type=int)
     @discord.option(name='per', description='...per the number of seconds to check', type=int)
-    @is_blocked()
     @analytics("antiraid join threshold")
     async def set_join_threshold(self, ctx: discord.ApplicationContext, people: int, per: int):
         # Get old settings
@@ -93,7 +90,6 @@ class AntiRaid(discord.Cog):
     @discord.default_permissions(manage_guild=True)
     @commands_ext.has_permissions(manage_guild=True)
     @commands_ext.guild_only()
-    @is_blocked()
     @analytics("antiraid list")
     async def list_settings(self, ctx: discord.ApplicationContext):
         join_threshold = get_setting(ctx.guild.id, 'antiraid_join_threshold', '5')

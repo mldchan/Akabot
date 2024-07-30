@@ -2,18 +2,15 @@ import discord
 from discord.ext import commands as commands_ext
 
 from utils.analytics import analytics
-from utils.blocked import is_blocked
 from utils.languages import get_translation_for_key_localized as trl
 from utils.logging_util import log_into_logs
 from utils.settings import get_setting, set_setting
-
 
 class Welcoming(discord.Cog):
     def __init__(self, bot: discord.Bot) -> None:
         self.bot = bot
 
     @discord.Cog.listener()
-    @is_blocked()
     async def on_member_join(self, member: discord.Member):
         target_channel_id = get_setting(member.guild.id, 'welcome_channel', '0')
         if target_channel_id == '0':
@@ -42,7 +39,6 @@ class Welcoming(discord.Cog):
             await target_channel.send(content=message_text)  # Send it as text only
 
     @discord.Cog.listener()
-    @is_blocked()
     async def on_member_remove(self, member: discord.Member):
         target_channel_id = get_setting(member.guild.id, 'goodbye_channel', '0')
         if target_channel_id == '0':
@@ -76,7 +72,6 @@ class Welcoming(discord.Cog):
     @discord.default_permissions(manage_guild=True)
     @commands_ext.has_permissions(manage_guild=True)
     @commands_ext.guild_only()
-    @is_blocked()
     @analytics("welcome list")
     async def welcome_list_settings(self, ctx: discord.ApplicationContext):
         welcome_channel = get_setting(ctx.guild.id, 'welcome_channel', '0')
@@ -98,7 +93,6 @@ class Welcoming(discord.Cog):
     @commands_ext.has_permissions(manage_guild=True)
     @commands_ext.guild_only()
     @commands_ext.bot_has_permissions(view_channel=True, send_messages=True)
-    @is_blocked()
     @analytics("welcome channel")
     async def welcome_channel(self, ctx: discord.ApplicationContext, channel: discord.TextChannel):
         # Get old channel
@@ -130,7 +124,6 @@ class Welcoming(discord.Cog):
     @commands_ext.guild_only()
     @discord.option(name="message_type", description="The type of the message (embed or text)",
                     choices=['embed', 'text'])
-    @is_blocked()
     @analytics("welcome type")
     async def welcome_type(self, ctx: discord.ApplicationContext, message_type: str):
         # Get old response type
@@ -156,7 +149,6 @@ class Welcoming(discord.Cog):
     @commands_ext.has_permissions(manage_guild=True)
     @commands_ext.guild_only()
     @discord.option(name="title", description="The title of the message")
-    @is_blocked()
     @analytics("welcome title")
     async def welcome_title(self, ctx: discord.ApplicationContext, title: str):
         # Get old response title
@@ -181,7 +173,6 @@ class Welcoming(discord.Cog):
     @commands_ext.has_permissions(manage_guild=True)
     @commands_ext.guild_only()
     @discord.option(name="text", description="The content of the message or description of the embed")
-    @is_blocked()
     @analytics("welcome text")
     async def welcome_text(self, ctx: discord.ApplicationContext, text: str):
         # Get old welcome text
@@ -207,7 +198,6 @@ class Welcoming(discord.Cog):
     @discord.default_permissions(manage_guild=True)
     @commands_ext.has_permissions(manage_guild=True)
     @commands_ext.guild_only()
-    @is_blocked()
     @analytics("goodbye list")
     async def goodbye_list_settings(self, ctx: discord.ApplicationContext):
         goodbye_channel = get_setting(ctx.guild.id, 'goodbye_channel', '0')
@@ -229,7 +219,6 @@ class Welcoming(discord.Cog):
     @commands_ext.has_permissions(manage_guild=True)
     @commands_ext.guild_only()
     @commands_ext.bot_has_permissions(view_channel=True, send_messages=True)
-    @is_blocked()
     @analytics("goodbye channel")
     async def goodbye_channel(self, ctx: discord.ApplicationContext, channel: discord.TextChannel):
         # Get old goodbye channel
@@ -257,7 +246,6 @@ class Welcoming(discord.Cog):
     @commands_ext.guild_only()
     @discord.option(name="message_type", description="The type of the message (embed or text)",
                     choices=['embed', 'text'])
-    @is_blocked()
     @analytics("goodbye type")
     async def goodbye_type(self, ctx: discord.ApplicationContext, message_type: str):
         # Get old goodbye type
@@ -283,7 +271,6 @@ class Welcoming(discord.Cog):
     @commands_ext.has_permissions(manage_guild=True)
     @commands_ext.guild_only()
     @discord.option(name="title", description="The title of the message")
-    @is_blocked()
     @analytics("goodbye title")
     async def goodbye_title(self, ctx: discord.ApplicationContext, title: str):
         # Get old goodbye title
@@ -308,7 +295,6 @@ class Welcoming(discord.Cog):
     @commands_ext.has_permissions(manage_guild=True)
     @commands_ext.guild_only()
     @discord.option(name="text", description="The content of the message or description of the embed")
-    @is_blocked()
     @analytics("goodbye text")
     async def goodbye_text(self, ctx: discord.ApplicationContext, text: str):
         # Get old goodbye text

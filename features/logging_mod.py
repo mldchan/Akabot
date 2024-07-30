@@ -1,7 +1,6 @@
 import discord
 from discord.ext import commands as commands_ext
 
-from utils.blocked import is_blocked
 from utils.languages import get_translation_for_key_localized as trl
 from utils.logging_util import log_into_logs
 from utils.settings import get_setting, set_setting
@@ -20,7 +19,6 @@ class Logging(discord.Cog):
         super().__init__()
 
     @discord.Cog.listener()
-    @is_blocked()
     async def on_guild_emojis_update(self, guild: discord.Guild, before: discord.Emoji | None,
                                      after: discord.Emoji | None):
         if before is None and after is not None:
@@ -47,7 +45,6 @@ class Logging(discord.Cog):
             await log_into_logs(guild, embed)
 
     @discord.Cog.listener()
-    @is_blocked()
     async def on_guild_stickers_update(self, guild: discord.Guild, before: discord.Sticker | None,
                                        after: discord.Sticker | None):
         if before is None and after is not None:
@@ -72,28 +69,24 @@ class Logging(discord.Cog):
             await log_into_logs(guild, embed)
 
     @discord.Cog.listener()
-    @is_blocked()
     async def on_auto_moderation_rule_create(self, rule: discord.AutoModRule):
         embed = discord.Embed(title=trl(0, rule.guild.id, "logging_automod_rule_created"), color=discord.Color.green())
         embed.add_field(name=trl(0, rule.guild.id, "logging_rule_name"), value=rule.name)
         await log_into_logs(rule.guild, embed)
 
     @discord.Cog.listener()
-    @is_blocked()
     async def on_auto_moderation_rule_delete(self, rule: discord.AutoModRule):
         embed = discord.Embed(title=trl(0, rule.guild.id, "logging_automod_rule_delete"), color=discord.Color.red())
         embed.add_field(name=trl(0, rule.guild.id, "logging_rule_name"), value=rule.name)
         await log_into_logs(rule.guild, embed)
 
     @discord.Cog.listener()
-    @is_blocked()
     async def on_auto_moderation_rule_update(self, rule: discord.AutoModRule):
         embed = discord.Embed(title=trl(0, rule.guild.id, "logging_automod_rule_update"), color=discord.Color.blue())
         embed.add_field(name=trl(0, rule.guild.id, "logging_rule_name"), value=rule.name)
         await log_into_logs(rule.guild, embed)
 
     @discord.Cog.listener()
-    @is_blocked()
     async def on_member_ban(self, guild: discord.Guild, user: discord.User):
         reason = None
         moderator = None
@@ -116,7 +109,6 @@ class Logging(discord.Cog):
         await log_into_logs(guild, embed)
 
     @discord.Cog.listener()
-    @is_blocked()
     async def on_member_unban(self, guild: discord.Guild, user: discord.User):
         reason = None
         moderator = None
@@ -139,7 +131,6 @@ class Logging(discord.Cog):
         await log_into_logs(guild, embed)
 
     @discord.Cog.listener()
-    @is_blocked()
     async def on_guild_channel_update(self, before: discord.abc.GuildChannel, after: discord.abc.GuildChannel):
         embed = discord.Embed(title=trl(0, after.guild.id, "logging_channel_update_title"),
                               color=discord.Color.blue())
@@ -170,7 +161,6 @@ class Logging(discord.Cog):
             await log_into_logs(after.guild, embed)
 
     @discord.Cog.listener()
-    @is_blocked()
     async def on_guild_channel_create(self, channel: discord.abc.GuildChannel):
         embed = discord.Embed(title=trl(0, channel.guild.id, "logging_channel_create_title"),
                               description=trl(0, channel.guild.id, "logging_channel_create_description").format(
@@ -180,7 +170,6 @@ class Logging(discord.Cog):
         await log_into_logs(channel.guild, embed)
 
     @discord.Cog.listener()
-    @is_blocked()
     async def on_guild_channel_delete(self, channel: discord.abc.GuildChannel):
         embed = discord.Embed(title=trl(0, channel.guild.id, "logging_channel_delete_title"),
                               description=trl(0, channel.guild.id, "logging_channel_delete_description").format(
@@ -190,7 +179,6 @@ class Logging(discord.Cog):
         await log_into_logs(channel.guild, embed)
 
     @discord.Cog.listener()
-    @is_blocked()
     async def on_guild_update(self, before: discord.Guild, after: discord.Guild):
         embed = discord.Embed(title=f"{after.name} Server Updated", color=discord.Color.blue())
 
@@ -243,7 +231,6 @@ class Logging(discord.Cog):
             await log_into_logs(after, embed)
 
     @discord.Cog.listener()
-    @is_blocked()
     async def on_guild_role_create(self, role: discord.Role):
         embed = discord.Embed(title=trl(0, role.guild.id, "logging_role_created_title"),
                               description=trl(0, role.guild.id, "logging_role_created_description").format(
@@ -252,7 +239,6 @@ class Logging(discord.Cog):
         await log_into_logs(role.guild, embed)
 
     @discord.Cog.listener()
-    @is_blocked()
     async def on_guild_role_delete(self, role: discord.Role):
         embed = discord.Embed(title=trl(0, role.guild.id, "logging_role_deleted_title"),
                               description=trl(0, role.guild.id, "logging_role_deleted_description").format(
@@ -260,7 +246,6 @@ class Logging(discord.Cog):
         await log_into_logs(role.guild, embed)
 
     @discord.Cog.listener()
-    @is_blocked()
     async def on_guild_role_update(self, before: discord.Role, after: discord.Role):
         embed = discord.Embed(title=trl(0, after.guild.id, "logging_role_updated_title"), color=discord.Color.blue())
         if before.name != after.name:
@@ -294,7 +279,6 @@ class Logging(discord.Cog):
             await log_into_logs(after.guild, embed)
 
     @discord.Cog.listener()
-    @is_blocked()
     async def on_invite_create(self, invite: discord.Invite):
         embed = discord.Embed(title=trl(0, invite.guild.id, "logging_invite_created"), color=discord.Color.green())
         embed.add_field(name=trl(0, invite.guild.id, "logging_code"), value=invite.code)
@@ -305,13 +289,11 @@ class Logging(discord.Cog):
         await log_into_logs(invite.guild, embed)
 
     @discord.Cog.listener()
-    @is_blocked()
     async def on_invite_delete(self, invite: discord.Invite):
         embed = discord.Embed(title=trl(0, invite.guild.id, "logging_invite_deleted"), color=discord.Color.red())
         await log_into_logs(invite.guild, embed)
 
     @discord.Cog.listener()
-    @is_blocked()
     async def on_member_join(self, member: discord.Member):
         embed = discord.Embed(title=trl(0, member.guild.id, "logging_member_join_title"),
                               description=trl(0, member.guild.id, "logging_member_join_description").format(
@@ -320,7 +302,6 @@ class Logging(discord.Cog):
         await log_into_logs(member.guild, embed)
 
     @discord.Cog.listener()
-    @is_blocked()
     async def on_member_remove(self, member: discord.Member):
         embed = discord.Embed(title=trl(0, member.guild.id, "logging_member_leave_title"),
                               description=trl(0, member.guild.id, "logging_member_leave_description").format(
@@ -329,7 +310,6 @@ class Logging(discord.Cog):
         await log_into_logs(member.guild, embed)
 
     @discord.Cog.listener()
-    @is_blocked()
     async def on_member_update(self, before: discord.Member, after: discord.Member):
         embed = discord.Embed(title=trl(0, after.guild.id, "logging_member_update_title"), color=discord.Color.blue())
 
@@ -347,7 +327,6 @@ class Logging(discord.Cog):
             await log_into_logs(after.guild, embed)
 
     @discord.Cog.listener()
-    @is_blocked()
     async def on_voice_state_update(self, member: discord.Member, before: discord.VoiceState,
                                     after: discord.VoiceState):
         if before.channel is None and after.channel is not None:
@@ -422,7 +401,6 @@ class Logging(discord.Cog):
                 await log_into_logs(member.guild, embed)
 
     @discord.Cog.listener()
-    @is_blocked()
     async def on_reaction_add(self, reaction: discord.Reaction, user: discord.User):
         embed = discord.Embed(title=trl(0, reaction.message.guild.id, "logging_reaction_added_title"),
                               color=discord.Color.green())
@@ -432,7 +410,6 @@ class Logging(discord.Cog):
         await log_into_logs(reaction.message.guild, embed)
 
     @discord.Cog.listener()
-    @is_blocked()
     async def on_reaction_remove(self, reaction: discord.Reaction, user: discord.User):
         embed = discord.Embed(title=trl(0, reaction.message.guild.id, "logging_reaction_removed_title"),
                               color=discord.Color.red())
@@ -442,7 +419,6 @@ class Logging(discord.Cog):
         await log_into_logs(reaction.message.guild, embed)
 
     @discord.Cog.listener()
-    @is_blocked()
     async def on_reaction_clear(self, message: discord.Message, reactions: list[discord.Reaction]):
         if len(reactions) < 1:
             return
@@ -451,7 +427,6 @@ class Logging(discord.Cog):
         await log_into_logs(message.guild, embed)
 
     @discord.Cog.listener()
-    @is_blocked()
     async def on_reaction_clear_emoji(self, reaction: discord.Reaction):
         embed = discord.Embed(title=trl(0, reaction.message.guild.id, "logging_reactions_clear"),
                               color=discord.Color.red())
@@ -460,7 +435,6 @@ class Logging(discord.Cog):
         await log_into_logs(reaction.message.guild, embed)
 
     @discord.Cog.listener()
-    @is_blocked()
     async def on_scheduled_event_create(self, event: discord.ScheduledEvent):
         embed = discord.Embed(title=trl(0, event.guild.id, "logging_scheduled_event_create"),
                               color=discord.Color.green())
@@ -473,7 +447,6 @@ class Logging(discord.Cog):
         await log_into_logs(event.guild, embed)
 
     @discord.Cog.listener()
-    @is_blocked()
     async def on_scheduled_event_update(self, before: discord.ScheduledEvent, after: discord.ScheduledEvent):
         embed = discord.Embed(title=trl(0, after.guild.id, "logging_scheduled_event_update"),
                               color=discord.Color.blue())
@@ -495,7 +468,6 @@ class Logging(discord.Cog):
             await log_into_logs(after.guild, embed)
 
     @discord.Cog.listener()
-    @is_blocked()
     async def on_scheduled_event_delete(self, event: discord.ScheduledEvent):
         embed = discord.Embed(title=trl(0, event.guild.id, "logging_scheduled_event_delete"), color=discord.Color.red())
         embed.add_field(name=trl(0, event.guild.id, "logging_name"), value=event.name)
@@ -507,7 +479,6 @@ class Logging(discord.Cog):
         await log_into_logs(event.guild, embed)
 
     @discord.Cog.listener()
-    @is_blocked()
     async def on_thread_create(self, thread: discord.Thread):
         embed = discord.Embed(title=trl(0, thread.guild.id, "logging_thread_create"),
                               description=trl(0, thread.guild.id, "logging_thread_create_description").format(
@@ -518,7 +489,6 @@ class Logging(discord.Cog):
         await log_into_logs(thread.guild, embed)
 
     @discord.Cog.listener()
-    @is_blocked()
     async def on_thread_delete(self, thread: discord.Thread):
         embed = discord.Embed(title=trl(0, thread.guild.id, "logging_thread_delete"),
                               description=trl(0, thread.guild.id, "logging_thread_delete_description").format(
@@ -528,7 +498,6 @@ class Logging(discord.Cog):
         await log_into_logs(thread.guild, embed)
 
     @discord.Cog.listener()
-    @is_blocked()
     async def on_thread_update(self, before: discord.Thread, after: discord.Thread):
         embed = discord.Embed(title=trl(0, after.guild.id, "logging_thread_update"), color=discord.Color.blue())
         if before.name != after.name:
@@ -548,7 +517,6 @@ class Logging(discord.Cog):
     @discord.default_permissions(manage_guild=True)
     @commands_ext.has_permissions(manage_guild=True)
     @commands_ext.guild_only()
-    @is_blocked()
     async def list_settings(self, ctx: discord.ApplicationContext):
         logging_channel = get_setting(ctx.guild.id, 'logging_channel', '0')
         embed = discord.Embed(title=trl(ctx.user.id, ctx.guild.id, "logging_list_title"), color=discord.Color.blurple())
@@ -568,7 +536,6 @@ class Logging(discord.Cog):
     @commands_ext.guild_only()
     @commands_ext.has_guild_permissions(manage_guild=True)
     @commands_ext.bot_has_permissions(send_messages=True, view_channel=True)
-    @is_blocked()
     async def set_logging_channel(self, ctx: discord.ApplicationContext, channel: discord.TextChannel):
         # Get old channel
         old_channel_id = get_setting(ctx.guild.id, "logging_channel", str(channel.id))

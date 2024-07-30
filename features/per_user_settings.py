@@ -3,7 +3,7 @@ import discord
 from utils.languages import get_language_names, language_name_to_code, get_language_name
 from utils.languages import get_translation_for_key_localized as trl
 from utils.per_user_settings import set_per_user_setting, db_init
-
+from utils.analytics import analytics
 
 class PerUserSettings(discord.Cog):
     def __init__(self, bot: discord.Bot):
@@ -15,6 +15,7 @@ class PerUserSettings(discord.Cog):
     @user_settings_group.command(name='chat_streaks_alerts', description='Enable or disable chat streaks alerts')
     @discord.option(name='state', description='How notifications should be sent',
                     choices=['enabled', 'only when lost', 'off'])
+    @analytics("user_settings chat_streaks_alerts")
     async def chat_streaks_alerts(self, ctx: discord.ApplicationContext, state: str):
         set_per_user_setting(ctx.user.id, 'chat_streaks_alerts', state)
         if state == 'enabled':
@@ -29,6 +30,7 @@ class PerUserSettings(discord.Cog):
     @user_settings_group.command(name='langauge',
                                  description='Set your personal language, applies across servers for you')
     @discord.option(name='lang', description='Your language', choices=get_language_names())
+    @analytics("user_settings language")
     async def set_language(self, ctx: discord.ApplicationContext, lang: str):
         lang_code = language_name_to_code(lang)
 

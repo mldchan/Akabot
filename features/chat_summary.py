@@ -7,7 +7,6 @@ from discord.ext import tasks
 
 from database import conn as db
 from utils.analytics import analytics
-from utils.blocked import is_blocked
 from utils.languages import get_translation_for_key_localized as trl
 from utils.logging_util import log_into_logs
 from utils.settings import get_setting, set_setting
@@ -44,7 +43,6 @@ class ChatSummary(discord.Cog):
         self.summarize.start()
 
     @discord.Cog.listener()
-    @is_blocked()
     async def on_message(self, message: discord.Message):
         if message.guild is None:
             return
@@ -80,7 +78,6 @@ class ChatSummary(discord.Cog):
         db.commit()
 
     @discord.Cog.listener()
-    @is_blocked()
     async def on_message_edit(self, old_message: discord.Message, new_message: discord.Message):
         if new_message.guild is None:
             return
@@ -210,7 +207,6 @@ class ChatSummary(discord.Cog):
     @discord.default_permissions(manage_guild=True)
     @commands_ext.has_permissions(manage_guild=True)
     @commands_ext.bot_has_permissions(send_messages=True)
-    @is_blocked()
     @analytics("chatsummary add")
     async def command_add(self, ctx: discord.ApplicationContext, channel: discord.TextChannel):
         cur = db.cursor()
@@ -252,7 +248,6 @@ class ChatSummary(discord.Cog):
     @commands_ext.guild_only()
     @discord.default_permissions(manage_guild=True)
     @commands_ext.has_permissions(manage_guild=True)
-    @is_blocked()
     @analytics("chatsummary remove")
     async def command_remove(self, ctx: discord.ApplicationContext, channel: discord.TextChannel):
         cur = db.cursor()
@@ -299,7 +294,6 @@ class ChatSummary(discord.Cog):
     @commands_ext.has_permissions(manage_guild=True)
     @discord.option(name="date_format", description="Format",
                     choices=["YYYY/MM/DD", "DD/MM/YYYY", "DD. MM. YYYY", "YYYY/DD/MM", "MM/DD/YYYY", "YYYY年MM月DD日"])
-    @is_blocked()
     @analytics("chatsummary dateformat")
     async def summary_dateformat(self, ctx: discord.ApplicationContext, date_format: str):
         # Get old setting
@@ -327,7 +321,6 @@ class ChatSummary(discord.Cog):
     @commands_ext.guild_only()
     @discord.default_permissions(manage_guild=True)
     @commands_ext.has_permissions(manage_guild=True)
-    @is_blocked()
     @analytics("chatsummary countedits")
     async def chatsummary_countedits(self, ctx: discord.ApplicationContext, countedits: bool):
         # Get old setting
@@ -358,7 +351,6 @@ class ChatSummary(discord.Cog):
     # @commands_ext.guild_only()
     # @discord.default_permissions(manage_guild=True)
     # @commands_ext.has_permissions(manage_guild=True)
-    # @is_blocked()
     # async def test_summarize(self, ctx: discord.ApplicationContext):
 
     #     cur = db.cursor()

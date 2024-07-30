@@ -5,7 +5,6 @@ import discord.ext.tasks
 
 from database import conn
 
-
 class DbCleanupTask(discord.Cog):
     def __init__(self) -> None:
         super().__init__()
