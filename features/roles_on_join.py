@@ -2,7 +2,7 @@ import discord
 
 from database import conn
 from utils.languages import get_translation_for_key_localized as trl
-
+from utils.analytics import analytics
 
 class RolesOnJoin(discord.Cog):
     def __init__(self, bot: discord.Bot):
@@ -33,6 +33,7 @@ class RolesOnJoin(discord.Cog):
     roles_on_join_commands = discord.SlashCommandGroup(name="roles_on_join", description="Add roles on join")
 
     @roles_on_join_commands.command(name="add", description="Add a role on join")
+    @analytics("roles_on_join add")
     async def add_role_on_join(self, ctx: discord.ApplicationContext, role: discord.Role):
         # check role position
         if role.position > ctx.me.top_role.position:
@@ -52,6 +53,7 @@ class RolesOnJoin(discord.Cog):
         await ctx.respond(trl(ctx.user.id, ctx.guild.id, "roles_on_join_role_added"), ephemeral=True)
 
     @roles_on_join_commands.command(name="remove", description="Remove a role on join")
+    @analytics("roles_on_join remove")
     async def remove_role_on_join(self, ctx: discord.ApplicationContext, role: discord.Role):
         cur = conn.cursor()
         cur.execute("SELECT role_id FROM roles_on_join WHERE guild_id=? AND role_id=?", (ctx.guild_id, role.id))
@@ -64,6 +66,7 @@ class RolesOnJoin(discord.Cog):
         await ctx.respond(trl(ctx.user.id, ctx.guild.id, "roles_on_join_role_removed"), ephemeral=True)
 
     @roles_on_join_commands.command(name="list", description="List roles on join")
+    @analytics("roles_on_join list")
     async def list_roles_on_join(self, ctx: discord.ApplicationContext):
         cur = conn.cursor()
         cur.execute("SELECT id, role_id FROM roles_on_join WHERE guild_id=?", (ctx.guild_id,))

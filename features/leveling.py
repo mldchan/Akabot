@@ -7,7 +7,6 @@ from discord.ext import commands as commands_ext
 
 from database import conn as db
 from utils.analytics import analytics
-from utils.blocked import is_blocked
 from utils.languages import get_translation_for_key_localized as trl
 from utils.logging_util import log_into_logs
 from utils.settings import get_setting, set_setting
@@ -269,7 +268,6 @@ class Leveling(discord.Cog):
 
     @discord.slash_command(name='level', description='Get the level of a user')
     @commands_ext.guild_only()
-    @is_blocked()
     @analytics("level")
     async def get_level(self, ctx: discord.ApplicationContext, user: discord.User = None):
         user = user or ctx.user
@@ -334,7 +332,6 @@ class Leveling(discord.Cog):
     @discord.default_permissions(manage_guild=True)
     @commands_ext.has_permissions(manage_guild=True)
     @commands_ext.guild_only()
-    @is_blocked()
     @analytics("leveling list")
     async def list_settings(self, ctx: discord.ApplicationContext):
         leveling_xp_multiplier = get_setting(ctx.guild.id, 'leveling_xp_multiplier', '1')
@@ -368,7 +365,6 @@ class Leveling(discord.Cog):
     @commands_ext.has_permissions(manage_guild=True)
     @commands_ext.guild_only()
     @discord.option(name="multiplier", description="The multiplier to set", type=int)
-    @is_blocked()
     @analytics("leveling multiplier")
     async def set_multiplier(self, ctx: discord.ApplicationContext, multiplier: int):
         # Get old setting
@@ -400,7 +396,6 @@ class Leveling(discord.Cog):
     @discord.option(name="multiplier", description="The multiplication", type=int)
     @discord.option(name='start_date', description='The start date of the multiplier, in format MM-DD', type=str)
     @discord.option(name='end_date', description='The end date of the multiplier, in format MM-DD', type=str)
-    @is_blocked()
     @analytics("leveling add multiplier")
     async def add_multiplier(self, ctx: discord.ApplicationContext, name: str, multiplier: int, start_date: str,
                              end_date: str):
@@ -461,7 +456,6 @@ class Leveling(discord.Cog):
     @commands_ext.guild_only()
     @discord.option(name="old_name", description="The old name of the multiplier", type=str)
     @discord.option(name="new_name", description="The new name of the multiplier", type=str)
-    @is_blocked()
     @analytics("leveling change multiplier name")
     async def change_multiplier_name(self, ctx: discord.ApplicationContext, old_name: str, new_name: str):
         if not db_multiplier_exists(ctx.guild.id, old_name):
@@ -502,7 +496,6 @@ class Leveling(discord.Cog):
     @commands_ext.guild_only()
     @discord.option(name="name", description="The name of the multiplier", type=str)
     @discord.option(name="multiplier", description="The new multiplier", type=int)
-    @is_blocked()
     @analytics("leveling change multiplier multiplier")
     async def change_multiplier_multiplier(self, ctx: discord.ApplicationContext, name: str, multiplier: int):
         if not db_multiplier_exists(ctx.guild.id, name):
@@ -539,7 +532,6 @@ class Leveling(discord.Cog):
     @commands_ext.guild_only()
     @discord.option(name="name", description="The name of the multiplier", type=str)
     @discord.option(name="start_date", description="The new start date of the multiplier, in format MM-DD", type=str)
-    @is_blocked()
     @analytics("leveling change multiplier start date")
     async def change_multiplier_start_date(self, ctx: discord.ApplicationContext, name: str, start_date: str):
         if not db_multiplier_exists(ctx.guild.id, name):
@@ -586,7 +578,6 @@ class Leveling(discord.Cog):
     @commands_ext.guild_only()
     @discord.option(name="name", description="The name of the multiplier", type=str)
     @discord.option(name="end_date", description="The new end date of the multiplier, in format MM-DD", type=str)
-    @is_blocked()
     @analytics("leveling change multiplier end date")
     async def change_multiplier_end_date(self, ctx: discord.ApplicationContext, name: str, end_date: str):
         if not db_multiplier_exists(ctx.guild.id, name):
@@ -632,7 +623,6 @@ class Leveling(discord.Cog):
     @commands_ext.has_permissions(manage_guild=True)
     @commands_ext.guild_only()
     @discord.option(name="name", description="The name of the multiplier", type=str)
-    @is_blocked()
     @analytics("leveling remove multiplier")
     async def remove_multiplier(self, ctx: discord.ApplicationContext, name: str):
         if not db_multiplier_exists(ctx.guild.id, name):
@@ -664,7 +654,6 @@ class Leveling(discord.Cog):
     @discord.default_permissions(manage_guild=True)
     @commands_ext.has_permissions(manage_guild=True)
     @commands_ext.guild_only()
-    @is_blocked()
     @analytics("leveling get multiplier")
     async def get_multiplier(self, ctx: discord.ApplicationContext):
         multiplier = db_calculate_multiplier(ctx.guild.id)
@@ -676,7 +665,6 @@ class Leveling(discord.Cog):
     @commands_ext.has_permissions(manage_guild=True)
     @commands_ext.guild_only()
     @discord.option(name="xp", description="The XP to set", type=int)
-    @is_blocked()
     @analytics("leveling set xp per level")
     async def set_xp_per_level(self, ctx: discord.ApplicationContext, xp: int):
         old_xp = get_setting(ctx.guild.id, 'leveling_xp_per_level', '500')
@@ -701,7 +689,6 @@ class Leveling(discord.Cog):
     @commands_ext.guild_only()
     @discord.option(name="level", description="The level to set the reward for", type=int)
     @discord.option(name='role', description='The role to set', type=discord.Role)
-    @is_blocked()
     @analytics("leveling set reward")
     async def set_reward(self, ctx: discord.ApplicationContext, level: int, role: discord.Role):
         # Get old setting
@@ -737,7 +724,6 @@ class Leveling(discord.Cog):
     @commands_ext.has_permissions(manage_guild=True)
     @commands_ext.guild_only()
     @discord.option(name="level", description="The level to remove the reward for", type=int)
-    @is_blocked()
     @analytics("leveling remove reward")
     async def remove_reward(self, ctx: discord.ApplicationContext, level: int):
         # Get old settingF

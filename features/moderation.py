@@ -5,7 +5,6 @@ from discord.ext import commands as commands_ext
 
 from database import conn
 from utils.analytics import analytics
-from utils.blocked import is_blocked
 from utils.config import get_key
 from utils.generic import pretty_time_delta
 from utils.languages import get_translation_for_key_localized as trl
@@ -43,7 +42,6 @@ class Moderation(discord.Cog):
     @discord.option(name='user', description='The user to kick', type=discord.Member)
     @discord.option(name='reason', description='The reason for kicking', type=str)
     @discord.option(name='send_dm', description='Send a DM to the user', type=bool, required=False, default=True)
-    @is_blocked()
     @analytics("kick")
     async def kick_user(self, ctx: discord.ApplicationContext, user: discord.Member, reason: str, send_dm: bool = True):
 
@@ -82,7 +80,6 @@ class Moderation(discord.Cog):
     @discord.option(name='user', description='The user to ban', type=discord.Member)
     @discord.option(name='reason', description='The reason for banning', type=str)
     @discord.option(name='send_dm', description='Send a DM to the user', type=bool)
-    @is_blocked()
     @analytics("ban")
     async def ban_user(self, ctx: discord.ApplicationContext, user: discord.Member, reason: str, send_dm: bool = True):
 
@@ -125,7 +122,6 @@ class Moderation(discord.Cog):
     @discord.option(name='days', description='The number of days to time out', type=int)
     @discord.option(name='hours', description='The number of hours to time out', type=int)
     @discord.option(name='minutes', description='The number of minutes to time out', type=int)
-    @is_blocked()
     @analytics("timeout")
     async def timeout_user(self, ctx: discord.ApplicationContext, user: discord.Member, reason: str, days: int,
                            send_dm: bool = True, hours: int = 0, minutes: int = 0):
@@ -187,7 +183,6 @@ class Moderation(discord.Cog):
     @discord.option(name='user', description='The user to remove the timeout from', type=discord.Member)
     @discord.option(name='reason', description='The reason for removing', type=str)
     @discord.option(name='send_dm', description='Send a DM to the user', type=bool)
-    @is_blocked()
     @analytics("remove_timeout")
     async def remove_timeout_user(self, ctx: discord.ApplicationContext, user: discord.Member, reason: str,
                                   send_dm: bool = True):
@@ -231,7 +226,6 @@ class Moderation(discord.Cog):
     @discord.option(name='amount', description='The number of messages to purge')
     @discord.option(name='include_user', description='Include messages from this user')
     @discord.option(name='exclude_user', description='Exclude messages from this user')
-    @is_blocked()
     @analytics("purge")
     async def purge_messages(self, ctx: discord.ApplicationContext, amount: int, include_user: discord.Member = None,
                              exclude_user: discord.Member = None):
@@ -268,7 +262,6 @@ class Moderation(discord.Cog):
     @commands_ext.has_permissions(manage_messages=True)
     @discord.option(name='user', description='The user to warn', type=discord.Member)
     @discord.option(name='reason', description='The reason for warning', type=str)
-    @is_blocked()
     @analytics("warn add")
     async def add_warning(self, ctx: discord.ApplicationContext, user: discord.Member, reason: str):
         id = await add_warning(user, ctx.guild, reason)
@@ -283,7 +276,6 @@ class Moderation(discord.Cog):
     @commands_ext.has_permissions(manage_messages=True)
     @discord.option(name='user', description='The user to remove the warning from', type=discord.Member)
     @discord.option(name='id', description='The ID of the warning', type=int)
-    @is_blocked()
     @analytics("warn remove")
     async def remove_warning(self, ctx: discord.ApplicationContext, user: discord.Member, id: int):
         # check: warning exists
@@ -307,7 +299,6 @@ class Moderation(discord.Cog):
     @discord.default_permissions(manage_messages=True)
     @commands_ext.has_permissions(manage_messages=True)
     @discord.option(name='user', description='The user to list the warnings for', type=discord.Member)
-    @is_blocked()
     @analytics("warn list")
     async def list_warnings(self, ctx: discord.ApplicationContext, user: discord.Member):
         warnings = db_get_warnings(ctx.guild.id, user.id)
@@ -327,7 +318,6 @@ class Moderation(discord.Cog):
     @commands_ext.has_permissions(manage_guild=True)
     @discord.option(name='enable', description='Enable or disable the warning message', type=bool)
     @discord.option(name='message', description='The message to send to the user.', type=str)
-    @is_blocked()
     @analytics("warn message")
     async def set_warning_message(self, ctx: discord.ApplicationContext, enable: bool, message: str):
         # Get old
@@ -370,7 +360,6 @@ class Moderation(discord.Cog):
     @discord.option(name='warnings', description='The number of warnings to trigger the action', type=int)
     @discord.option(name='action', description='The action to take', type=str,
                     choices=['kick', 'ban', 'timeout 12h', 'timeout 1d', 'timeout 7d', 'timeout 28d'])
-    @is_blocked()
     @analytics("warn_actions add")
     async def add_warning_action(self, ctx: discord.ApplicationContext, warnings: int, action: str):
         db_add_warning_action(ctx.guild.id, action, warnings)
@@ -384,7 +373,6 @@ class Moderation(discord.Cog):
     @commands_ext.guild_only()
     @discord.default_permissions(manage_messages=True)
     @commands_ext.has_permissions(manage_messages=True)
-    @is_blocked()
     @analytics("warn_actions list")
     async def list_warning_actions(self, ctx: discord.ApplicationContext):
         actions = db_get_warning_actions(ctx.guild.id)
@@ -407,7 +395,6 @@ class Moderation(discord.Cog):
     @discord.default_permissions(manage_messages=True)
     @commands_ext.has_permissions(manage_messages=True)
     @discord.option(name='id', description='The ID of the action', type=int)
-    @is_blocked()
     @analytics("warn_actions remove")
     async def remove_warning_action(self, ctx: discord.ApplicationContext, id: int):
         actions = db_get_warning_actions(ctx.guild.id)

@@ -6,7 +6,6 @@ from discord.ext import tasks
 
 from database import conn as db
 from utils.analytics import analytics
-from utils.blocked import is_blocked
 from utils.languages import get_translation_for_key_localized as trl
 from utils.logging_util import log_into_logs
 
@@ -22,12 +21,10 @@ class ChatRevive(discord.Cog):
         db.commit()
 
     @discord.Cog.listener()
-    @is_blocked()
     async def on_ready(self):
         self.revive_channels.start()
 
     @discord.Cog.listener()
-    @is_blocked()
     async def on_message(self, message: discord.Message):
         if message.author.bot:
             return
@@ -74,7 +71,6 @@ class ChatRevive(discord.Cog):
     @discord.default_permissions(manage_guild=True)
     @commands_ext.has_permissions(manage_guild=True)
     @commands_ext.bot_has_permissions(send_messages=True)
-    @is_blocked()
     @analytics("chatrevive set")
     async def set_revive_settings(self, ctx: discord.ApplicationContext, channel: discord.TextChannel,
                                   revival_minutes: int,
@@ -125,7 +121,6 @@ class ChatRevive(discord.Cog):
     @commands_ext.guild_only()
     @discord.default_permissions(manage_guild=True)
     @commands_ext.has_permissions(manage_guild=True)
-    @is_blocked()
     @analytics("chatrevive remove")
     async def remove_revive_settings(self, ctx: discord.ApplicationContext, channel: discord.TextChannel):
         # Connect to database
@@ -156,7 +151,6 @@ class ChatRevive(discord.Cog):
     @commands_ext.guild_only()
     @discord.default_permissions(manage_guild=True)
     @commands_ext.has_permissions(manage_guild=True)
-    @is_blocked()
     @analytics("chatrevive list")
     async def list_revive_settings(self, ctx: discord.ApplicationContext, channel: discord.TextChannel):
         cur = db.cursor()

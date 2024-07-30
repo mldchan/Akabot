@@ -5,7 +5,6 @@ from discord.ext import commands as commands_ext
 
 from database import conn as db
 from utils.analytics import analytics
-from utils.blocked import is_blocked
 from utils.languages import get_translation_for_key_localized as trl
 from utils.logging_util import log_into_logs
 from utils.per_user_settings import get_per_user_setting
@@ -118,7 +117,6 @@ class ChatStreaks(discord.Cog):
         self.streak_storage = ChatStreakStorage()
 
     @discord.Cog.listener()
-    @is_blocked()
     async def on_message(self, message: discord.Message):
         if message.author.bot:
             return
@@ -150,7 +148,6 @@ class ChatStreaks(discord.Cog):
     @discord.default_permissions(manage_guild=True)
     @commands_ext.has_permissions(manage_guild=True)
     @discord.option(name='user', description='The user to reset the streak for', type=discord.Member)
-    @is_blocked()
     @analytics("streaks reset")
     async def reset_streak_command(self, ctx: discord.ApplicationContext, user: discord.Member):
         # Reset streak
@@ -175,7 +172,6 @@ class ChatStreaks(discord.Cog):
     @discord.default_permissions(manage_guild=True)
     @commands_ext.has_permissions(manage_guild=True)
     @discord.option(name='user', description='The user to get the streak for', type=discord.Member)
-    @is_blocked()
     @analytics("streaks streak")
     async def get_user_streak(self, ctx: discord.ApplicationContext, user: discord.Member):
         (_, streak, _) = self.streak_storage.set_streak(ctx.guild.id, user.id)
@@ -184,7 +180,6 @@ class ChatStreaks(discord.Cog):
             ephemeral=True)
 
     @discord.slash_command(name='streak', description='Get your current streak')
-    @is_blocked()
     @analytics("streak")
     async def get_streak_command(self, ctx: discord.ApplicationContext):
         (_, streak, _) = self.streak_storage.set_streak(ctx.guild.id, ctx.user.id)
@@ -194,7 +189,6 @@ class ChatStreaks(discord.Cog):
 
     @streaks_subcommand.command(name="leaderboard", description="Get the chat streak leaderboard")
     @commands_ext.guild_only()
-    @is_blocked()
     @analytics("streaks leaderboard")
     async def streaks_lb(self, ctx: discord.ApplicationContext):
         cur = db.cursor()

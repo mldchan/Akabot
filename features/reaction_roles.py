@@ -2,7 +2,6 @@ import discord
 from discord.ext import commands as commands_ext
 
 from utils.analytics import analytics
-from utils.blocked import is_blocked
 from utils.languages import get_translation_for_key_localized as trl
 
 
@@ -66,7 +65,6 @@ class ReactionRoles(discord.Cog):
     @commands_ext.has_permissions(manage_roles=True)
     @commands_ext.guild_only()
     @commands_ext.bot_has_permissions(send_messages=True)
-    @is_blocked()
     @analytics("create_reaction_role")
     async def create_reaction_role(self, interaction: discord.ApplicationContext, type: str, message: str,
                                    role_1: discord.Role, role_2: discord.Role = None, role_3: discord.Role = None,
@@ -98,7 +96,6 @@ class ReactionRoles(discord.Cog):
     @commands_ext.has_permissions(manage_roles=True)
     @commands_ext.guild_only()
     @commands_ext.bot_has_permissions(send_messages=True)
-    @is_blocked()
     @analytics("edit_reaction_role")
     async def edit_reaction_role(self, interaction: discord.ApplicationContext, message: str, type: str,
                                  role_1: discord.Role, role_2: discord.Role = None, role_3: discord.Role = None,
@@ -138,7 +135,6 @@ class ReactionRoles(discord.Cog):
             trl(interaction.user.id, interaction.guild.id, "reaction_roles_edited_response"), ephemeral=True)
 
     @discord.Cog.listener()
-    @is_blocked()
     async def on_interaction(self, interaction: discord.Interaction) -> None:
         if interaction.type != discord.InteractionType.component:
             return

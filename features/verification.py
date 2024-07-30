@@ -9,6 +9,7 @@ import utils.logging_util
 import utils.settings
 from utils.logging_util import log_into_logs
 from utils.languages import get_translation_for_key_localized as trl
+from utils.analytics import analytics
 
 
 async def give_verify_role(interaction: discord.Interaction | discord.ApplicationContext):
@@ -208,6 +209,7 @@ class VerificationView(discord.ui.View):
         button_1.callback = self.button_callback
         self.add_item(button_1)
 
+    @analytics("\"Verify\" button click")
     async def button_callback(self, button: discord.Button, ctx: discord.ApplicationContext):
 
         if await is_verified(ctx):
@@ -253,6 +255,7 @@ class Verification(discord.Cog):
     @verification_subcommand.command(name="set_role", description="Set a role for the verification command")
     @discord.ext.commands.has_permissions(manage_roles=True)
     @discord.ext.commands.bot_has_permissions(manage_roles=True)
+    @analytics("verification set_role")
     async def set_role(self, ctx: discord.ApplicationContext, role: discord.Role):
         # Bot permission check
         if not ctx.guild.me.guild_permissions.manage_roles:
@@ -274,6 +277,7 @@ class Verification(discord.Cog):
                                       "reverse text"])
     @discord.ext.commands.has_permissions(manage_roles=True)
     @discord.ext.commands.bot_has_permissions(manage_roles=True)
+    @analytics("verification set_difficulty")
     async def set_difficulty(self, ctx: discord.ApplicationContext, difficulty: str):
         # Store old difficulty
         old_difficulty = utils.settings.get_setting(ctx.guild.id, "verification_method", "none")
@@ -309,6 +313,7 @@ class Verification(discord.Cog):
     @verification_subcommand.command(name="send_message", description="Send the verification message")
     @discord.ext.commands.has_permissions(manage_guild=True)
     @discord.ext.commands.bot_has_permissions(manage_guild=True)
+    @analytics("verification send_message")
     async def send_message(self, ctx: discord.ApplicationContext,
                            custom_verify_message: str = "Click the verify button below to verify!",
                            custom_verify_label: str = "Verify"):

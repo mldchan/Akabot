@@ -4,7 +4,6 @@ from discord.ext import commands as cmds_ext
 from discord.ui.input_text import InputText
 
 from utils.analytics import analytics
-from utils.blocked import is_blocked
 from utils.config import get_key
 from utils.languages import get_translation_for_key_localized as trl
 
@@ -150,13 +149,11 @@ class SupportCmd(discord.Cog):
         self.bot = bot
 
     @discord.slash_command(name="website", help="Get the website link")
-    @is_blocked()
     @analytics("website")
     async def website(self, ctx: discord.ApplicationContext):
         await ctx.respond(trl(ctx.user.id, ctx.guild.id, "feedback_visit_website"), ephemeral=True)
 
     @discord.slash_command(name="vote", description="Vote on the bot")
-    @is_blocked()
     @analytics("vote")
     async def vote(self, ctx: discord.ApplicationContext):
         await ctx.respond(
@@ -166,7 +163,6 @@ class SupportCmd(discord.Cog):
         )
 
     @discord.slash_command(name="privacy", description="Privacy policy URL")
-    @is_blocked()
     @analytics("privacy policy")
     async def privacy_policy(self, ctx: discord.ApplicationContext):
         await ctx.respond(
@@ -176,14 +172,12 @@ class SupportCmd(discord.Cog):
         )
 
     @discord.slash_command(name="donate", description="Donate to the bot to support it")
-    @is_blocked()
     @analytics("donate")
     async def donate(self, ctx: discord.ApplicationContext):
         await ctx.respond(trl(ctx.user.id, ctx.guild.id, "feedback_donate"), ephemeral=True)
 
     @discord.slash_command(name="changelog", description="Get the bot's changelog")
     @discord.option(name="version", description="The version to get the changelog for", choices=["3.3", "3.2", "3.1"])
-    @is_blocked()
     @analytics("changelog")
     async def changelog(self, ctx: discord.ApplicationContext, version: str = get_key("Bot_Version", "3.3")):
         if version == "3.3":
@@ -208,7 +202,6 @@ class SupportCmd(discord.Cog):
 
     @feedback_subcommand.command(name="bug", description="Report a bug")
     @cmds_ext.cooldown(1, 300, cmds_ext.BucketType.user)
-    @is_blocked()
     @analytics("feedback bug")
     async def report_bug(self, ctx: discord.ApplicationContext):
         await ctx.respond(content=trl(ctx.user.id, ctx.guild.id, "feedback_bug_report_disclaimer"),
@@ -217,7 +210,6 @@ class SupportCmd(discord.Cog):
 
     @feedback_subcommand.command(name="feature", description="Suggest a feature")
     @cmds_ext.cooldown(1, 300, cmds_ext.BucketType.user)
-    @is_blocked()
     @analytics("feedback feature")
     async def suggest_feature(self, ctx: discord.ApplicationContext):
         await ctx.respond(content=trl(ctx.user.id, ctx.guild.id, "feedback_feature_disclaimer"),
@@ -225,7 +217,6 @@ class SupportCmd(discord.Cog):
                           view=ConfirmSubmitFeatureRequest(ctx.user.id))
 
     @discord.slash_command(name="about", description="Get information about the bot")
-    @is_blocked()
     @analytics("about")
     async def about(self, ctx: discord.ApplicationContext):
         await ctx.respond(trl(ctx.user.id, ctx.guild.id, "feedback_about"), ephemeral=True)

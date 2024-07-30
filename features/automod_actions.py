@@ -4,6 +4,7 @@ import discord
 from discord.ext import commands as discord_commands_ext
 
 from database import conn
+from utils.analytics import analytics
 from utils.config import get_key
 from utils.languages import get_translation_for_key_localized as trl
 from utils.warning import add_warning
@@ -101,6 +102,7 @@ class AutomodActions(discord.Cog):
                     choices=["ban", "kick", "timeout 1h", "timeout 12h", "timeout 1d", "timeout 7d", "timeout 28d",
                              "DM", "warning"])
     @discord.option(name="message_reason", description="Reason for the action / Message for DM.")
+    @analytics("automod action add")
     async def automod_actions_add(self, ctx: discord.ApplicationContext, rule_name: str, action: str,
                                   message_reason: str = None):
         # verify count of rules
@@ -148,6 +150,7 @@ class AutomodActions(discord.Cog):
     @discord_commands_ext.bot_has_permissions(manage_guild=True)
     @discord_commands_ext.has_permissions(manage_messages=True)
     @discord.option(name="rule_name", description="Name of the rule, as it is in the settings.")
+    @analytics("automod action remove")
     async def automod_actions_remove(self, ctx: discord.ApplicationContext, action_id: int):
         # verify action exists, rule_name is NOT rule_id
 
@@ -168,6 +171,7 @@ class AutomodActions(discord.Cog):
     @automod_actions_subcommands.command(name='list', description='List automod actions.')
     @discord_commands_ext.bot_has_permissions(manage_guild=True)
     @discord_commands_ext.has_permissions(manage_messages=True)
+    @analytics("automod action list")
     async def automod_actions_list(self, ctx: discord.ApplicationContext):
         automod_actions = db_get_automod_actions(ctx.guild.id)
         if not automod_actions:
