@@ -209,7 +209,9 @@ class ChatStreaks(discord.Cog):
             if member is None:
                 continue
 
+            days = int(row[1])
+
             message += trl(ctx.user.id, ctx.guild.id, "chat_streak_leaderboard_line").format(position=i + 1,
                                                                                              user=member.mention,
-                                                                                             days=row[1])
+                                                                                             days=str(days))
         await ctx.respond(message, ephemeral=True)
