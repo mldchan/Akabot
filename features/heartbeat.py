@@ -3,6 +3,7 @@ import requests
 import logging
 
 from utils.config import get_key
+from discord.ext import tasks
 
 
 class Heartbeat(discord.Cog):
@@ -16,7 +17,7 @@ class Heartbeat(discord.Cog):
         else:
             logging.warning("Heartbeat is disabled")
 
-    @discord.ext.tasks.loop(seconds=1)
+    @tasks.loop(seconds=1)
     async def heartbeat_task(self):
         self.interval_cnt += 1
         if self.interval_cnt >= int(get_key("Heartbeat_Interval", '60')):
