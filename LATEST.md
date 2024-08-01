@@ -11,3 +11,6 @@ In this update, we have made several improvements and added new features to enha
 - Fixed a bug in Chat Streaks that allowed a person to keep their chat streak for 2 days
 - Added per-user settings
 - Added ability to disable Chat Streaks messages or reduce their frequency.
+- Fixed Giveaways
+- Fixed Admin Commands
+- Added list commmand to Giveaways
