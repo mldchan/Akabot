@@ -4,8 +4,8 @@ from utils.config import get_key
 # Let's say that trl is the short form of get_translation_for_key_localized across the codebase
 from utils.languages import get_translation_for_key_localized as trl
 
-ADMIN_GUILD = get_key("Admin_GuildID", "0")
-OWNER_ID = get_key("Admin_OwnerID", "0")
+ADMIN_GUILD = int(get_key("Admin_GuildID", "0"))
+OWNER_ID = int(get_key("Admin_OwnerID", "0"))
 
 
 class AdminCommands(discord.Cog):
