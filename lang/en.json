@@ -419,5 +419,12 @@
   "antiraid_dontspam_message": "<@{user_id}>, please do not spam the chat.",
   "giveaways_list_title": "# Giveaways List\n",
   "giveaways_list_line": "{id}. {item} - {winners} winners - {time} remaining\n",
-  "giveaways_list_empty": "There are no currently running giveaways."
+  "giveaways_list_empty": "There are no currently running giveaways.",
+  "pretty_time_delta_less_than_a_minute": "Less than a minute",
+  "pretty_time_delta_2_no_seconds": "{minutes} minutes",
+  "pretty_time_delta_less_than_an_hour": "Less than an hour",
+  "pretty_time_delta_3_no_minutes": "{hours} hours",
+  "pretty_time_delta_3_no_seconds": "{hours} hours {minutes} minutes",
+  "pretty_time_delta_4_no_seconds": "{days} days {hours} hours {minutes} minutes",
+  "pretty_time_delta_4_no_minutes": "{days} days {hours} hours"
 }
