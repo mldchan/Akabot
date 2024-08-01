@@ -78,7 +78,7 @@
   "feedback_feature_direct": "Žádost o funkci můžete otevřít přímo na [GitHub repozitáři](https://github.com/Akatsuki2555/Akabot/issues/new).",
   "feedback_bug_report_disclaimer": "## Upozornění před odesláním hlášení o chybě\nPokud chcete odeslat žádost o funkci, následující informace budou odeslány na GitHub úkoly:\n- Tvoje Discord zobrazované jméno, uživatelské jméno a ID\n- Jakékoliv informace, které poskytnete v názvu a popisu ve formuláři\n\nPokud s tím nesouhlasíte, můžete otevřít chybové hlášení přímo na GitHub úkolech.\n*Toto bylo provedeno pro zabránění spamu a zneužití systému hlášení chyb.\n*Pokud nechcete odesílat žádost o funkci, můžete tuto zprávu ignorovat.*",
   "feedback_bug_report_direct": "Můžete přímo otevřít zprávu o chybě na [GitHub repozitáři](https://github.com/Akatsuki2555/Akabot/issues/new).",
-  "feedback_visit_website": "Můžete navštívit webové stránky [zde](<https://akatsuki.nekoweb.org/project/akabot>)",
+  "feedback_visit_website": "Můžete navštívit webové stránky [zde](<https://akatsuki2555.is-a.dev/project/akabot>)",
   "feedback_form_title": "Nadpis",
   "feedback_form_description": "Popis",
   "feedback_bug_report_submitted": "Zpráva o chybě odeslána.",

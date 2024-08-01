@@ -78,7 +78,7 @@
   "feedback_feature_direct": "Du kannst eine Feature-Anfrage im [GitHub Repository](https://github.com/Akatsuki2555/Akabot/issues/new) direkt öffnen.",
   "feedback_bug_report_disclaimer": "## Hinweis vor dem Absenden eines Fehlerberichts\nWenn Sie einen Fehlerbericht senden folgende Informationen werden an GitHub Probleme gesendet:\n- Dein Discord Anzeigename Benutzername und ID\n- Alle Informationen, die Sie im Titel und in der Beschreibung im Formular\n\nangeben, wenn Sie damit nicht einverstanden sind Sie können einen Fehlerbericht direkt im GitHub Repository öffnen.\n*Dies wurde getan, um Spam und Missbrauch des Fehlermeldesystems zu verhindern.\n*Wenn du überhaupt nicht einreichen möchtest, kannst du diese Nachricht komplett ignorieren.*",
   "feedback_bug_report_direct": "Du kannst einen Fehlerbericht im [GitHub Repository](https://github.com/Akatsuki2555/Akabot/issues/new) direkt öffnen.",
-  "feedback_visit_website": "Sie können die Webseite [here](<https://akatsuki.nekoweb.org/project/akabot> ) besuchen",
+  "feedback_visit_website": "Sie können die Webseite [here](<https://akatsuki2555.is-a.dev/project/akabot> ) besuchen",
   "feedback_form_title": "Titel",
   "feedback_form_description": "Beschreibung",
   "feedback_bug_report_submitted": "Fehlerbericht eingereicht.",
