@@ -1,16 +1,6 @@
-# Changelog for 3.3
+# Version 3.4
 
-In this update, we have made several improvements and added new features to enhance your experience:
-
-- Chat Streaks now reply to the user instead of sending a chat message
-- Leveling now uses UTC time instead of server clock
-- Added server based time
-- Added server settings instead of server language setting
-- Added message intent features
-- Added Auto React
-- Added Auto Response
-- Updated translations
-- Added 4 languages
-- Fixed a bug in Chat Streaks that allowed a person to keep their chat streak for 2 days
-- Added per-user settings
-- Added ability to disable Chat Streaks messages or reduce their frequency.
+- Added Anti Spam into Anti Raid
+- Fixed Admin Commands
+- Fixed Giveaways
+- Added list command to Giveaways
