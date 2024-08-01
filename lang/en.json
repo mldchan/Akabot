@@ -416,5 +416,8 @@
   "logging_antiraid_message_threshold_changed": "Antiraid Message Threshold was changed",
   "logging_message_threshold": "Message Threshold",
   "antiraid_message_threshold_changed": "Successfully set the message threshold to {messages} per {per} seconds.",
-  "antiraid_dontspam_message": "<@{user_id}>, please do not spam the chat."
+  "antiraid_dontspam_message": "<@{user_id}>, please do not spam the chat.",
+  "giveaways_list_title": "# Giveaways List\n",
+  "giveaways_list_line": "{id}. {item} - {winners} winners - {time} remaining\n",
+  "giveaways_list_empty": "There are no currently running giveaways."
 }
