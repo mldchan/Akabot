@@ -180,8 +180,13 @@ class SupportCmd(discord.Cog):
     @discord.option(name="version", description="The version to get the changelog for", choices=["3.3", "3.2", "3.1"])
     @analytics("changelog")
     async def changelog(self, ctx: discord.ApplicationContext, version: str = get_key("Bot_Version", "3.3")):
-        if version == "3.3":
+        if version == "3.4":
             with open("LATEST.md", "r") as f:
+                changelog = f.read()
+
+            await ctx.respond(changelog, ephemeral=True)
+        elif version == "3.3":
+            with open("LATEST_3.3.md", "r") as f:
                 changelog = f.read()
 
             await ctx.respond(changelog, ephemeral=True)
