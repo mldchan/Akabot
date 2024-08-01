@@ -21,8 +21,8 @@ class PrivacyPolicyView(discord.ui.View):
     def __init__(self):
         super().__init__()
 
-        button1 = discord.ui.Button(label="akatsuki.nekoweb.org",
-                                    url="https://akatsuki.nekoweb.org/project/akabot/privacy/")
+        button1 = discord.ui.Button(label="akatsuki2555.is-a.dev",
+                                    url="https://akatsuki2555.is-a.dev/project/akabot/privacy/")
 
         self.add_item(button1)
 

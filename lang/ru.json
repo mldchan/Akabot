@@ -78,7 +78,7 @@
   "feedback_feature_direct": "Вы можете напрямую открыть запрос о функциях в [GitHub](https://github.com/Akatsuki2555/Akabot/issues/new).",
   "feedback_bug_report_disclaimer": "## Внимание перед отправкой сообщения об ошибке\nЕсли вы отправляете сообщение об ошибке, следующая информация будет отправлена на GitHub:\n- ваше отображаемое имя Discord, username and ID\n- Любая информация, которую вы предоставляете в заголовке и описании в форме\n\nЕсли вы не согласны с этим, вы можете напрямую открыть отчёт об ошибке на GitHub.\n*Это было сделано для предотвращения спама и злоупотребления системой сообщений об ошибке.\n*Если вы не хотите отправлять сообщения вообще, вы можете проигнорировать это сообщение.*",
   "feedback_bug_report_direct": "Вы можете напрямую открыть отчёт об ошибке в [GitHub](https://github.com/Akatsuki2555/Akabot/issues/new).",
-  "feedback_visit_website": "You can visit the website [here](<https://akatsuki.nekoweb.org/project/akabot>)",
+  "feedback_visit_website": "You can visit the website [here](<https://akatsuki2555.is-a.dev/project/akabot>)",
   "feedback_form_title": "Заголовок",
   "feedback_form_description": "Описание",
   "feedback_bug_report_submitted": "Отчет об ошибке отправлен.",
