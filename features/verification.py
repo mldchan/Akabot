@@ -208,7 +208,7 @@ class VerificationView(discord.ui.View):
         button_1.callback = self.button_callback
         self.add_item(button_1)
 
-    async def button_callback(self, button: discord.Button, ctx: discord.ApplicationContext):
+    async def button_callback(self, ctx: discord.ApplicationContext):
 
         if await is_verified(ctx):
             await ctx.respond("You're already verified.", ephemeral=True)
