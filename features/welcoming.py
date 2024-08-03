@@ -160,7 +160,7 @@ class Welcoming(discord.Cog):
         # Logging embed
         logging_embed = discord.Embed(title=trl(0, ctx.guild.id, "welcome_title_log_title"))
         logging_embed.add_field(name=trl(0, ctx.guild.id, "logging_user"), value=f"{ctx.user.mention}")
-        logging_embed.add_field(name=trl(0, ctx.guild.id, "logging_title"), value=f"{old_welcome_title} -> {title}")
+        logging_embed.add_field(name=trl(0, ctx.guild.id, "title"), value=f"{old_welcome_title} -> {title}")
 
         # Send log
         await log_into_logs(ctx.guild, logging_embed)
@@ -282,7 +282,7 @@ class Welcoming(discord.Cog):
         # Logging embed
         logging_embed = discord.Embed(title=trl(0, ctx.guild.id, "goodbye_title_log_title"))
         logging_embed.add_field(name=trl(0, ctx.guild.id, "logging_user"), value=f"{ctx.user.mention}")
-        logging_embed.add_field(name=trl(0, ctx.guild.id, "logging_title"), value=f"{old_goodbye_title} -> {title}")
+        logging_embed.add_field(name=trl(0, ctx.guild.id, "title"), value=f"{old_goodbye_title} -> {title}")
 
         # Send log
         await log_into_logs(ctx.guild, logging_embed)

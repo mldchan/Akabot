@@ -235,8 +235,8 @@ class ChatSummary(discord.Cog):
 
         # Logging embed
         logging_embed = discord.Embed(title=trl(0, ctx.guild.id, "chat_summary_add_log_title"))
-        logging_embed.add_field(name=trl(0, ctx.guild.id, "chat_summary_add_log_channel"), value=f"{channel.mention}")
-        logging_embed.add_field(name=trl(0, ctx.guild.id, "chat_summary_add_log_user"), value=f"{ctx.user.mention}")
+        logging_embed.add_field(name=trl(0, ctx.guild.id, "logging_channel"), value=f"{channel.mention}")
+        logging_embed.add_field(name=trl(0, ctx.guild.id, "logging_user"), value=f"{ctx.user.mention}")
 
         # Log into logs
         await log_into_logs(ctx.guild, logging_embed)
@@ -277,9 +277,9 @@ class ChatSummary(discord.Cog):
 
         # Logging embed
         logging_embed = discord.Embed(title=trl(ctx.user.id, ctx.guild.id, "chat_summary_remove_log_title"))
-        logging_embed.add_field(name=trl(ctx.user.id, ctx.guild.id, "chat_summary_remove_log_channel"),
+        logging_embed.add_field(name=trl(ctx.user.id, ctx.guild.id, "logging_channel"),
                                 value=f"{channel.mention}")
-        logging_embed.add_field(name=trl(ctx.user.id, ctx.guild.id, "chat_summary_remove_log_user"),
+        logging_embed.add_field(name=trl(ctx.user.id, ctx.guild.id, "logging_user"),
                                 value=f"{ctx.user.mention}")
 
         # Send
@@ -306,7 +306,7 @@ class ChatSummary(discord.Cog):
         logging_embed = discord.Embed(title=trl(0, ctx.guild.id, "chat_summary_dateformat_log_title"))
         logging_embed.add_field(name=trl(0, ctx.guild.id, "chat_summary_dateformat_log_dateformat"),
                                 value=f"{old_date_format} -> {date_format}")
-        logging_embed.add_field(name=trl(0, ctx.guild.id, "chat_summary_dateformat_log_user"),
+        logging_embed.add_field(name=trl(0, ctx.guild.id, "logging_user"),
                                 value=f"{ctx.user.mention}")
 
         # Send
@@ -334,7 +334,7 @@ class ChatSummary(discord.Cog):
         logging_embed.add_field(name=trl(0, ctx.guild.id, "chat_summary_count_edits_log_count_edits"),
                                 value="{old} -> {new}".format(old=("Yes" if old_count_edits == "True" else "No"),
                                                               new=("Yes" if countedits else "No")))
-        logging_embed.add_field(name=trl(0, ctx.guild.id, "chat_summary_count_edits_log_user"),
+        logging_embed.add_field(name=trl(0, ctx.guild.id, "logging_user"),
                                 value=f"{ctx.user.mention}")
 
         # Send

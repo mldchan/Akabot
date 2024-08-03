@@ -28,7 +28,7 @@ if __name__ == '__main__':
         with open(i, "r", encoding='utf8') as f:
             content = f.read()
 
-        for j in re.findall('trl\((.*?), (.*?), "(.*?)"\)', content):
+        for j in re.findall('trl[(](.*?), (.*?), "(.*?)"[)]', content):
             used_keys.append(j[2])
 
     invalid_keys = []

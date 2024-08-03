@@ -63,7 +63,7 @@ class Logging(discord.Cog):
                 embed.add_field(name=trl(0, guild.id, "logging_name"), value=f'{before.name} -> {after.name}')
 
             if before.description != after.description:
-                embed.add_field(name=trl(0, guild.id, "logging_sticker_edited_description"),
+                embed.add_field(name=trl(0, guild.id, "description"),
                                 value=f'{before.description} -> {after.description}')
 
             await log_into_logs(guild, embed)
@@ -189,7 +189,7 @@ class Logging(discord.Cog):
         if before.banner != after.banner:
             embed.add_field(name=trl(0, after.id, "logging_banner"), value=trl(0, after.id, "logging_changed"))
         if before.description != after.description:
-            embed.add_field(name=trl(0, after.id, "logging_description"),
+            embed.add_field(name=trl(0, after.id, "description"),
                             value=f'{before.description} -> {after.description}')
         if before.afk_channel != after.afk_channel:
             embed.add_field(name=trl(0, after.id, "logging_afk_channel"),
@@ -439,7 +439,7 @@ class Logging(discord.Cog):
         embed = discord.Embed(title=trl(0, event.guild.id, "logging_scheduled_event_create"),
                               color=discord.Color.green())
         embed.add_field(name=trl(0, event.guild.id, "logging_name"), value=event.name)
-        embed.add_field(name=trl(0, event.guild.id, "logging_description"), value=event.description)
+        embed.add_field(name=trl(0, event.guild.id, "description"), value=event.description)
         embed.add_field(name=trl(0, event.guild.id, "logging_location"), value=event.location.value)
         embed.add_field(name=trl(0, event.guild.id, "logging_start"),
                         value=event.start_time.strftime("%Y/%m/%d %H:%M:%S"))
@@ -453,7 +453,7 @@ class Logging(discord.Cog):
         if before.name != after.name:
             embed.add_field(name=trl(0, after.guild.id, "logging_name"), value=f'{before.name} -> {after.name}')
         if before.description != after.description:
-            embed.add_field(name=trl(0, after.guild.id, "logging_description"),
+            embed.add_field(name=trl(0, after.guild.id, "description"),
                             value=f'{before.description} -> {after.description}')
         if before.location != after.location:
             embed.add_field(name=trl(0, after.guild.id, "logging_location"),
@@ -471,7 +471,7 @@ class Logging(discord.Cog):
     async def on_scheduled_event_delete(self, event: discord.ScheduledEvent):
         embed = discord.Embed(title=trl(0, event.guild.id, "logging_scheduled_event_delete"), color=discord.Color.red())
         embed.add_field(name=trl(0, event.guild.id, "logging_name"), value=event.name)
-        embed.add_field(name=trl(0, event.guild.id, "logging_description"), value=event.description)
+        embed.add_field(name=trl(0, event.guild.id, "description"), value=event.description)
         embed.add_field(name=trl(0, event.guild.id, "logging_location"), value=event.location.value)
         embed.add_field(name=trl(0, event.guild.id, "logging_start"),
                         value=event.start_time.strftime("%Y/%m/%d %H:%M:%S"))

@@ -99,11 +99,11 @@ class ChatRevive(discord.Cog):
 
         # Embed for logs
         logging_embed = discord.Embed(title=trl(ctx.user.id, ctx.guild.id, "chat_revive_log_set_title"))
-        logging_embed.add_field(name=trl(ctx.user.id, ctx.guild.id, "chat_revive_log_set_channel"),
+        logging_embed.add_field(name=trl(ctx.user.id, ctx.guild.id, "logging_channel"),
                                 value=f"{ctx.channel.mention}", inline=True)
-        logging_embed.add_field(name=trl(ctx.user.id, ctx.guild.id, "chat_revive_log_set_user"),
+        logging_embed.add_field(name=trl(ctx.user.id, ctx.guild.id, "logging_user"),
                                 value=f"{ctx.user.mention}", inline=True)
-        logging_embed.add_field(name=trl(ctx.user.id, ctx.guild.id, "chat_revive_log_set_revival_role"),
+        logging_embed.add_field(name=trl(ctx.user.id, ctx.guild.id, "chat_revive_list_role"),
                                 value=f"{revival_role.mention}", inline=False)
         logging_embed.add_field(name=trl(ctx.user.id, ctx.guild.id, "chat_revive_log_set_revival_time"),
                                 value=trl(ctx.user.id, ctx.guild.id, "chat_revive_log_set_revival_time_value").format(
@@ -135,9 +135,9 @@ class ChatRevive(discord.Cog):
 
         # Create embed
         logging_embed = discord.Embed(title=trl(ctx.user.id, ctx.guild.id, "chat_revive_remove_log_title"))
-        logging_embed.add_field(name=trl(ctx.user.id, ctx.guild.id, "chat_revive_remove_log_channel"),
+        logging_embed.add_field(name=trl(ctx.user.id, ctx.guild.id, "logging_channel"),
                                 value=f"{ctx.channel.mention}", inline=True)
-        logging_embed.add_field(name=trl(ctx.user.id, ctx.guild.id, "chat_revive_remove_log_user"),
+        logging_embed.add_field(name=trl(ctx.user.id, ctx.guild.id, "logging_user"),
                                 value=f"{ctx.user.mention}", inline=True)
 
         # Send to logs
