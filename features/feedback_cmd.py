@@ -114,12 +114,19 @@ class ConfirmSubmitBugReport(discord.ui.View):
         super().__init__()
         self.user_id = user_id
 
-    @discord.ui.button(label="I agree and want to submit", style=discord.ButtonStyle.primary)
+        self.agree_button = discord.ui.Button(label=trl(user_id, 0, "feedback_agree"))
+        self.agree_button.callback = self.submit
+        self.add_item(self.agree_button)
+
+        self.cancel_github = discord.ui.Button(label=trl(user_id, 0, "feedback_prefer_github"),
+                                               style=discord.ButtonStyle.secondary)
+        self.cancel_github.callback = self.cancel_gh
+        self.add_item(self.cancel_github)
+
     async def submit(self, button: discord.ui.Button, interaction: discord.Interaction):
         modal = BugReportModal(self.user_id)
         await interaction.response.send_modal(modal)
 
-    @discord.ui.button(label="I don't agree and prefer to submit on GitHub", style=discord.ButtonStyle.secondary)
     async def cancel_gh(self, button: discord.ui.Button, interaction: discord.Interaction):
         self.disable_all_items()
         await interaction.respond(
@@ -132,12 +139,19 @@ class ConfirmSubmitFeatureRequest(discord.ui.View):
         super().__init__()
         self.user_id = user_id
 
-    @discord.ui.button(label="I agree and want to submit", style=discord.ButtonStyle.primary)
+        self.agree_button = discord.ui.Button(label=trl(user_id, 0, "feedback_agree"))
+        self.agree_button.callback = self.submit
+        self.add_item(self.agree_button)
+
+        self.cancel_github = discord.ui.Button(label=trl(user_id, 0, "feedback_prefer_github"),
+                                               style=discord.ButtonStyle.secondary)
+        self.cancel_github.callback = self.cancel_gh
+        self.add_item(self.cancel_github)
+
     async def submit(self, button: discord.ui.Button, interaction: discord.Interaction):
         modal = FeatureModal(self.user_id)
         await interaction.response.send_modal(modal)
 
-    @discord.ui.button(label="I don't agree and prefer to submit on GitHub", style=discord.ButtonStyle.secondary)
     async def cancel_gh(self, button: discord.ui.Button, interaction: discord.Interaction):
         await interaction.respond(
             trl(self.user_id, 0, "feedback_feature_direct"),

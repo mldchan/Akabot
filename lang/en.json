@@ -411,5 +411,8 @@
   "pretty_time_delta_3_no_minutes": "{hours} hours",
   "pretty_time_delta_3_no_seconds": "{hours} hours {minutes} minutes",
   "pretty_time_delta_4_no_seconds": "{days} days {hours} hours {minutes} minutes",
-  "pretty_time_delta_4_no_minutes": "{days} days {hours} hours"
+  "pretty_time_delta_4_no_minutes": "{days} days {hours} hours",
+  "feedback_agree": "I agree and want to submit",
+  "feedback_prefer_github": "I don't agree and prefer to submit on GitHub",
+  "verification_answer": "Answer"
 }
