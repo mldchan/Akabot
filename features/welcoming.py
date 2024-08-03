@@ -6,6 +6,7 @@ from utils.languages import get_translation_for_key_localized as trl
 from utils.logging_util import log_into_logs
 from utils.settings import get_setting, set_setting
 
+
 class Welcoming(discord.Cog):
     def __init__(self, bot: discord.Bot) -> None:
         self.bot = bot
@@ -33,7 +34,8 @@ class Welcoming(discord.Cog):
         message_text = message_text.replace('{memberCount}', str(member.guild.member_count))
 
         if message_type == 'embed':
-            embed = discord.Embed(title=message_title, description=message_text)  # Create the embed
+            embed = discord.Embed(title=message_title, description=message_text,
+                                  color=discord.Color.green())  # Create the embed
             await target_channel.send(embed=embed)  # Send it in the welcoming channel
         if message_type == 'text':
             await target_channel.send(content=message_text)  # Send it as text only
@@ -61,7 +63,8 @@ class Welcoming(discord.Cog):
         message_text = message_text.replace('{memberCount}', str(member.guild.member_count))
 
         if message_type == 'embed':
-            embed = discord.Embed(title=message_title, description=message_text)  # Create the embed
+            embed = discord.Embed(title=message_title, description=message_text,
+                                  color=discord.Color.red())  # Create the embed
             await target_channel.send(embed=embed)  # Send it in the welcoming channel
         if message_type == 'text':
             await target_channel.send(content=message_text)  # Send it as text only
