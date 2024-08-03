@@ -702,11 +702,11 @@ class Leveling(discord.Cog):
         logging_embed = discord.Embed(title=trl(0, ctx.guild.id, "leveling_set_reward_log_title"))
         logging_embed.add_field(name=trl(0, ctx.guild.id, "logging_user"), value=f"{ctx.user.mention}")
         if old_role_id == '0':
-            logging_embed.add_field(name=trl(0, ctx.guild.id, "leveling_set_reward_log_role"),
+            logging_embed.add_field(name=trl(0, ctx.guild.id, "logging_role"),
                                     value=trl(0, ctx.guild.id, "leveling_set_reward_log_role_added").format(
                                         reward=role.mention))
         else:
-            logging_embed.add_field(name=trl(0, ctx.guild.id, "leveling_set_reward_log_role"),
+            logging_embed.add_field(name=trl(0, ctx.guild.id, "logging_role"),
                                     value=trl(0, ctx.guild.id, "leveling_set_reward_log_role_changed").format(
                                         old_reward=old_role.mention if old_role is not None else old_role_id,
                                         new_reward=role.mention))
@@ -734,10 +734,10 @@ class Leveling(discord.Cog):
         logging_embed = discord.Embed(title=trl(ctx.user.id, ctx.guild.id, "leveling_remove_reward_log_title"))
         logging_embed.add_field(name=trl(ctx.user.id, ctx.guild.id, "logging_user"), value=f"{ctx.user.mention}")
         if old_role is not None:
-            logging_embed.add_field(name=trl(ctx.user.id, ctx.guild.id, "leveling_remove_reward_log_role"),
+            logging_embed.add_field(name=trl(ctx.user.id, ctx.guild.id, "logging_role"),
                                     value=f"{old_role.mention}")
         else:
-            logging_embed.add_field(name=trl(ctx.user.id, ctx.guild.id, "leveling_remove_reward_log_role"),
+            logging_embed.add_field(name=trl(ctx.user.id, ctx.guild.id, "logging_role"),
                                     value=trl(ctx.user.id, ctx.guild.id, "leveling_remove_reward_log_role_unknown"))
 
         # Send into logs

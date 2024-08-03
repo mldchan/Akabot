@@ -281,7 +281,7 @@ class Moderation(discord.Cog):
         # check: warning exists
         warnings = db_get_warnings(ctx.guild.id, user.id)
         if not warnings:
-            await ctx.respond(trl(ctx.user.id, ctx.guild.id, "warn_remove_error_no_warnings"), ephemeral=True)
+            await ctx.respond(trl(ctx.user.id, ctx.guild.id, "warn_list_no_warnings"), ephemeral=True)
             return
 
         if id not in [warning[0] for warning in warnings]:

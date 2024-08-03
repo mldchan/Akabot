@@ -163,7 +163,7 @@ class AntiRaid(discord.Cog):
         join_threshold_per = get_setting(ctx.guild.id, 'antiraid_join_threshold_per', '60')
 
         embed = discord.Embed(title=trl(ctx.user.id, ctx.guild.id, "antiraid_settings"), color=discord.Color.blurple())
-        embed.add_field(name=trl(ctx.user.id, ctx.guild.id, "antiraid_settings_join_threshold"),
+        embed.add_field(name=trl(ctx.user.id, ctx.guild.id, "logging_join_threshold"),
                         value=trl(ctx.user.id, ctx.guild.id, "antiraid_settings_join_threshold_value").format(
                             joins=join_threshold, seconds=join_threshold_per), inline=True)
 

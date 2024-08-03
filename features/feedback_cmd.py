@@ -32,8 +32,8 @@ class BugReportModal(discord.ui.Modal):
         super().__init__(title="Bug Report", timeout=600)
 
         self.user_id = user_id
-        title = trl(user_id, 0, "feedback_form_title")
-        description = trl(user_id, 0, "feedback_form_description")
+        title = trl(user_id, 0, "title")
+        description = trl(user_id, 0, "description")
         self.title_input = InputText(label=title, style=discord.InputTextStyle.short, max_length=100, min_length=8,
                                      required=True)
         self.description_input = InputText(label=description, style=discord.InputTextStyle.long, max_length=1000,
@@ -73,8 +73,8 @@ class FeatureModal(discord.ui.Modal):
         self.user_id = user_id
         super().__init__(title=trl(user_id, 0, "feedback_feature_form_title"), timeout=600)
 
-        title = trl(user_id, 0, "feedback_form_title")
-        description = trl(user_id, 0, "feedback_form_description")
+        title = trl(user_id, 0, "title")
+        description = trl(user_id, 0, "description")
         self.title_input = InputText(label=title, style=discord.InputTextStyle.short, max_length=100, min_length=8,
                                      required=True)
         self.description_input = InputText(label=description, style=discord.InputTextStyle.long, max_length=1000,

@@ -157,7 +157,7 @@ class ChatStreaks(discord.Cog):
         logging_embed = discord.Embed(title=trl(ctx.user.id, ctx.guild.id, "chat_streaks_reset_log_title"))
         logging_embed.add_field(name=trl(ctx.user.id, ctx.guild.id, "chat_streaks_reset_log_admin"),
                                 value=f'{ctx.user.mention}')
-        logging_embed.add_field(name=trl(ctx.user.id, ctx.guild.id, "chat_streaks_reset_log_user"),
+        logging_embed.add_field(name=trl(ctx.user.id, ctx.guild.id, "logging_user"),
                                 value=f'{user.mention}')
 
         # Send to log
