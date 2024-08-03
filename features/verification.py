@@ -159,7 +159,7 @@ class VerificationMath(discord.ui.View):
         self.ops = ["+", "-", "*"]
 
         # Division operator if there's no remainder
-        if self.a % self.b == 0:
+        if self.b != 0 and self.a % self.b == 0:
             self.ops = self.ops.extend(["/"])
 
         # Random operator
