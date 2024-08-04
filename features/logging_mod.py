@@ -13,6 +13,10 @@ def str_channel_type(channel_type: discord.ChannelType) -> str:
     return text
 
 
+def format_perm_name(name: str) -> str:
+    return name.replace('_', ' ').title()
+
+
 class Logging(discord.Cog):
     def __init__(self, bot: discord.Bot) -> None:
         self.bot = bot
@@ -23,6 +27,7 @@ class Logging(discord.Cog):
                                      after: discord.Emoji | None):
         if before is None and after is not None:
             embed = discord.Embed(title=trl(0, guild.id, "logging_emoji_added_title"), color=discord.Color.green())
+
             if after.animated:
                 embed.description = trl(0, guild.id, "logging_animated_emoji_added").format(name=after.name)
             else:
@@ -134,6 +139,7 @@ class Logging(discord.Cog):
     async def on_guild_channel_update(self, before: discord.abc.GuildChannel, after: discord.abc.GuildChannel):
         embed = discord.Embed(title=trl(0, after.guild.id, "logging_channel_update_title"),
                               color=discord.Color.blue())
+        embed.add_field(name=trl(0, after.guild.id, "logging_channel"), value=after.mention)
 
         if before.name != after.name:
             embed.add_field(name=trl(0, after.guild.id, "logging_name"), value=f'{before.name} -> {after.name}')
@@ -157,7 +163,7 @@ class Logging(discord.Cog):
             embed.add_field(name=trl(0, after.guild.id, "logging_category"),
                             value=f'{before.category} -> {after.category}')
 
-        if len(embed.fields) > 0:
+        if len(embed.fields) > 1:
             await log_into_logs(after.guild, embed)
 
     @discord.Cog.listener()
@@ -261,14 +267,16 @@ class Logging(discord.Cog):
             changed_allow = []
             changed_deny = []
 
-            for perm in discord.Permissions.VALID_FLAGS:
-
-                if dict(before.permissions)[perm] == dict(after.permissions)[perm]:
+            for (perm, value) in iter(after.permissions):
+                if value == dict(before.permissions)[perm]:
                     continue
-                if dict(after.permissions)[perm]:
+                if dict(before.permissions)[perm]:
                     changed_allow.append(perm)
                 else:
                     changed_deny.append(perm)
+
+            changed_allow = [format_perm_name(perm) for perm in changed_allow]
+            changed_deny = [format_perm_name(perm) for perm in changed_deny]
 
             if len(changed_allow) > 0:
                 embed.add_field(name=trl(0, after.guild.id, "logging_allowed_perms"), value=', '.join(changed_allow))
@@ -312,6 +320,7 @@ class Logging(discord.Cog):
     @discord.Cog.listener()
     async def on_member_update(self, before: discord.Member, after: discord.Member):
         embed = discord.Embed(title=trl(0, after.guild.id, "logging_member_update_title"), color=discord.Color.blue())
+        embed.add_field(name=trl(0, after.guild.id, "logging_user"), value=after.mention)
 
         if before.nick != after.nick:
             embed.add_field(name=trl(0, after.guild.id, "logging_nickname"), value=f'{before.nick} -> {after.nick}')
@@ -323,7 +332,7 @@ class Logging(discord.Cog):
             if len(removed_roles) > 0:
                 embed.add_field(name=trl(0, after.guild.id, "logging_removed_roles"), value=', '.join(removed_roles))
 
-        if len(embed.fields) > 0:
+        if len(embed.fields) > 1:
             await log_into_logs(after.guild, embed)
 
     @discord.Cog.listener()
@@ -500,6 +509,7 @@ class Logging(discord.Cog):
     @discord.Cog.listener()
     async def on_thread_update(self, before: discord.Thread, after: discord.Thread):
         embed = discord.Embed(title=trl(0, after.guild.id, "logging_thread_update"), color=discord.Color.blue())
+
         if before.name != after.name:
             embed.add_field(name=trl(0, after.guild.id, "logging_name"), value=f'{before.name} -> {after.name}')
         if before.archived != after.archived:
