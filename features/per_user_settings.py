@@ -5,6 +5,7 @@ from utils.languages import get_translation_for_key_localized as trl
 from utils.per_user_settings import set_per_user_setting, db_init
 from utils.analytics import analytics
 
+
 class PerUserSettings(discord.Cog):
     def __init__(self, bot: discord.Bot):
         self.bot = bot

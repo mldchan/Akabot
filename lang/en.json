@@ -411,5 +411,18 @@
   "feedback_prefer_github": "I don't agree and prefer to submit on GitHub",
   "verification_answer": "Answer",
   "translation_not_existing": "This text isn't translated, but you can be part of the translation team and help translate it [here](<https://crowdin.com/project/akabot-by-akatsuki2555>)",
-  "logging_role": "Role"
+  "logging_role": "Role",
+  "announcement_file_not_md": "The file must be a markdown file.",
+  "announcement_no_send_messages_permission": "I don't have permission to send messages in that channel.",
+  "announcement_subscribed": "Subscribed to announcements in {channel}.",
+  "announcement_not_subscribed": "Not subscribed to announcements in {channel}.",
+  "announcement_unsubscribed": "Unsubscribed from announcements in {channel}.",
+  "announcement_none_subscribed": "No channels are subscribed to announcements.",
+  "announcement_file_not_utf8": "The file must be in UTF-8 encoding.",
+  "announcement_too_long": "The message is too long. Please shorten it.",
+  "announcement_not_set": "No announcement message set.",
+  "announcement_channel_not_found": "Announcement Channel configured in config.conf not found.",
+  "announcement_sent_sending_to_subscribed": "Sent to main server, now sending to rest of the servers.",
+  "announcement_sent": "Announcement sent.",
+  "announcement_sent_sending_to_subscribed_progress": "Sent to {progress} servers out of {count}."
 }
