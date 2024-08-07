@@ -8,7 +8,7 @@ from sentry_sdk.integrations.logging import LoggingIntegration
 from features import welcoming, leveling, antiraid, chat_streaks, chat_revive, chat_summary, reaction_roles, \
     logging_mod, admin_cmds, giveaways, feedback_cmd, moderation, cleanup_task, verification, velky_stompies, \
     roles_on_join, heartbeat, automod_actions, power_outage_announcement, per_user_settings, server_settings, \
-    bot_help
+    bot_help, announcement_channels
 from utils.config import get_key
 
 from utils.languages import get_translation_for_key_localized as trl
@@ -118,5 +118,7 @@ if get_key("Feature_ServerSettings", "true") == "true":
     bot.add_cog(server_settings.ServerSettings())
 if get_key("Feature_HelpCommands", "true") == "true":
     bot.add_cog(bot_help.Help(bot))
+if get_key("Feature_AnnouncementChannels", "true") == "true":
+    bot.add_cog(announcement_channels.AnnouncementChannels(bot))
 
 bot.run(get_key("Bot_Token"))
