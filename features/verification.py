@@ -67,11 +67,16 @@ class VerificationTextReverse(discord.ui.View):
         # Random English word (to make it easier) and reverse it right away
         self.english_word = utils.english_words.get_random_english_word()[::-1]
 
+        # Answer button
+        self.answer_btn = discord.ui.Button(label=trl(user_id, 0, "verification_answer"),
+                                            style=discord.ButtonStyle.primary)
+        self.answer_btn.callback = self.respond
+        self.add_item(self.answer_btn)
+
     def message_content(self) -> str:
         # Message
         return trl(self.user_id, 0, "verification_reverse_word").format(word=self.english_word)
 
-    @discord.ui.button(label="Answer", style=discord.ButtonStyle.primary)
     async def respond(self, btn: discord.Button, ctx: discord.ApplicationContext):
         # Respond with modal
         modal = VerificationTextReverseModal(word=self.english_word, user_id=self.user_id)
@@ -108,10 +113,15 @@ class VerificationEnglishWord(discord.ui.View):
 
         self.length = random.randint(2, 8)
 
+        # Answer button
+        self.answer_btn = discord.ui.Button(label=trl(user_id, 0, "verification_answer"),
+                                            style=discord.ButtonStyle.primary)
+        self.answer_btn.callback = self.respond
+        self.add_item(self.answer_btn)
+
     def message_content(self) -> str:
         return trl(self.user_id, 0, "verification_english_word").format(self.length)
 
-    @discord.ui.button(label="Answer", style=discord.ButtonStyle.primary)
     async def respond(self, btn: discord.Button, ctx: discord.ApplicationContext):
         # Respond with modal
         modal = VerificationEnglishWordModal(length=self.length, user_id=self.user_id)
@@ -174,11 +184,16 @@ class VerificationMath(discord.ui.View):
         elif self.op == "*":
             self.result = self.a * self.b
 
+        # Answer button
+        self.answer_btn = discord.ui.Button(label=trl(user_id, 0, "verification_answer"),
+                                            style=discord.ButtonStyle.primary)
+        self.answer_btn.callback = self.respond
+        self.add_item(self.answer_btn)
+
     def message_content(self) -> str:
         # Create a message
         return trl(self.user_id, 0, "verification_math").format(a=self.a, b=self.b, o=self.op)
 
-    @discord.ui.button(label="Answer", style=discord.ButtonStyle.primary)
     async def respond(self, btn: discord.Button, ctx: discord.ApplicationContext):
         # Respond with modal
         await ctx.response.send_modal(VerificationMathModal(result=self.result, user_id=self.user_id))
