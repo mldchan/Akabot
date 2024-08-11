@@ -8,7 +8,7 @@ from sentry_sdk.integrations.logging import LoggingIntegration
 from features import welcoming, leveling, antiraid, chat_streaks, chat_revive, chat_summary, reaction_roles, \
     logging_mod, admin_cmds, giveaways, feedback_cmd, moderation, cleanup_task, verification, velky_stompies, \
     roles_on_join, heartbeat, automod_actions, power_outage_announcement, per_user_settings, server_settings, \
-    auto_react, auto_response, bot_help, announcement_channels
+    auto_react, auto_response, bot_help, announcement_channels, tickets
 from utils.config import get_key
 
 from utils.languages import get_translation_for_key_localized as trl
@@ -36,6 +36,7 @@ bot = discord.Bot(intents=intents)
 @bot.event
 async def on_ready():
     bot.add_view(verification.VerificationView())
+    bot.add_view(tickets.TicketCreateView(""))
     await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.playing, name=f"v{BOT_VERSION}"))
 
 
@@ -124,5 +125,7 @@ if get_key("Feature_HelpCommands", "true") == "true":
     bot.add_cog(bot_help.Help(bot))
 if get_key("Feature_AnnouncementChannels", "true") == "true":
     bot.add_cog(announcement_channels.AnnouncementChannels(bot))
+if get_key("Feature_Tickets", "true") == "true":
+    bot.add_cog(tickets.Tickets(bot))
 
 bot.run(get_key("Bot_Token"))
