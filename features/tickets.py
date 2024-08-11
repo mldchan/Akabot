@@ -1,23 +1,35 @@
+import datetime
+
 import discord
-from discord.ext import commands
+from discord.ext import commands, tasks
 
 from database import conn
 from utils.settings import set_setting, get_setting
 
 
 def db_init():
+    """
+    Initialize the database for the tickets feature.
+    id is the primary key and autoincrements.
+    guild_id is the Guild ID.
+    ticket_channel_id is the Ticket Channel ID.
+    user_id is the User ID of the ticket creator.
+    mtime is the last modification time of the ticket. This includes messages and reactions.
+    atime is the time the ticket was archived. Used for letting the user see the ticket for a certain amount of time.
+    atime is set to "None" (string) if the ticket is not archived.
+    """
     cur = conn.cursor()
     cur.execute(
         "create table if not exists tickets (id integer primary key autoincrement, guild_id bigint, ticket_channel_id "
-        "bigint, user_id bigint)")
+        "bigint, user_id bigint, mtime text, atime text)")
     cur.close()
     conn.commit()
 
 
 def db_add_ticket_channel(guild_id: int, ticket_category: int, user_id: int):
     cur = conn.cursor()
-    cur.execute("insert into tickets(guild_id, ticket_channel_id, user_id) values (?, ?, ?)",
-                (guild_id, ticket_category, user_id))
+    cur.execute("insert into tickets(guild_id, ticket_channel_id, user_id, mtime, atime) values (?, ?, ?, ?, ?)",
+                (guild_id, ticket_category, user_id, datetime.datetime.now().isoformat(), "None"))
     cur.close()
     conn.commit()
 
@@ -46,6 +58,88 @@ def db_remove_ticket_channel(guild_id: int, ticket_channel_id: int):
     conn.commit()
 
 
+def db_update_mtime(guild_id: int, ticket_channel_id: int):
+    cur = conn.cursor()
+    cur.execute("update tickets set mtime = ? where guild_id = ? and ticket_channel_id = ?",
+                (datetime.datetime.now().isoformat(), guild_id, ticket_channel_id))
+    cur.close()
+    conn.commit()
+
+
+def check_ticket_archive_time(guild_id: int, ticket_channel_id: int) -> bool:
+    archive_time = get_setting(guild_id, "ticket_archive_time", "0")  # hours
+    if archive_time == "0":
+        return False
+
+    cur = conn.cursor()
+    cur.execute("select mtime from tickets where guild_id = ? and ticket_channel_id = ?", (guild_id, ticket_channel_id))
+    mtime = cur.fetchone()
+    cur.close()
+
+    if mtime is None:
+        return False
+
+    mtime = datetime.datetime.fromisoformat(mtime[0])
+    if (datetime.datetime.now() - mtime).total_seconds() / 3600 >= int(archive_time):
+        return True
+
+    return False
+
+
+def db_is_archived(guild_id: int, ticket_channel_id: int) -> bool:
+    cur = conn.cursor()
+    cur.execute("select atime from tickets where guild_id = ? and ticket_channel_id = ?", (guild_id, ticket_channel_id))
+    atime = cur.fetchone()
+    cur.close()
+
+    return atime[0] != "None" if atime is not None else False
+
+
+def check_ticket_hide_time(guild_id: int, ticket_channel_id: int) -> bool:
+    if not db_is_archived(guild_id, ticket_channel_id):
+        return False
+
+    hide_time = get_setting(guild_id, "ticket_hide_time", "0")  # hours, hide time from archive
+    if hide_time == "0":
+        return False
+
+    cur = conn.cursor()
+    cur.execute("select atime from tickets where guild_id = ? and ticket_channel_id = ?", (guild_id, ticket_channel_id))
+    atime = cur.fetchone()
+    cur.close()
+
+    if atime is None:
+        return False
+
+    atime = datetime.datetime.fromisoformat(atime[0])
+    if (datetime.datetime.now() - atime).total_seconds() / 3600 >= int(hide_time):
+        print("Hiding ticket")
+        return True
+
+    print("Time left to hide: " + str(int(hide_time) * 3600 - (datetime.datetime.now() - atime).total_seconds()) + " seconds")
+    return False
+
+
+def db_archive_ticket(guild_id: int, ticket_channel_id: int):
+    cur = conn.cursor()
+    cur.execute("update tickets set atime = ? where guild_id = ? and ticket_channel_id = ?",
+                (datetime.datetime.now().isoformat(), guild_id, ticket_channel_id))
+    cur.close()
+    conn.commit()
+
+
+def db_list_archived_tickets():
+    """
+    Get all archived tickets.
+    :return: List of tuples with guild_id and ticket_channel_id.
+    """
+    cur = conn.cursor()
+    cur.execute("select guild_id, ticket_channel_id from tickets where atime != 'None'")
+    tickets = cur.fetchall()
+    cur.close()
+    return tickets
+
+
 class TicketMessageView(discord.ui.View):
     """View for the message sent on top of every ticket."""
 
@@ -64,15 +158,21 @@ class TicketMessageView(discord.ui.View):
             await interaction.response.send_message("This is not a ticket channel.", ephemeral=True)
             return
 
-        # Remove user from ticket
-        member = interaction.guild.get_member(db_get_ticket_creator(interaction.guild.id, interaction.channel.id))
-        await interaction.channel.set_permissions(member, read_messages=False, send_messages=False)
+        # Remove permissions from the ticket creator appropriately
+        atime = get_setting(interaction.guild.id, "ticket_hide_time", "0")
+        if atime == "0":
+            member = interaction.guild.get_member(db_get_ticket_creator(interaction.guild.id, interaction.channel.id))
+            await interaction.channel.set_permissions(member, view_channel=False, read_messages=False,
+                                                      send_messages=False)
+            db_remove_ticket_channel(interaction.guild.id, interaction.channel.id)
+        else:
+            member = interaction.guild.get_member(db_get_ticket_creator(interaction.guild.id, interaction.channel.id))
+            await interaction.channel.set_permissions(member, view_channel=False, read_messages=True,
+                                                      send_messages=False)
+            db_archive_ticket(interaction.guild.id, interaction.channel.id)
 
         # Send closed message
         await interaction.channel.send("Ticket closed by " + interaction.user.mention)
-
-        # Delete ticket from database
-        db_remove_ticket_channel(interaction.guild.id, interaction.channel.id)
 
         await interaction.message.edit(view=self)
         await interaction.response.send_message("Ticket closed!", ephemeral=True)
@@ -119,6 +219,46 @@ class Tickets(discord.Cog):
 
     tickets_commands = discord.SlashCommandGroup(name="tickets", description="Manage tickets")
 
+    @discord.Cog.listener()
+    async def on_ready(self):
+        self.handle_hiding.start()
+
+    @discord.Cog.listener()
+    async def on_message(self, message: discord.Message):
+        if message.author.bot:
+            return
+
+        if not db_is_ticket_channel(message.guild.id, message.channel.id):
+            return
+
+        if db_is_archived(message.guild.id, message.channel.id):
+            return
+
+        db_update_mtime(message.guild.id, message.channel.id)
+
+    @discord.Cog.listener()
+    async def on_message_edit(self, before: discord.Message, after: discord.Message):
+        if after.author.bot:
+            return
+
+        if not db_is_ticket_channel(after.guild.id, after.channel.id):
+            return
+
+        db_update_mtime(after.guild.id, after.channel.id)
+
+    @discord.Cog.listener()
+    async def on_reaction_add(self, reaction: discord.Reaction, user: discord.User):
+        if user.bot:
+            return
+
+        if not db_is_ticket_channel(reaction.message.guild.id, reaction.message.channel.id):
+            return
+
+        if db_is_archived(reaction.message.guild.id, reaction.message.channel.id):
+            return
+
+        db_update_mtime(reaction.message.guild.id, reaction.message.channel.id)
+
     @tickets_commands.command(name="send_message", description="Send a message that allows users to create a ticket")
     @discord.default_permissions(manage_guild=True)
     @commands.has_permissions(manage_guild=True)
@@ -149,3 +289,23 @@ class Tickets(discord.Cog):
     async def set_category(self, ctx: discord.ApplicationContext, category: discord.CategoryChannel):
         set_setting(ctx.guild.id, "ticket_category", str(category.id))
         await ctx.respond("Category set!", ephemeral=True)
+
+    @tickets_commands.command(name="set_hide_time",
+                              description="Set the time that the ticket will be available for the creator after it's "
+                                          "archived.")
+    @discord.default_permissions(manage_guild=True)
+    @commands.has_permissions(manage_guild=True)
+    async def set_hide_time(self, ctx: discord.ApplicationContext, hours: int):
+        set_setting(ctx.guild.id, "ticket_hide_time", str(hours))
+        await ctx.respond("Hide time set!", ephemeral=True)
+
+    @tasks.loop(seconds=60)
+    async def handle_hiding(self):
+        for i in db_list_archived_tickets():
+            guild = self.bot.get_guild(i[0])
+            channel = guild.get_channel(i[1])
+
+            if check_ticket_hide_time(i[0], i[1]):
+                member = guild.get_member(db_get_ticket_creator(i[0], i[1]))
+                await channel.set_permissions(member, read_messages=False, send_messages=False)
+                db_remove_ticket_channel(i[0], i[1])
