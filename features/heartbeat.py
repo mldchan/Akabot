@@ -21,7 +21,6 @@ class Heartbeat(discord.Cog):
     async def heartbeat_task(self):
         self.interval_cnt += 1
         if self.interval_cnt >= int(get_key("Heartbeat_Interval", '60')):
-            logging.info("Sending heartbeat")
             self.interval_cnt = 0
             # Send heartbeat
             if get_key("Heartbeat_HTTPMethod", 'post') == "get":
@@ -32,5 +31,3 @@ class Heartbeat(discord.Cog):
                 requests.put(get_key("Heartbeat_URL", 'https://example.com'))
             elif get_key("Heartbeat_HTTPMethod", 'post') == "delete":
                 requests.delete(get_key("Heartbeat_URL", 'https://example.com'))
-
-            logging.info("Heartbeat sent")
