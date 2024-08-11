@@ -1,5 +1,5 @@
 import discord
-from database import conn
+
 from utils.announcement_channels import db_init, db_get_announcement_channels, db_remove_announcement_channel, \
     db_add_announcement_channel, db_is_subscribed_to_announcements
 from utils.languages import get_translation_for_key_localized as trl
