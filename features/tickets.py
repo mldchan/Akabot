@@ -113,10 +113,8 @@ def check_ticket_hide_time(guild_id: int, ticket_channel_id: int) -> bool:
 
     atime = datetime.datetime.fromisoformat(atime[0])
     if (datetime.datetime.now() - atime).total_seconds() / 3600 >= int(hide_time):
-        print("Hiding ticket")
         return True
 
-    print("Time left to hide: " + str(int(hide_time) * 3600 - (datetime.datetime.now() - atime).total_seconds()) + " seconds")
     return False
 
 
@@ -135,6 +133,18 @@ def db_list_archived_tickets():
     """
     cur = conn.cursor()
     cur.execute("select guild_id, ticket_channel_id from tickets where atime != 'None'")
+    tickets = cur.fetchall()
+    cur.close()
+    return tickets
+
+
+def db_list_not_archived_tickets():
+    """
+    Get all not archived tickets.
+    :return: List of tuples with guild_id and ticket_channel_id.
+    """
+    cur = conn.cursor()
+    cur.execute("select guild_id, ticket_channel_id from tickets where atime = 'None'")
     tickets = cur.fetchall()
     cur.close()
     return tickets
@@ -222,6 +232,7 @@ class Tickets(discord.Cog):
     @discord.Cog.listener()
     async def on_ready(self):
         self.handle_hiding.start()
+        self.handle_auto_archive.start()
 
     @discord.Cog.listener()
     async def on_message(self, message: discord.Message):
@@ -299,6 +310,14 @@ class Tickets(discord.Cog):
         set_setting(ctx.guild.id, "ticket_hide_time", str(hours))
         await ctx.respond("Hide time set!", ephemeral=True)
 
+    @tickets_commands.command(name="set_archive_time",
+                              description="Set the time that the ticket will be archived after no activity.")
+    @discord.default_permissions(manage_guild=True)
+    @commands.has_permissions(manage_guild=True)
+    async def set_auto_archive_time(self, ctx: discord.ApplicationContext, hours: int):
+        set_setting(ctx.guild.id, "ticket_archive_time", str(hours))
+        await ctx.respond("Auto archive time set!", ephemeral=True)
+
     @tasks.loop(seconds=60)
     async def handle_hiding(self):
         for i in db_list_archived_tickets():
@@ -309,3 +328,32 @@ class Tickets(discord.Cog):
                 member = guild.get_member(db_get_ticket_creator(i[0], i[1]))
                 await channel.set_permissions(member, read_messages=False, send_messages=False)
                 db_remove_ticket_channel(i[0], i[1])
+
+    @tasks.loop(seconds=60)
+    async def handle_auto_archive(self):
+        # Ticket archiving after certain time of no changes
+        for i in db_list_not_archived_tickets():
+            if check_ticket_archive_time(i[0], i[1]):
+                db_archive_ticket(i[0], i[1])
+
+                guild = self.bot.get_guild(i[0])
+                channel = guild.get_channel(i[1])
+
+                # Remove permissions from the ticket creator appropriately
+                atime = get_setting(guild.id, "ticket_hide_time", "0")
+                if atime == "0":
+                    member = guild.get_member(
+                        db_get_ticket_creator(guild.id, channel.id))
+                    await channel.set_permissions(member, view_channel=False, read_messages=False,
+                                                  send_messages=False)
+                    db_remove_ticket_channel(guild.id, channel.id)
+                else:
+                    member = guild.get_member(
+                        db_get_ticket_creator(guild.id, channel.id))
+                    await channel.set_permissions(member, view_channel=True, read_messages=True,
+                                                  send_messages=False)
+                    db_archive_ticket(guild.id, channel.id)
+
+                # Send closed message
+                await channel.send(
+                    "Ticket closed automatically because there was no activity for a certain amount of time.")
