@@ -3,7 +3,7 @@ import datetime
 from utils.settings import get_setting
 
 
-def get_server_midnight_time(server_id: int) -> datetime:
+def get_server_midnight_time(server_id: int) -> datetime.datetime:
     """Get the time at midnight for the server's timezone
 
     Args:
