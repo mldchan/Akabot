@@ -28,7 +28,7 @@ def adjust_time_for_server(time: datetime.datetime, server_id: int) -> datetime.
         datetime: Adjusted time
     """
     tz_offset = get_setting(server_id, "timezone_offset", "0")
-    return time + datetime.timedelta(seconds=float(tz_offset))
+    return time + datetime.timedelta(hours=float(tz_offset))
 
 
 def get_now_for_server(server_id: int) -> datetime.datetime:
