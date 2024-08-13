@@ -409,5 +409,17 @@
   "announcement_channel_not_found": "Announcement Channel configured in config.conf not found.",
   "announcement_sent_sending_to_subscribed": "Sent to main server, now sending to rest of the servers.",
   "announcement_sent": "Announcement sent.",
-  "announcement_sent_sending_to_subscribed_progress": "Sent to {progress} servers out of {count}."
+  "announcement_sent_sending_to_subscribed_progress": "Sent to {progress} servers out of {count}.",
+  "logging_permissions_synced": "Permissions Synced",
+  "logging_removed_overwrite": "Permission Override Removed",
+  "logging_added_overwrite": "Permission Override Added",
+  "logging_added_overwrite_value": "Added: {target}",
+  "logging_removed_overwrite_value": "Removed: {target}",
+  "logging_overwrite_update_title": "Permission Override in {channel} Updated For {target}",
+  "logging_overwrite_permission_changes": "Permission Changes",
+  "logging_overwrite_permission_changes_line": "{permission} - {old} -> {new}\n",
+  "logging_no_changes": "No changes",
+  "logging_overwrite_inherited": "Inherited",
+  "logging_overwrite_allowed": "Allowed",
+  "logging_overwrite_denied": "Denied"
 }
