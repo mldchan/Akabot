@@ -5,6 +5,7 @@ from discord.ext import commands, tasks
 
 from database import conn
 from utils.settings import set_setting, get_setting
+from utils.tzutil import get_now_for_server
 
 
 def db_init():
@@ -29,7 +30,7 @@ def db_init():
 def db_add_ticket_channel(guild_id: int, ticket_category: int, user_id: int):
     cur = conn.cursor()
     cur.execute("insert into tickets(guild_id, ticket_channel_id, user_id, mtime, atime) values (?, ?, ?, ?, ?)",
-                (guild_id, ticket_category, user_id, datetime.datetime.now().isoformat(), "None"))
+                (guild_id, ticket_category, user_id, get_now_for_server(guild_id).isoformat(), "None"))
     cur.close()
     conn.commit()
 
@@ -61,7 +62,7 @@ def db_remove_ticket_channel(guild_id: int, ticket_channel_id: int):
 def db_update_mtime(guild_id: int, ticket_channel_id: int):
     cur = conn.cursor()
     cur.execute("update tickets set mtime = ? where guild_id = ? and ticket_channel_id = ?",
-                (datetime.datetime.now().isoformat(), guild_id, ticket_channel_id))
+                (get_now_for_server(guild_id).isoformat(), guild_id, ticket_channel_id))
     cur.close()
     conn.commit()
 
@@ -80,7 +81,7 @@ def check_ticket_archive_time(guild_id: int, ticket_channel_id: int) -> bool:
         return False
 
     mtime = datetime.datetime.fromisoformat(mtime[0])
-    if (datetime.datetime.now() - mtime).total_seconds() / 3600 >= int(archive_time):
+    if (get_now_for_server(guild_id) - mtime).total_seconds() / 3600 >= int(archive_time):
         return True
 
     return False
@@ -112,7 +113,7 @@ def check_ticket_hide_time(guild_id: int, ticket_channel_id: int) -> bool:
         return False
 
     atime = datetime.datetime.fromisoformat(atime[0])
-    if (datetime.datetime.now() - atime).total_seconds() / 3600 >= int(hide_time):
+    if (get_now_for_server(guild_id) - atime).total_seconds() / 3600 >= int(hide_time):
         return True
 
     return False
@@ -121,7 +122,7 @@ def check_ticket_hide_time(guild_id: int, ticket_channel_id: int) -> bool:
 def db_archive_ticket(guild_id: int, ticket_channel_id: int):
     cur = conn.cursor()
     cur.execute("update tickets set atime = ? where guild_id = ? and ticket_channel_id = ?",
-                (datetime.datetime.now().isoformat(), guild_id, ticket_channel_id))
+                (get_now_for_server(guild_id).isoformat(), guild_id, ticket_channel_id))
     cur.close()
     conn.commit()
 
