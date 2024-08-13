@@ -17,7 +17,7 @@ def get_server_midnight_time(server_id: int) -> datetime:
     return datetime.datetime.fromtimestamp(stamp1)
 
 
-def adjust_time_for_server(time: datetime, server_id: int) -> datetime:
+def adjust_time_for_server(time: datetime.datetime, server_id: int) -> datetime.datetime:
     """Adjust time for the server's timezone
 
     Args:
@@ -31,7 +31,7 @@ def adjust_time_for_server(time: datetime, server_id: int) -> datetime:
     return time + datetime.timedelta(hours=float(tz_offset))
 
 
-def get_now_for_server(server_id: int) -> datetime:
+def get_now_for_server(server_id: int) -> datetime.datetime:
     """Get the current time for the server's timezone
 
     Args:
