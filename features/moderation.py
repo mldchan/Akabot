@@ -247,7 +247,6 @@ class Moderation(discord.Cog):
 
         chunks = [messages[i:i + 100] for i in range(0, len(messages), 100)]
         for chunk in chunks:
-            print(chunk)
             await ctx.channel.delete_messages(chunk)
 
         await ctx.respond(
