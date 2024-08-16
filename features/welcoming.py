@@ -28,10 +28,12 @@ class Welcoming(discord.Cog):
         message_title = message_title.replace('{user}', member.display_name)
         message_title = message_title.replace('{server}', member.guild.name)
         message_title = message_title.replace('{memberCount}', str(member.guild.member_count))
+        message_title = message_title.replace('{mention}', member.mention)
 
         message_text = message_text.replace('{user}', member.display_name)
         message_text = message_text.replace('{server}', member.guild.name)
         message_text = message_text.replace('{memberCount}', str(member.guild.member_count))
+        message_text = message_text.replace('{mention}', member.mention)
 
         if message_type == 'embed':
             embed = discord.Embed(title=message_title, description=message_text,
@@ -57,10 +59,12 @@ class Welcoming(discord.Cog):
         message_title = message_title.replace('{user}', member.display_name)
         message_title = message_title.replace('{server}', member.guild.name)
         message_title = message_title.replace('{memberCount}', str(member.guild.member_count))
+        message_title = message_title.replace('{mention}', member.mention)
 
         message_text = message_text.replace('{user}', member.display_name)
         message_text = message_text.replace('{server}', member.guild.name)
         message_text = message_text.replace('{memberCount}', str(member.guild.member_count))
+        message_text = message_text.replace('{mention}', member.mention)
 
         if message_type == 'embed':
             embed = discord.Embed(title=message_title, description=message_text,
