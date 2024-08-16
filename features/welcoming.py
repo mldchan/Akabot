@@ -149,7 +149,7 @@ class Welcoming(discord.Cog):
         await log_into_logs(ctx.guild, logging_embed)
 
         # Respond
-        await ctx.respond(trl(ctx.user.id, ctx.guild.id, "welcome_type_set"), ephemeral=True)
+        await ctx.respond(trl(ctx.user.id, ctx.guild.id, "welcome_type_set").format(type=message_type), ephemeral=True)
 
     @welcome_subcommands.command(name='title', description="Set the title of the welcoming message")
     @discord.default_permissions(manage_guild=True)
