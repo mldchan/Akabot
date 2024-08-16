@@ -436,5 +436,17 @@
   "logging_no_changes": "No changes",
   "logging_overwrite_inherited": "Inherited",
   "logging_overwrite_allowed": "Allowed",
-  "logging_overwrite_denied": "Denied"
+  "logging_overwrite_denied": "Denied",
+  "per_user_birthday_invalid": "Invalid birthday. Please try again.",
+  "per_user_birthday_set": "Birthday was set to {birthday}.",
+  "per_user_birthday_announcements_enabled": "Birthday announcements are now enabled for this server.",
+  "per_user_birthday_announcements_disabled": "Birthday announcements are now disabled for this server.",
+  "per_user_birthday_reveal_age_enabled": "The bot is now allowed to reveal your current age in server announcements and your DM's.",
+  "per_user_birthday_reveal_age_disabled": "The bot is no longer allowed to reveal your current age in server announcements and your DM's.",
+  "per_user_birthday_send_dm_enabled": "The bot will now send DM's on your birthday. Please make sure you have DM's allowed.",
+  "per_user_birthday_send_dm_disabled": "The bot will no longer send DM's on your birthday.",
+  "birthday_dm": "Happy birthday! 🎉",
+  "birthday_dm_age": "Happy {age} birthday! 🎉",
+  "per_user_birthday_cleared": "All data about your birthday has been cleared from the database.",
+  "birthday_announcements_channel_set": "Birthday announcements channel set to {channel}."
 }

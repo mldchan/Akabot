@@ -33,3 +33,21 @@ def set_per_user_setting(user_id: int, setting_name: str, setting_value: str):
         cur.execute("INSERT INTO per_user_settings (user_id, setting_name, setting_value) VALUES (?, ?, ?)",
                     (user_id, setting_name, setting_value))
     conn.commit()
+
+
+def unset_per_user_setting(user_id: int, setting_name: str):
+    cur = conn.cursor()
+    cur.execute("DELETE FROM per_user_settings WHERE user_id = ? AND setting_name = ?", (user_id, setting_name))
+    conn.commit()
+
+
+def search_settings_by_value(setting_value: str):
+    """Searches for settings
+    Returns: List of settings with the given value
+    user_id, setting_name, setting_value order
+    """
+    cur = conn.cursor()
+    cur.execute("SELECT user_id, setting_name, setting_value FROM per_user_settings WHERE setting_value = ?",
+                (setting_value,))
+    rows = cur.fetchall()
+    return rows

@@ -171,10 +171,6 @@ class Giveaways(discord.Cog):
         cur.execute("select * from giveaway_participants where giveaway_id=?", (giveaway_id,))
         users = [j[2] for j in cur.fetchall()]
 
-        # Print some information
-        print("Giveaway ended")
-        print(f"Item: {res[3]}", f"End date: {res[4]}", f"Winners: {res[5]}")
-
         # Check if there are enough members to select winners
         if len(users) < res[5]:
             await chan.send(trl(0, chan.guild.id, "giveaways_warning_not_enough_participants"))
