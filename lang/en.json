@@ -87,8 +87,8 @@
   "leveling_level_multiplier_title": "## Multipliers\n",
   "leveling_level_multiplier_row": "{name} Multiplier - {multiplier}x - from {start} to {end}\n",
   "leveling_level_multipliers_none": "No custom multipliers set.",
-  "leveling_level_info_self": "## Level Info\nYou are on is level {level}.\nYou have {level_xp} XP. Next milestone is {next_level_xp} XP for level {next_level}.\nThe multiplier is currently `{multiplier}x`.\n",
-  "leveling_level_info_another": "## Level Info\n{mention} is on is level {level}.\n{mention} has {level_xp} XP. Next milestone is {next_level_xp} XP for level {next_level}.\nThe multiplier is currently `{multiplier}x`.\n",
+  "leveling_level_info_self": "## Level Info\nYou {icon} are on is level {level}.\nYou {icon} have {level_xp} XP. Next milestone is {next_level_xp} XP for level {next_level}.\nThe multiplier is currently `{multiplier}x`.\n",
+  "leveling_level_info_another": "## Level Info\n{mention} {icon} is on is level {level}.\n{mention} {icon} has {level_xp} XP. Next milestone is {next_level_xp} XP for level {next_level}.\nThe multiplier is currently `{multiplier}x`.\n",
   "leveling_settings_title": "Leveling settings",
   "leveling_settings_multiplier": "Leveling multiplier",
   "leveling_multiplier_doesnt_exist": "The multiplier with the name {name} does not exist.",
@@ -448,5 +448,7 @@
   "birthday_dm": "Happy birthday! 🎉",
   "birthday_dm_age": "Happy {age} birthday! 🎉",
   "per_user_birthday_cleared": "All data about your birthday has been cleared from the database.",
-  "birthday_announcements_channel_set": "Birthday announcements channel set to {channel}."
+  "birthday_announcements_channel_set": "Birthday announcements channel set to {channel}.",
+  "leveling_set_icon_success": "The icon of your leveling card was set successfully.",
+  "leveling_set_icon_error": "Invalid icon, try again. An icon must be an emoji."
 }
