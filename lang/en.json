@@ -450,5 +450,6 @@
   "per_user_birthday_cleared": "All data about your birthday has been cleared from the database.",
   "birthday_announcements_channel_set": "Birthday announcements channel set to {channel}.",
   "leveling_set_icon_success": "The icon of your leveling card was set successfully.",
-  "leveling_set_icon_error": "Invalid icon, try again. An icon must be an emoji."
+  "leveling_set_icon_error": "Invalid icon, try again. An icon must be an emoji.",
+  "moderation_timeout_error_member_not_found": "Member wasn't found in server. Try again later."
 }
