@@ -10,11 +10,10 @@
   "bot_status_message": "I am currently in {servers} guilds\n-> {channels} total channels\n-> {users} total members",
   "antiraid_kicked_message": "You have been kicked from the server for suspected raiding. If you believe this was a mistake, try rejoining in a few minutes.",
   "antiraid_kicked_audit": "Suspected raiding",
-  "logging_antiraid_threshold_changed": "Antiraid Join Threshold was changed",
-  "logging_antiraid_threshold_changed_join_threshold": "Join Threshold",
-  "logging_antiraid_threshold_changed_per": "Per",
-  "logging_antiraid_threshold_changed_user": "User",
-  "antiraid_threshold_changed": "Successfully set the join threshold to {people} per {per} seconds.",
+  "logging_antiraid_join_threshold_changed": "Antiraid Join Threshold was changed",
+  "logging_join_threshold": "Join Threshold",
+  "logging_per": "Per",
+  "antiraid_join_threshold_changed": "Successfully set the join threshold to {people} per {per} seconds.",
   "antiraid_settings": "Antiraid settings",
   "antiraid_settings_join_threshold": "Join Threshold",
   "antiraid_settings_join_threshold_value": "{joins} per {seconds} seconds",
@@ -407,5 +406,6 @@
   "command_error_generic": "An error occurred while executing this command. An automatic report was created successfully.",
   "giveaways_list_title": "# Giveaways List\n",
   "giveaways_list_line": "{id}. {item} - {winners} winners - {time} remaining\n",
-  "giveaways_list_empty": "There are no currently running giveaways."
+  "giveaways_list_empty": "There are no currently running giveaways.",
+  "moderation_timeout_error_member_not_found": "Member wasn't found in server. Try again later."
 }
