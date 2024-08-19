@@ -1,3 +1,4 @@
+/.idea/
 /data/
 *.pyc
 /venv/
@@ -7,4 +8,4 @@
 *.bak
 *.orig
 /config.conf
-.idea
+/data
