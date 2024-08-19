@@ -7,8 +7,8 @@ import discord.ext.commands
 import utils.english_words
 import utils.logging_util
 import utils.settings
-from utils.logging_util import log_into_logs
 from utils.languages import get_translation_for_key_localized as trl
+from utils.logging_util import log_into_logs
 
 
 async def give_verify_role(interaction: discord.Interaction | discord.ApplicationContext):
@@ -71,7 +71,7 @@ class VerificationTextReverse(discord.ui.View):
         return trl(self.user_id, 0, "verification_reverse_word").format(word=self.english_word)
 
     @discord.ui.button(label="Answer", style=discord.ButtonStyle.primary)
-    async def respond(self, btn: discord.Button, ctx: discord.ApplicationContext):
+    async def respond(self, ctx: discord.ApplicationContext):
         # Respond with modal
         modal = VerificationTextReverseModal(word=self.english_word, user_id=self.user_id)
         await ctx.response.send_modal(modal)
@@ -108,10 +108,10 @@ class VerificationEnglishWord(discord.ui.View):
         self.length = random.randint(2, 8)
 
     def message_content(self) -> str:
-        return trl(self.user_id, 0, "verification_english_word").format(self.length)
+        return trl(self.user_id, 0, "verification_english_word").format(length=str(self.length))
 
     @discord.ui.button(label="Answer", style=discord.ButtonStyle.primary)
-    async def respond(self, btn: discord.Button, ctx: discord.ApplicationContext):
+    async def respond(self, ctx: discord.ApplicationContext):
         # Respond with modal
         modal = VerificationEnglishWordModal(length=self.length, user_id=self.user_id)
         await ctx.response.send_modal(modal)
@@ -123,7 +123,8 @@ class VerificationEnglishWordModal(discord.ui.Modal):
         self.length = length
         self.user_id = user_id
 
-        self.text_1 = discord.ui.InputText(label=trl(user_id, 0, "verification_form_english_word"), required=True,
+        self.text_1 = discord.ui.InputText(
+            label=trl(user_id, 0, "verification_form_english_word").format(length=str(self.length)), required=True,
                                            min_length=self.length, max_length=self.length)
         self.add_item(self.text_1)
 
@@ -178,7 +179,7 @@ class VerificationMath(discord.ui.View):
         return trl(self.user_id, 0, "verification_math").format(a=self.a, b=self.b, o=self.op)
 
     @discord.ui.button(label="Answer", style=discord.ButtonStyle.primary)
-    async def respond(self, btn: discord.Button, ctx: discord.ApplicationContext):
+    async def respond(self, ctx: discord.ApplicationContext):
         # Respond with modal
         await ctx.response.send_modal(VerificationMathModal(result=self.result, user_id=self.user_id))
 
