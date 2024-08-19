@@ -1,6 +1,7 @@
 import datetime
 
 import discord
+import sentry_sdk
 from discord.ext import commands as commands_ext
 
 from database import conn
@@ -57,32 +58,32 @@ class Moderation(discord.Cog):
             await ctx.respond(trl(ctx.user.id, ctx.guild.id, "moderation_kick_error_insufficient_role"), ephemeral=True)
             return
 
-        if send_dm and user.can_send():
-            try:
-                await user.send(
-                    trl(0, ctx.guild.id, "moderation_kick_dm").format(guild=ctx.guild.name, reason=reason,
-                                                                      moderator=ctx.user.display_name))
-            except discord.Forbidden:
-                pass
+        ephemerality = get_setting(ctx.guild.id, "moderation_ephemeral", "true")
+        await ctx.defer(ephemeral=ephemerality == "true")
+
+        try:
+            await user.send(
+                trl(0, ctx.guild.id, "moderation_kick_dm").format(guild=ctx.guild.name, reason=reason,
+                                                                  moderator=ctx.user.display_name))
+        except Exception as e:
+            sentry_sdk.capture_exception(e, scope="kick_user_dm")  # TO HANDLE LATER
+            pass
 
         await user.kick(reason=reason)
 
-        ephemerality = get_setting(ctx.guild.id, "moderation_ephemeral", "true")
         await ctx.respond(
-            trl(ctx.user.id, ctx.guild.id, "moderation_kick_response").format(mention=user.mention, reason=reason),
-            ephemeral=ephemerality == "true")
+            trl(ctx.user.id, ctx.guild.id, "moderation_kick_response").format(mention=user.mention, reason=reason))
 
     @discord.slash_command(name='ban', description='Ban a user from the server')
     @commands_ext.guild_only()
     @discord.default_permissions(ban_members=True)
     @commands_ext.has_permissions(ban_members=True)
     @commands_ext.bot_has_permissions(ban_members=True)
-    @discord.option(name='user', description='The user to ban', type=discord.Member)
+    @discord.option(name='user', description='The user to ban')
     @discord.option(name='reason', description='The reason for banning', type=str)
     @discord.option(name='send_dm', description='Send a DM to the user', type=bool)
     @analytics("ban")
-    async def ban_user(self, ctx: discord.ApplicationContext, user: discord.Member, reason: str, send_dm: bool = True):
-
+    async def ban_user(self, ctx: discord.ApplicationContext, user: discord.User, reason: str):
         if user.id == self.bot.user.id:  # Check if the user is the bot
             await ctx.respond(trl(ctx.user.id, ctx.guild.id, "moderation_ban_error_self_bot"), ephemeral=True)
             return
@@ -91,27 +92,31 @@ class Moderation(discord.Cog):
             await ctx.respond(trl(ctx.user.id, ctx.guild.id, "moderation_ban_error_self_user"), ephemeral=True)
             return
 
-        if user.top_role >= ctx.user.top_role:  # Check if the user has a higher role
+        member = ctx.guild.get_member(user.id)
+
+        if member is not None and member.top_role >= ctx.user.top_role:  # Check if the user has a higher role
             await ctx.respond(trl(ctx.user.id, ctx.guild.id, "moderation_ban_error_insufficient_role"), ephemeral=True)
             return
 
-        if send_dm and user.can_send():
-            try:
-                await user.send(
-                    trl(ctx.user.id, ctx.guild.id, "moderation_ban_dm").format(guild=ctx.guild.name, reason=reason,
-                                                                               moderator=ctx.user.display_name))
-            except discord.Forbidden:
-                pass
-
-        await user.ban(reason=reason)
-
         ephemerality = get_setting(ctx.guild.id, "moderation_ephemeral", "true")
+        await ctx.defer(ephemeral=ephemerality == "true")
+
+        try:
+            await user.send(
+                trl(ctx.user.id, ctx.guild.id, "moderation_ban_dm").format(guild=ctx.guild.name, reason=reason,
+                                                                           moderator=ctx.user.display_name))
+        except Exception as e:
+            sentry_sdk.capture_exception(e, scope="ban_user_dm")
+            pass
+
+        await ctx.guild.ban(user, reason=reason)
+
         await ctx.respond(
-            trl(ctx.user.id, ctx.guild.id, "moderation_ban_response").format(mention=user.mention, reason=reason),
-            ephemeral=ephemerality == "true")
+            trl(ctx.user.id, ctx.guild.id, "moderation_ban_response").format(mention=user.mention, reason=reason))
 
     @discord.slash_command(name='timeout',
-                           description='Time out a user from the server. If a user has a timeout, this will change the timeout.')
+                           description='Time out a user from the server. If a user has a timeout, this will change '
+                                       'the timeout.')
     @commands_ext.guild_only()
     @discord.default_permissions(kick_members=True)
     @commands_ext.has_permissions(kick_members=True)
@@ -124,7 +129,7 @@ class Moderation(discord.Cog):
     @discord.option(name='minutes', description='The number of minutes to time out', type=int)
     @analytics("timeout")
     async def timeout_user(self, ctx: discord.ApplicationContext, user: discord.Member, reason: str, days: int,
-                           send_dm: bool = True, hours: int = 0, minutes: int = 0):
+                           hours: int = 0, minutes: int = 0):
 
         if user.id == self.bot.user.id:  # Check if the user is the bot
             await ctx.respond(trl(ctx.user.id, ctx.guild.id, "moderation_timeout_error_self_bot"), ephemeral=True)
@@ -133,6 +138,10 @@ class Moderation(discord.Cog):
         if user.id == ctx.user.id:  # Check if the user is the author
             await ctx.respond(trl(ctx.user.id, ctx.guild.id, "moderation_timeout_error_self_user"), ephemeral=True)
             return
+
+        member = ctx.guild.get_member(user.id)
+        if member is None:
+            await ctx.respond(trl(ctx.user.id, ctx.guild.id, "moderation_timeout_error_member_not_found"), ephemeral=True)
 
         if user.top_role >= ctx.user.top_role:  # Check if the user has a higher role
             await ctx.respond(trl(ctx.user.id, ctx.guild.id, "moderation_timeout_error_insufficient_role"),
@@ -151,29 +160,31 @@ class Moderation(discord.Cog):
             await user.remove_timeout(reason=trl(0, ctx.guild.id, "moderation_timeout_reason_changing"))
             dm_has_updated = True
 
-        if send_dm and user.can_send():
-            if dm_has_updated:
-                try:
-                    await user.send(trl(0, ctx.guild.id, "moderation_timeout_dm_changing")
-                                    .format(guild=ctx.guild.name, time=pretty_time_delta(total_seconds, user_id=user.id,
-                                                                                         server_id=ctx.guild.id),
-                                            moderator=ctx.user.display_name, reason=reason))
-                except discord.Forbidden:
-                    pass
-            else:
-                try:
-                    await user.send(
-                        trl(0, ctx.guild.id, "moderation_timeout_dm").format(guild=ctx.guild.name, reason=reason,
-                                                                             moderator=ctx.user.display_name))
-                except discord.Forbidden:
-                    pass
+        ephemerality = get_setting(ctx.guild.id, "moderation_ephemeral", "true")
+        await ctx.defer(ephemeral=ephemerality == "true")
+
+        if dm_has_updated:
+            try:
+                await user.send(trl(0, ctx.guild.id, "moderation_timeout_dm_changing")
+                                .format(guild=ctx.guild.name, time=pretty_time_delta(total_seconds, user_id=user.id,
+                                                                                     server_id=ctx.guild.id),
+                                        moderator=ctx.user.display_name, reason=reason))
+            except Exception as e:
+                sentry_sdk.capture_exception(e, scope="timeout_user_dm")
+                pass
+        else:
+            try:
+                await user.send(
+                    trl(0, ctx.guild.id, "moderation_timeout_dm").format(guild=ctx.guild.name, reason=reason,
+                                                                         moderator=ctx.user.display_name))
+            except Exception as e:
+                sentry_sdk.capture_exception(e, scope="timeout_user_dm")
+                pass
 
         await user.timeout_for(datetime.timedelta(seconds=total_seconds), reason=reason)
 
-        ephemerality = get_setting(ctx.guild.id, "moderation_ephemeral", "true")
         await ctx.respond(
-            trl(ctx.user.id, ctx.guild.id, "moderation_timeout_response").format(mention=user.mention, reason=reason),
-            ephemeral=ephemerality == "true")
+            trl(ctx.user.id, ctx.guild.id, "moderation_timeout_response").format(mention=user.mention, reason=reason))
 
     @discord.slash_command(name='remove_timeout', description='Remove a timeout from a user on the server')
     @commands_ext.guild_only()
@@ -184,8 +195,7 @@ class Moderation(discord.Cog):
     @discord.option(name='reason', description='The reason for removing', type=str)
     @discord.option(name='send_dm', description='Send a DM to the user', type=bool)
     @analytics("remove_timeout")
-    async def remove_timeout_user(self, ctx: discord.ApplicationContext, user: discord.Member, reason: str,
-                                  send_dm: bool = True):
+    async def remove_timeout_user(self, ctx: discord.ApplicationContext, user: discord.Member, reason: str):
 
         if user.id == self.bot.user.id:  # Check if the user is the bot
             await ctx.respond(trl(ctx.user.id, ctx.guild.id, "moderation_remove_timeout_error_self_bot"),
@@ -202,21 +212,21 @@ class Moderation(discord.Cog):
                               ephemeral=True)
             return
 
-        if send_dm and user.can_send():
-            try:
-                await user.send(
-                    trl(ctx.user.id, ctx.guild.id, "moderation_remove_timeout_dm")
-                    .format(guild=ctx.guild.name, reason=reason, moderator=ctx.user.display_name))
-            except discord.Forbidden:
-                pass
+        ephemerality = get_setting(ctx.guild.id, "moderation_ephemeral", "true")
+        await ctx.defer(ephemeral=ephemerality == "true")
+
+        try:
+            await user.send(
+                trl(ctx.user.id, ctx.guild.id, "moderation_remove_timeout_dm")
+                .format(guild=ctx.guild.name, reason=reason, moderator=ctx.user.display_name))
+        except discord.Forbidden:
+            pass
 
         await user.remove_timeout(reason=reason)
 
-        ephemerality = get_setting(ctx.guild.id, "moderation_ephemeral", "true")
         await ctx.respond(
             trl(ctx.user.id, ctx.guild.id, "moderation_remove_timeout_response").format(mention=user.mention,
-                                                                                        reason=reason),
-            ephemeral=ephemerality == "true")
+                                                                                        reason=reason))
 
     @discord.slash_command(name='purge', description='Purge messages from a channel')
     @commands_ext.guild_only()
@@ -227,9 +237,10 @@ class Moderation(discord.Cog):
     @discord.option(name='include_user', description='Include messages from this user')
     @discord.option(name='exclude_user', description='Exclude messages from this user')
     @analytics("purge")
-    async def purge_messages(self, ctx: discord.ApplicationContext, amount: int, include_user: discord.Member = None,
-                             exclude_user: discord.Member = None):
-        await ctx.defer(invisible=True, ephemeral=True)
+    async def purge_messages(self, ctx: discord.ApplicationContext, amount: int, include_user: discord.User = None,
+                             exclude_user: discord.User = None):
+        ephemerality = get_setting(ctx.guild.id, "moderation_ephemeral", "true")
+        await ctx.defer(ephemeral=ephemerality == "true")
         if amount > int(get_key("Moderation_MaxPurge", "1000")):
             await ctx.respond(trl(ctx.user.id, ctx.guild.id, "moderation_purge_max_messages").format(amount),
                               ephemeral=True)
@@ -263,10 +274,10 @@ class Moderation(discord.Cog):
     @discord.option(name='reason', description='The reason for warning', type=str)
     @analytics("warn add")
     async def add_warning(self, ctx: discord.ApplicationContext, user: discord.Member, reason: str):
-        id = await add_warning(user, ctx.guild, reason)
+        warning_id = await add_warning(user, ctx.guild, reason)
         ephemerality = get_setting(ctx.guild.id, "moderation_ephemeral", "true")
         await ctx.respond(
-            trl(ctx.user.id, ctx.guild.id, "warn_add_response").format(mention=user.mention, reason=reason, id=id),
+            trl(ctx.user.id, ctx.guild.id, "warn_add_response").format(mention=user.mention, reason=reason, id=warning_id),
             ephemeral=ephemerality == "true")
 
     @warning_group.command(name='remove', description='Remove a warning from a user')
@@ -276,21 +287,21 @@ class Moderation(discord.Cog):
     @discord.option(name='user', description='The user to remove the warning from', type=discord.Member)
     @discord.option(name='id', description='The ID of the warning', type=int)
     @analytics("warn remove")
-    async def remove_warning(self, ctx: discord.ApplicationContext, user: discord.Member, id: int):
+    async def remove_warning(self, ctx: discord.ApplicationContext, user: discord.Member, warning_id: int):
         # check: warning exists
         warnings = db_get_warnings(ctx.guild.id, user.id)
         if not warnings:
             await ctx.respond(trl(ctx.user.id, ctx.guild.id, "warn_list_no_warnings"), ephemeral=True)
             return
 
-        if id not in [warning[0] for warning in warnings]:
-            await ctx.respond(trl(ctx.user.id, ctx.guild.id, "warn_remove_error_warning_not_found").format(id=id),
+        if warning_id not in [warning[0] for warning in warnings]:
+            await ctx.respond(trl(ctx.user.id, ctx.guild.id, "warn_remove_error_warning_not_found").format(id=warning_id),
                               ephemeral=True)
             return
 
-        db_remove_warning(ctx.guild.id, id)
+        db_remove_warning(ctx.guild.id, warning_id)
         ephemerality = get_setting(ctx.guild.id, "moderation_ephemeral", "true")
-        await ctx.respond(trl(ctx.user.id, ctx.guild.id, "warn_remove_response").format(id=id, user=user.mention),
+        await ctx.respond(trl(ctx.user.id, ctx.guild.id, "warn_remove_response").format(id=warning_id, user=user.mention),
                           ephemeral=ephemerality == "true")
 
     @warning_group.command(name='list', description='List all warnings for a user')
@@ -368,7 +379,8 @@ class Moderation(discord.Cog):
             ephemeral=ephemerality == "true")
 
     @warning_actions_group.command(name='list',
-                                   description='List all actions to be taken on a user with a certain number of warnings')
+                                   description='List all actions to be taken on a user with a certain number of '
+                                               'warnings')
     @commands_ext.guild_only()
     @discord.default_permissions(manage_messages=True)
     @commands_ext.has_permissions(manage_messages=True)
@@ -389,23 +401,24 @@ class Moderation(discord.Cog):
         await ctx.respond(action_str, ephemeral=ephemerality == "true")
 
     @warning_actions_group.command(name='remove',
-                                   description='Remove an action to be taken on a user with a certain number of warnings')
+                                   description='Remove an action to be taken on a user with a certain number of '
+                                               'warnings')
     @commands_ext.guild_only()
     @discord.default_permissions(manage_messages=True)
     @commands_ext.has_permissions(manage_messages=True)
     @discord.option(name='id', description='The ID of the action', type=int)
     @analytics("warn_actions remove")
-    async def remove_warning_action(self, ctx: discord.ApplicationContext, id: int):
+    async def remove_warning_action(self, ctx: discord.ApplicationContext, warning_action_id: int):
         actions = db_get_warning_actions(ctx.guild.id)
         if not actions:
             await ctx.respond(trl(ctx.user.id, ctx.guild.id, "warn_actions_list_empty"), ephemeral=True)
             return
 
-        if id not in [action[0] for action in actions]:
+        if warning_action_id not in [action[0] for action in actions]:
             await ctx.respond(trl(ctx.user.id, ctx.guild.id, "warn_actions_doesnt_exist"), ephemeral=True)
             return
 
-        db_remove_warning_action(id)
+        db_remove_warning_action(warning_action_id)
         ephemerality = get_setting(ctx.guild.id, "moderation_ephemeral", "true")
         await ctx.respond(trl(ctx.user.id, ctx.guild.id, "warn_actions_remove_response"),
                           ephemeral=ephemerality == "true")
