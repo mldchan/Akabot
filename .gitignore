@@ -7,3 +7,4 @@
 *.bak
 *.orig
 /config.conf
+.idea
