@@ -127,12 +127,12 @@ class AutomodActions(discord.Cog):
             return
 
         # Check if there's already a timeout action
-        for action in automod_db_actions:
-            if action[1] == automod_rule.id and action[3] == action:
+        for i in automod_db_actions:
+            if i[1] == automod_rule.id and i[3] == action:
                 await ctx.respond(trl(ctx.user.id, ctx.guild.id, "automod_rule_action_already_exists"), ephemeral=True)
                 return
 
-            if action[1] == automod_rule.id and action[3].startswith("timeout") and action.startswith("timeout"):
+            if i[1] == automod_rule.id and i[3].startswith("timeout") and action.startswith("timeout"):
                 await ctx.respond(trl(ctx.user.id, ctx.guild.id, "automod_rule_timeout_action_already_exists"),
                                   ephemeral=True)
                 return
