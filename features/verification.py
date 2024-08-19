@@ -77,7 +77,7 @@ class VerificationTextReverse(discord.ui.View):
         # Message
         return trl(self.user_id, 0, "verification_reverse_word").format(word=self.english_word)
 
-    async def respond(self, btn: discord.Button, ctx: discord.ApplicationContext):
+    async def respond(self, ctx: discord.ApplicationContext):
         # Respond with modal
         modal = VerificationTextReverseModal(word=self.english_word, user_id=self.user_id)
         await ctx.response.send_modal(modal)
@@ -120,9 +120,9 @@ class VerificationEnglishWord(discord.ui.View):
         self.add_item(self.answer_btn)
 
     def message_content(self) -> str:
-        return trl(self.user_id, 0, "verification_english_word").format(self.length)
+        return trl(self.user_id, 0, "verification_english_word").format(length=str(self.length))
 
-    async def respond(self, btn: discord.Button, ctx: discord.ApplicationContext):
+    async def respond(self, ctx: discord.ApplicationContext):
         # Respond with modal
         modal = VerificationEnglishWordModal(length=self.length, user_id=self.user_id)
         await ctx.response.send_modal(modal)
@@ -134,7 +134,8 @@ class VerificationEnglishWordModal(discord.ui.Modal):
         self.length = length
         self.user_id = user_id
 
-        self.text_1 = discord.ui.InputText(label=trl(user_id, 0, "verification_form_english_word"), required=True,
+        self.text_1 = discord.ui.InputText(
+            label=trl(user_id, 0, "verification_form_english_word").format(length=str(self.length)), required=True,
                                            min_length=self.length, max_length=self.length)
         self.add_item(self.text_1)
 
@@ -194,7 +195,7 @@ class VerificationMath(discord.ui.View):
         # Create a message
         return trl(self.user_id, 0, "verification_math").format(a=self.a, b=self.b, o=self.op)
 
-    async def respond(self, btn: discord.Button, ctx: discord.ApplicationContext):
+    async def respond(self, ctx: discord.ApplicationContext):
         # Respond with modal
         await ctx.response.send_modal(VerificationMathModal(result=self.result, user_id=self.user_id))
 
