@@ -451,5 +451,10 @@
   "birthday_announcements_channel_set": "Birthday announcements channel set to {channel}.",
   "leveling_set_icon_success": "The icon of your leveling card was set successfully.",
   "leveling_set_icon_error": "Invalid icon, try again. An icon must be an emoji.",
-  "moderation_timeout_error_member_not_found": "Member wasn't found in server. Try again later."
+  "moderation_timeout_error_member_not_found": "Member wasn't found in server. Try again later.",
+  "suggestions_channel_not_found": "Channel doesn't exist.",
+  "suggestions_channel_added": "Channel {channel} was added to suggestion channels.",
+  "suggestions_channel_removed": "Channel {channel} was removed from suggestion channels.",
+  "suggestions_channel_already_exists": "Channel already exists.",
+  "suggestions_message_reminder_set": "Reminder set to {enabled} with message `{message}`"
 }
