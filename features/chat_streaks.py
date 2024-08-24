@@ -5,9 +5,10 @@ from discord.ext import commands as commands_ext
 
 from database import conn as db
 from utils.analytics import analytics
-from utils.languages import get_translation_for_key_localized as trl
+from utils.languages import get_translation_for_key_localized as trl, get_language
 from utils.logging_util import log_into_logs
 from utils.per_user_settings import get_per_user_setting
+from utils.tips import append_tip_to_message
 from utils.tzutil import get_server_midnight_time
 
 
@@ -164,7 +165,7 @@ class ChatStreaks(discord.Cog):
         await log_into_logs(ctx.guild, logging_embed)
 
         # Respond
-        await ctx.respond(trl(ctx.user.id, ctx.guild.id, "chat_streaks_reset_success").format(user=user.mention),
+        await ctx.respond(trl(ctx.user.id, ctx.guild.id, "chat_streaks_reset_success", append_tip=True).format(user=user.mention),
                           ephemeral=True)
 
     @streaks_subcommand.command(name="streak", description="Get someone's streak, to get yours, /streak.")
@@ -176,14 +177,14 @@ class ChatStreaks(discord.Cog):
     async def get_user_streak(self, ctx: discord.ApplicationContext, user: discord.Member):
         (_, streak, _) = self.streak_storage.set_streak(ctx.guild.id, user.id)
         await ctx.respond(
-            trl(ctx.user.id, ctx.guild.id, "chat_streaks_streak_admin").format(user=user.mention, streak=str(streak)),
+            trl(ctx.user.id, ctx.guild.id, "chat_streaks_streak_admin", append_tip=True).format(user=user.mention, streak=str(streak)),
             ephemeral=True)
 
     @discord.slash_command(name='streak', description='Get your current streak')
     @analytics("streak")
     async def get_streak_command(self, ctx: discord.ApplicationContext):
         (_, streak, _) = self.streak_storage.set_streak(ctx.guild.id, ctx.user.id)
-        await ctx.respond(trl(ctx.user.id, ctx.guild.id, "chat_streaks_streak").format(streak=streak), ephemeral=True)
+        await ctx.respond(trl(ctx.user.id, ctx.guild.id, "chat_streaks_streak", append_tip=True).format(streak=streak), ephemeral=True)
 
     # Leaderboard
 
@@ -214,4 +215,7 @@ class ChatStreaks(discord.Cog):
             message += trl(ctx.user.id, ctx.guild.id, "chat_streak_leaderboard_line").format(position=i + 1,
                                                                                              user=member.mention,
                                                                                              days=str(days))
+
+        language = get_language(ctx.guild.id, ctx.user.id)
+        message = append_tip_to_message(ctx.guild.id, ctx.user.id, message, language)
         await ctx.respond(message, ephemeral=True)

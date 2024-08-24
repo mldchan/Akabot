@@ -1,8 +1,9 @@
 import discord
 
 from database import conn
-from utils.languages import get_translation_for_key_localized as trl
 from utils.analytics import analytics
+from utils.languages import get_translation_for_key_localized as trl
+
 
 class RolesOnJoin(discord.Cog):
     def __init__(self, bot: discord.Bot):
@@ -50,7 +51,7 @@ class RolesOnJoin(discord.Cog):
 
         cur.execute("INSERT INTO roles_on_join(guild_id, role_id) VALUES (?, ?)", (ctx.guild_id, role.id))
         conn.commit()
-        await ctx.respond(trl(ctx.user.id, ctx.guild.id, "roles_on_join_role_added"), ephemeral=True)
+        await ctx.respond(trl(ctx.user.id, ctx.guild.id, "roles_on_join_role_added", append_tip=True), ephemeral=True)
 
     @roles_on_join_commands.command(name="remove", description="Remove a role on join")
     @analytics("roles_on_join remove")
@@ -63,7 +64,7 @@ class RolesOnJoin(discord.Cog):
 
         cur.execute("DELETE FROM roles_on_join WHERE guild_id=? AND role_id=?", (ctx.guild_id, role.id))
         conn.commit()
-        await ctx.respond(trl(ctx.user.id, ctx.guild.id, "roles_on_join_role_removed"), ephemeral=True)
+        await ctx.respond(trl(ctx.user.id, ctx.guild.id, "roles_on_join_role_removed", append_tip=True), ephemeral=True)
 
     @roles_on_join_commands.command(name="list", description="List roles on join")
     @analytics("roles_on_join list")
@@ -72,7 +73,7 @@ class RolesOnJoin(discord.Cog):
         cur.execute("SELECT id, role_id FROM roles_on_join WHERE guild_id=?", (ctx.guild_id,))
         rows = cur.fetchall()
         if not rows:
-            await ctx.respond(trl(ctx.user.id, ctx.guild.id, "roles_on_join_list_no_roles_on_join"), ephemeral=True)
+            await ctx.respond(trl(ctx.user.id, ctx.guild.id, "roles_on_join_list_no_roles_on_join", append_tip=True), ephemeral=True)
             return
 
         msg = ""

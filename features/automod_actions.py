@@ -144,7 +144,7 @@ class AutomodActions(discord.Cog):
             message_reason = trl(0, ctx.guild.id, "automod_default")
 
         action_id = db_add_automod_action(ctx.guild.id, automod_rule.id, rule_name, action, additional=message_reason)
-        await ctx.respond(trl(ctx.user.id, ctx.guild.id, "automod_added").format(id=action_id), ephemeral=True)
+        await ctx.respond(trl(ctx.user.id, ctx.guild.id, "automod_added", append_tip=True).format(id=action_id), ephemeral=True)
 
     @automod_actions_subcommands.command(name='remove', description='Remove an automod action.')
     @discord_commands_ext.bot_has_permissions(manage_guild=True)
@@ -166,7 +166,7 @@ class AutomodActions(discord.Cog):
             return
 
         db_remove_automod_action(action_id)
-        await ctx.respond(trl(ctx.user.id, ctx.guild.id, "automod_removed"), ephemeral=True)
+        await ctx.respond(trl(ctx.user.id, ctx.guild.id, "automod_removed", append_tip=True), ephemeral=True)
 
     @automod_actions_subcommands.command(name='list', description='List automod actions.')
     @discord_commands_ext.bot_has_permissions(manage_guild=True)
@@ -175,9 +175,9 @@ class AutomodActions(discord.Cog):
     async def automod_actions_list(self, ctx: discord.ApplicationContext):
         automod_actions = db_get_automod_actions(ctx.guild.id)
         if not automod_actions:
-            await ctx.respond(trl(ctx.user.id, ctx.guild.id, "automod_actions_list_empty"), ephemeral=True)
+            await ctx.respond(trl(ctx.user.id, ctx.guild.id, "automod_actions_list_empty", append_tip=True), ephemeral=True)
             return
  
         actions = '\n'.join([f"`{action[0]}`: {action[2]}: {action[3]}" for action in automod_actions])
-        await ctx.respond(trl(ctx.user.id, ctx.guild.id, "automod_actions_list").format(actions=actions),
+        await ctx.respond(trl(ctx.user.id, ctx.guild.id, "automod_actions_list", append_tip=True).format(actions=actions),
                           ephemeral=True)

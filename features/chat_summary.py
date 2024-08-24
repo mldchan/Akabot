@@ -242,7 +242,7 @@ class ChatSummary(discord.Cog):
         await log_into_logs(ctx.guild, logging_embed)
 
         # Send response
-        await ctx.respond(trl(ctx.user.id, ctx.guild.id, "chat_summary_add_added"), ephemeral=True)
+        await ctx.respond(trl(ctx.user.id, ctx.guild.id, "chat_summary_add_added", append_tip=True), ephemeral=True)
 
     @chat_summary_subcommand.command(name="remove", description="Remove a channel from being counted to chat summary")
     @commands_ext.guild_only()
@@ -286,7 +286,7 @@ class ChatSummary(discord.Cog):
         await log_into_logs(ctx.guild, logging_embed)
 
         # Respond
-        await ctx.respond(trl(ctx.user.id, ctx.guild.id, "chat_summary_remove_removed"), ephemeral=True)
+        await ctx.respond(trl(ctx.user.id, ctx.guild.id, "chat_summary_remove_removed", append_tip=True), ephemeral=True)
 
     @chat_summary_subcommand.command(name="dateformat", description="Set the date format of Chat Streak messages.")
     @commands_ext.guild_only()
@@ -313,7 +313,7 @@ class ChatSummary(discord.Cog):
         await log_into_logs(ctx.guild, logging_embed)
 
         # Respond
-        await ctx.respond(trl(ctx.user.id, ctx.guild.id, "chat_summary_dateformat_set").format(format=date_format),
+        await ctx.respond(trl(ctx.user.id, ctx.guild.id, "chat_summary_dateformat_set", append_tip=True).format(format=date_format),
                           ephemeral=True)
 
     @chat_summary_subcommand.command(name="countedits",
@@ -342,8 +342,8 @@ class ChatSummary(discord.Cog):
 
         # Respond
         await ctx.respond(
-            trl(ctx.user.id, ctx.guild.id, "chat_summary_count_edits_on") if countedits else
-            trl(ctx.user.id, ctx.guild.id, "chat_summary_count_edits_off"),
+            trl(ctx.user.id, ctx.guild.id, "chat_summary_count_edits_on", append_tip=True) if countedits else
+            trl(ctx.user.id, ctx.guild.id, "chat_summary_count_edits_off", append_tip=True),
             ephemeral=True)
 
     # The commented code below is for testing purposes

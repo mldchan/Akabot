@@ -8,7 +8,8 @@ from discord.ext import tasks
 from database import conn
 from utils.analytics import analytics
 from utils.generic import pretty_time_delta
-from utils.languages import get_translation_for_key_localized as trl
+from utils.languages import get_translation_for_key_localized as trl, get_language
+from utils.tips import append_tip_to_message
 from utils.tzutil import get_now_for_server
 
 
@@ -64,7 +65,7 @@ class Giveaways(discord.Cog):
         conn.commit()
 
         # Send success message
-        await ctx.respond(trl(ctx.user.id, ctx.guild.id, "giveaways_new_success").format(id=cur.lastrowid),
+        await ctx.respond(trl(ctx.user.id, ctx.guild.id, "giveaways_new_success", append_tip=True).format(id=cur.lastrowid),
                           ephemeral=True)
 
     @giveaways_group.command(name="end", description="End a giveaway IRREVERSIBLY")
@@ -86,7 +87,7 @@ class Giveaways(discord.Cog):
 
         await self.process_send_giveaway(giveaway_id)
 
-        await ctx.respond(trl(ctx.user.id, ctx.guild.id, "giveaways_giveaway_end_success"), ephemeral=True)
+        await ctx.respond(trl(ctx.user.id, ctx.guild.id, "giveaways_giveaway_end_success", append_tip=True), ephemeral=True)
 
     @giveaways_group.command(name='list', description='List all giveaways')
     @discord.default_permissions(manage_guild=True)
@@ -117,6 +118,8 @@ class Giveaways(discord.Cog):
         if len(res) == 0:
             message += trl(ctx.user.id, ctx.guild.id, "giveaways_list_empty")
 
+        language = get_language(ctx.guild.id, ctx.user.id)
+        message = append_tip_to_message(ctx.guild.id, ctx.user.id, message, language)
         await ctx.respond(message, ephemeral=True)
 
     @discord.Cog.listener()

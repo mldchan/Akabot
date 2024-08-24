@@ -8,9 +8,10 @@ from database import conn
 from utils.analytics import analytics
 from utils.config import get_key
 from utils.generic import pretty_time_delta
-from utils.languages import get_translation_for_key_localized as trl
+from utils.languages import get_translation_for_key_localized as trl, get_language
 from utils.logging_util import log_into_logs
 from utils.settings import get_setting, set_setting
+from utils.tips import append_tip_to_message
 from utils.warning import add_warning, db_get_warning_actions, db_add_warning_action, db_get_warnings, \
     db_remove_warning_action, db_remove_warning
 
@@ -72,7 +73,7 @@ class Moderation(discord.Cog):
         await user.kick(reason=reason)
 
         await ctx.respond(
-            trl(ctx.user.id, ctx.guild.id, "moderation_kick_response").format(mention=user.mention, reason=reason))
+            trl(ctx.user.id, ctx.guild.id, "moderation_kick_response", append_tip=True).format(mention=user.mention, reason=reason))
 
     @discord.slash_command(name='ban', description='Ban a user from the server')
     @commands_ext.guild_only()
@@ -112,7 +113,7 @@ class Moderation(discord.Cog):
         await ctx.guild.ban(user, reason=reason)
 
         await ctx.respond(
-            trl(ctx.user.id, ctx.guild.id, "moderation_ban_response").format(mention=user.mention, reason=reason))
+            trl(ctx.user.id, ctx.guild.id, "moderation_ban_response", append_tip=True).format(mention=user.mention, reason=reason))
 
     @discord.slash_command(name='timeout',
                            description='Time out a user from the server. If a user has a timeout, this will change '
@@ -184,7 +185,7 @@ class Moderation(discord.Cog):
         await user.timeout_for(datetime.timedelta(seconds=total_seconds), reason=reason)
 
         await ctx.respond(
-            trl(ctx.user.id, ctx.guild.id, "moderation_timeout_response").format(mention=user.mention, reason=reason))
+            trl(ctx.user.id, ctx.guild.id, "moderation_timeout_response", append_tip=True).format(mention=user.mention, reason=reason))
 
     @discord.slash_command(name='remove_timeout', description='Remove a timeout from a user on the server')
     @commands_ext.guild_only()
@@ -225,7 +226,7 @@ class Moderation(discord.Cog):
         await user.remove_timeout(reason=reason)
 
         await ctx.respond(
-            trl(ctx.user.id, ctx.guild.id, "moderation_remove_timeout_response").format(mention=user.mention,
+            trl(ctx.user.id, ctx.guild.id, "moderation_remove_timeout_response", append_tip=True).format(mention=user.mention,
                                                                                         reason=reason))
 
     @discord.slash_command(name='purge', description='Purge messages from a channel')
@@ -261,7 +262,7 @@ class Moderation(discord.Cog):
             await ctx.channel.delete_messages(chunk)
 
         await ctx.respond(
-            trl(ctx.user.id, ctx.guild.id, "moderation_purge_response").format(messages=str(len(messages))),
+            trl(ctx.user.id, ctx.guild.id, "moderation_purge_response", append_tip=True).format(messages=str(len(messages))),
             ephemeral=True)
 
     warning_group = discord.SlashCommandGroup(name='warn', description='Warning commands')
@@ -277,7 +278,7 @@ class Moderation(discord.Cog):
         warning_id = await add_warning(user, ctx.guild, reason)
         ephemerality = get_setting(ctx.guild.id, "moderation_ephemeral", "true")
         await ctx.respond(
-            trl(ctx.user.id, ctx.guild.id, "warn_add_response").format(mention=user.mention, reason=reason, id=warning_id),
+            trl(ctx.user.id, ctx.guild.id, "warn_add_response", append_tip=True).format(mention=user.mention, reason=reason, id=warning_id),
             ephemeral=ephemerality == "true")
 
     @warning_group.command(name='remove', description='Remove a warning from a user')
@@ -301,7 +302,7 @@ class Moderation(discord.Cog):
 
         db_remove_warning(ctx.guild.id, warning_id)
         ephemerality = get_setting(ctx.guild.id, "moderation_ephemeral", "true")
-        await ctx.respond(trl(ctx.user.id, ctx.guild.id, "warn_remove_response").format(id=warning_id, user=user.mention),
+        await ctx.respond(trl(ctx.user.id, ctx.guild.id, "warn_remove_response", append_tip=True).format(id=warning_id, user=user.mention),
                           ephemeral=ephemerality == "true")
 
     @warning_group.command(name='list', description='List all warnings for a user')
@@ -320,6 +321,9 @@ class Moderation(discord.Cog):
         for warning in warnings:
             warning_str += trl(ctx.user.id, ctx.guild.id, "warn_list_line").format(id=warning[0], reason=warning[1],
                                                                                    date=warning[2])
+
+        language = get_language(ctx.guild.id, ctx.user.id)
+        warning_str = append_tip_to_message(ctx.guild.id, ctx.user.id, warning_str, language)
         await ctx.respond(warning_str, ephemeral=True)
 
     @warning_group.command(name='message', description='Set the message to be sent to a user when they are warned')
@@ -357,7 +361,7 @@ class Moderation(discord.Cog):
         set_setting(ctx.guild.id, 'warning_message', message)
 
         ephemerality = get_setting(ctx.guild.id, "moderation_ephemeral", "true")
-        await ctx.respond(trl(ctx.user.id, ctx.guild.id, "warn_set_message_response").format(message=message),
+        await ctx.respond(trl(ctx.user.id, ctx.guild.id, "warn_set_message_response", append_tip=True).format(message=message),
                           ephemeral=ephemerality == "true")
 
     warning_actions_group = discord.SlashCommandGroup(name='warn_actions', description='Warning action commands')
@@ -375,7 +379,7 @@ class Moderation(discord.Cog):
         db_add_warning_action(ctx.guild.id, action, warnings)
         ephemerality = get_setting(ctx.guild.id, "moderation_ephemeral", "true")
         await ctx.respond(
-            trl(ctx.user.id, ctx.guild.id, "warn_actions_add_response").format(action=action, warnings=warnings),
+            trl(ctx.user.id, ctx.guild.id, "warn_actions_add_response", append_tip=True).format(action=action, warnings=warnings),
             ephemeral=ephemerality == "true")
 
     @warning_actions_group.command(name='list',
@@ -398,6 +402,9 @@ class Moderation(discord.Cog):
                                                                                           warnings=action[2])
 
         ephemerality = get_setting(ctx.guild.id, "moderation_ephemeral", "true")
+
+        language = get_language(ctx.guild.id, ctx.user.id)
+        action_str = append_tip_to_message(ctx.guild.id, ctx.user.id, action_str, language)
         await ctx.respond(action_str, ephemeral=ephemerality == "true")
 
     @warning_actions_group.command(name='remove',
@@ -420,13 +427,13 @@ class Moderation(discord.Cog):
 
         db_remove_warning_action(warning_action_id)
         ephemerality = get_setting(ctx.guild.id, "moderation_ephemeral", "true")
-        await ctx.respond(trl(ctx.user.id, ctx.guild.id, "warn_actions_remove_response"),
+        await ctx.respond(trl(ctx.user.id, ctx.guild.id, "warn_actions_remove_response", append_tip=True),
                           ephemeral=ephemerality == "true")
 
     @moderation_subcommand.command(name="ephemeral", description="Toggle the ephemeral status of a message")
     async def toggle_ephemeral(self, ctx: discord.ApplicationContext, ephemeral: bool):
         set_setting(ctx.guild.id, "moderation_ephemeral", str(ephemeral).lower())
         await ctx.respond(
-            trl(ctx.user.id, ctx.guild.id, "moderation_ephemeral_on")
-            if ephemeral else trl(ctx.user.id, ctx.guild.id, "moderation_ephemeral_off"),
+            trl(ctx.user.id, ctx.guild.id, "moderation_ephemeral_on", append_tip=True)
+            if ephemeral else trl(ctx.user.id, ctx.guild.id, "moderation_ephemeral_off", append_tip=True),
             ephemeral=True)

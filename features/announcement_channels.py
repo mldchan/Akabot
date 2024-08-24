@@ -2,7 +2,8 @@ import discord
 
 from utils.announcement_channels import db_init, db_get_announcement_channels, db_remove_announcement_channel, \
     db_add_announcement_channel, db_is_subscribed_to_announcements
-from utils.languages import get_translation_for_key_localized as trl
+from utils.languages import get_translation_for_key_localized as trl, get_language
+from utils.tips import append_tip_to_message
 
 
 class AnnouncementChannels(discord.Cog):
@@ -22,8 +23,9 @@ class AnnouncementChannels(discord.Cog):
             return
 
         db_add_announcement_channel(ctx.guild.id, channel.id)
-        await ctx.respond(trl(ctx.user.id, ctx.guild.id, "announcement_subscribed").format(channel=channel.mention),
-                          ephemeral=True)
+        await ctx.respond(
+            trl(ctx.user.id, ctx.guild.id, "announcement_subscribed", append_tip=True).format(channel=channel.mention),
+            ephemeral=True)
 
     @announcement_channels_group.command(name="unsubscribe",
                                          description="Unsubscribe a channel from Akabot announcements")
@@ -35,16 +37,19 @@ class AnnouncementChannels(discord.Cog):
             return
 
         db_remove_announcement_channel(ctx.guild.id, channel.id)
-        await ctx.respond(trl(ctx.author.id, ctx.guild.id, "announcement_unsubscribed").format(channel=channel.mention),
-                          ephemeral=True)
+        await ctx.respond(trl(ctx.author.id, ctx.guild.id, "announcement_unsubscribed", append_tip=True).format(
+            channel=channel.mention),
+            ephemeral=True)
 
     @announcement_channels_group.command(name="list",
                                          description="List all channels subscribed to Akabot announcements")
     async def announcement_channels_list(self, ctx: discord.ApplicationContext):
         channels = db_get_announcement_channels(ctx.guild.id)
         if not channels:
-            await ctx.respond(trl(ctx.author.id, ctx.guild.id, "announcement_none_subscribed"), ephemeral=True)
+            await ctx.respond(trl(ctx.author.id, ctx.guild.id, "announcement_none_subscribed"),
+                              ephemeral=True)
             return
 
+        language = get_language(ctx.guild.id, ctx.user.id)
         channel_mentions = [f"<#{channel[1]}>" for channel in channels]
-        await ctx.respond("\n".join(channel_mentions), ephemeral=True)
+        await ctx.respond(append_tip_to_message(ctx.guild.id, ctx.user.id, "\n".join(channel_mentions), language), ephemeral=True)

@@ -56,8 +56,7 @@ class Suggestions(discord.Cog):
         cur.close()
         conn.commit()
 
-        await ctx.respond(trl(ctx.user.id, ctx.guild.id, 'suggestions_channel_added').format(channel=channel.mention),
-                          ephemeral=True)
+        await ctx.respond(trl(ctx.user.id, ctx.guild.id, 'suggestions_channel_added', append_tip=True).format(channel=channel.mention), ephemeral=True)
 
     @suggestions_group.command(name='remove_channel', description='Remove a suggestion channel')
     @discord.default_permissions(manage_guild=True)
@@ -75,8 +74,7 @@ class Suggestions(discord.Cog):
         cur.close()
         conn.commit()
 
-        await ctx.respond(trl(ctx.user.id, ctx.guild.id, "suggestions_channel_removed").format(channel=channel.mention),
-                          ephemeral=True)
+        await ctx.respond(trl(ctx.user.id, ctx.guild.id, "suggestions_channel_removed", append_tip=True).format(channel=channel.mention), ephemeral=True)
 
     @suggestions_group.command(name='emoji', description='Choose emoji')
     @discord.default_permissions(manage_guild=True)
@@ -85,7 +83,7 @@ class Suggestions(discord.Cog):
     @discord.option(name='emoji', description='The emoji to use', choices=['👎👍', '✅❌'])
     async def cmd_choose_emoji(self, ctx: discord.ApplicationContext, emoji: str):
         set_setting(ctx.guild.id, 'suggestion_emoji', emoji)
-        await ctx.respond('Emoji set to {emoji}'.format(emoji=emoji), ephemeral=True)
+        await ctx.respond(trl(ctx.user.id, ctx.guild.id, "suggestions_emoji_set").format(emoji=emoji), ephemeral=True)
 
     @suggestions_group.command(name='message_reminder', description="Message reminder for people posting suggestions")
     @discord.default_permissions(manage_guild=True)
@@ -97,5 +95,5 @@ class Suggestions(discord.Cog):
         set_setting(ctx.guild.id, 'suggestion_reminder_enabled', str(enabled).lower())
         set_setting(ctx.guild.id, 'suggestion_reminder_message', message)
         await ctx.respond(
-            trl(ctx.user.id, ctx.guild.id, 'suggestions_message_reminder_set').format(enabled=enabled, message=message),
+            trl(ctx.user.id, ctx.guild.id, 'suggestions_message_reminder_set', append_tip=True).format(enabled=enabled, message=message),
             ephemeral=True)

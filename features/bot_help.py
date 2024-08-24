@@ -1,7 +1,9 @@
 import os
 
 import discord
+
 from utils.analytics import analytics
+
 
 async def respond_to_help(ctx: discord.ApplicationContext, help_file: str):
     help_file = help_file.title().replace(" ", "-")

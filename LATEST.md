@@ -4,3 +4,5 @@
 - Fixed Admin Commands
 - Fixed Giveaways
 - Added list command to Giveaways
+- Added Tips
+- Added Tickets

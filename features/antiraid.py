@@ -116,7 +116,7 @@ class AntiRaid(discord.Cog):
 
         # Send response to user
         await ctx.respond(
-            trl(ctx.user.id, ctx.guild.id, "antiraid_join_threshold_changed").format(people=str(people), per=str(per)),
+            trl(ctx.user.id, ctx.guild.id, "antiraid_join_threshold_changed", append_tip=True).format(people=str(people), per=str(per)),
             ephemeral=True)
 
     @antiraid_subcommand.command(name="message_threshold",
@@ -149,7 +149,7 @@ class AntiRaid(discord.Cog):
 
         # Send response to user
         await ctx.respond(
-            trl(ctx.user.id, ctx.guild.id, "antiraid_message_threshold_changed").format(messages=str(messages),
+            trl(ctx.user.id, ctx.guild.id, "antiraid_message_threshold_changed", append_tip=True).format(messages=str(messages),
                                                                                         per=str(per)),
             ephemeral=True)
 
