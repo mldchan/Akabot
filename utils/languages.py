@@ -1,13 +1,13 @@
 import json
 import logging
 import os.path
-from typing import List, Any
 
 from utils.per_user_settings import get_per_user_setting, set_per_user_setting
 from utils.settings import get_setting, set_setting
+from utils.tips import append_tip_to_message
 
 
-def get_translation_for_key_localized(user_id: int, guild_id: int, key: str) -> str:
+def get_translation_for_key_localized(user_id: int, guild_id: int, key: str, append_tip=False) -> str:
     """Get translation for a key in the user's language, server language, or English
 
     Args:
@@ -18,6 +18,31 @@ def get_translation_for_key_localized(user_id: int, guild_id: int, key: str) -> 
     Returns:
         str: Translation
     """
+    translation = ""
+    language = get_language(guild_id, user_id)
+
+    with open(f"lang/{language}.json", encoding='utf8') as f:
+        translations: dict = json.load(f)
+
+    translation = translations.get(key, translation)
+
+    if append_tip:
+        return append_tip_to_message(guild_id, user_id, translation, language)
+    return translation
+
+
+def get_language(guild_id: int, user_id: int) -> str:
+    """Get the language for a user, guild or use English as a
+    fallback
+
+    Args:
+        guild_id (int): Guild ID
+        user_id (int): User ID
+
+    Returns:
+        str: Language code
+    """
+
     # Get user language
     if user_id != 0:
         user_lang = get_per_user_setting(user_id, "language", "en")
@@ -26,11 +51,7 @@ def get_translation_for_key_localized(user_id: int, guild_id: int, key: str) -> 
             logging.error(
                 "WARNING: User {id} has somehow set the user language to {lang}, which is not a valid language. "
                 "Reset to EN".format(id=user_id, lang=user_lang))
-        with open(f"lang/{user_lang}.json", encoding='utf8') as f:
-            translations = json.load(f)
-
-        if key in translations:
-            return translations[key]
+        return user_lang
 
     # Get server language
     if guild_id != 0:
@@ -40,18 +61,10 @@ def get_translation_for_key_localized(user_id: int, guild_id: int, key: str) -> 
             logging.error(
                 "WARNING: Server {id} has somehow set the server language to {lang}, which is not a valid language. "
                 "Reset to EN".format(id=guild_id, lang=server_lang))
-
-        with open(f"lang/{server_lang}.json", encoding='utf8') as f:
-            translations = json.load(f)
-
-        if key in translations:
-            return translations[key]
+        return server_lang
 
     # Global (English)
-    with open("lang/en.json", encoding='utf8') as f:
-        translations = json.load(f)
-
-    return translations.get(key, key)
+    return "en"
 
 
 def get_list_of_languages():

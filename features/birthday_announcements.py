@@ -25,7 +25,7 @@ class BirthdayAnnouncements(discord.Cog):
     @analytics("birthday_announcements channel")
     async def set_channel(self, ctx: discord.ApplicationContext, channel: discord.TextChannel):
         set_setting(ctx.guild.id, "birthday_announcements_channel", str(channel.id))
-        await ctx.respond(trl(ctx.user.id, ctx.guild.id, "birthday_announcements_channel_set").format(channel=channel.mention), ephemeral=True)
+        await ctx.respond(trl(ctx.user.id, ctx.guild.id, "birthday_announcements_channel_set", append_tip=True).format(channel=channel.mention), ephemeral=True)
 
     @discord.Cog.listener()
     async def on_ready(self):

@@ -1,9 +1,12 @@
-import discord
 import re
+
+import discord
+
+from utils.analytics import analytics
+from utils.languages import get_translation_for_key_localized as trl
 from utils.languages import language_name_to_code, get_language_names, get_language_name
 from utils.settings import set_setting
-from utils.languages import get_translation_for_key_localized as trl
-from utils.analytics import analytics
+
 
 class ServerSettings(discord.Cog):
     server_settings_group = discord.SlashCommandGroup(name='server_settings', description='Server settings')
@@ -14,7 +17,7 @@ class ServerSettings(discord.Cog):
     async def server_language(self, ctx: discord.ApplicationContext, lang: str):
         lang_code = language_name_to_code(lang)
         set_setting(ctx.guild.id, 'language', lang_code)
-        await ctx.respond(trl(ctx.user.id, ctx.guild.id, "server_language_response").format(
+        await ctx.respond(trl(ctx.user.id, ctx.guild.id, "server_language_response", append_tip=True).format(
             lang=get_language_name(lang_code, completeness=False)), ephemeral=True)
 
     @server_settings_group.command(name='tz', description='Timezone setting')
@@ -35,4 +38,4 @@ class ServerSettings(discord.Cog):
         tz_formatted = str(tz)
         if re.match(r'^[+-]?\d+\.0$', tz_formatted):
             tz_formatted = tz_formatted[:-2]
-        await ctx.respond(trl(ctx.user.id, ctx.guild.id, "server_tz_response").format(tz=tz_formatted), ephemeral=True)
+        await ctx.respond(trl(ctx.user.id, ctx.guild.id, "server_tz_response", append_tip=True).format(tz=tz_formatted), ephemeral=True)

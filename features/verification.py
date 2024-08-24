@@ -285,7 +285,7 @@ class Verification(discord.Cog):
             return
 
         utils.settings.set_setting(ctx.guild.id, "verification_role", str(role.id))
-        await ctx.respond(trl(ctx.user.id, ctx.guild.id, "verification_set_success"), ephemeral=True)
+        await ctx.respond(trl(ctx.user.id, ctx.guild.id, "verification_set_success", append_tip=True), ephemeral=True)
 
     @verification_subcommand.command(name="set_difficulty", description="Set the verification difficulty")
     @discord.commands.option(name="difficulty",
@@ -323,7 +323,7 @@ class Verification(discord.Cog):
 
         # Respond
         await ctx.respond(
-            trl(ctx.user.id, ctx.guild.id, "verification_set_difficulty_response").format(difficulty=difficulty),
+            trl(ctx.user.id, ctx.guild.id, "verification_set_difficulty_response", append_tip=True).format(difficulty=difficulty),
             ephemeral=True)
 
     @verification_subcommand.command(name="send_message", description="Send the verification message")
@@ -363,4 +363,4 @@ class Verification(discord.Cog):
         await ctx.channel.send(content=custom_verify_message, view=view)
 
         # Respond to user that it was successfull
-        await ctx.respond(trl(ctx.user.id, ctx.guild.id, "verification_send_success"), ephemeral=True)
+        await ctx.respond(trl(ctx.user.id, ctx.guild.id, "verification_send_success", append_tip=True), ephemeral=True)

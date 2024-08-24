@@ -65,7 +65,7 @@ class BugReportModal(discord.ui.Modal):
                           "labels": ["bug", "in-bot"]
                       })
 
-        await interaction.respond(trl(self.user_id, 0, "feedback_bug_report_submitted"), ephemeral=True)
+        await interaction.respond(trl(self.user_id, 0, "feedback_bug_report_submitted", append_tip=True), ephemeral=True)
 
 
 class FeatureModal(discord.ui.Modal):
@@ -106,7 +106,7 @@ class FeatureModal(discord.ui.Modal):
                           "labels": ["enhancement", "in-bot"]
                       })
 
-        await interaction.respond(trl(self.user_id, 0, "feedback_feature_submitted"), ephemeral=True)
+        await interaction.respond(trl(self.user_id, 0, "feedback_feature_submitted", append_tip=True), ephemeral=True)
 
 
 class ConfirmSubmitBugReport(discord.ui.View):
@@ -130,7 +130,7 @@ class ConfirmSubmitBugReport(discord.ui.View):
     async def cancel_gh(self, button: discord.ui.Button, interaction: discord.Interaction):
         self.disable_all_items()
         await interaction.respond(
-            trl(self.user_id, 0, "feedback_bug_report_direct"),
+            trl(self.user_id, 0, "feedback_bug_report_direct", append_tip=True),
             ephemeral=True)
 
 
@@ -154,7 +154,7 @@ class ConfirmSubmitFeatureRequest(discord.ui.View):
 
     async def cancel_gh(self, button: discord.ui.Button, interaction: discord.Interaction):
         await interaction.respond(
-            trl(self.user_id, 0, "feedback_feature_direct"),
+            trl(self.user_id, 0, "feedback_feature_direct", append_tip=True),
             ephemeral=True)
 
 
@@ -165,13 +165,13 @@ class SupportCmd(discord.Cog):
     @discord.slash_command(name="website", help="Get the website link")
     @analytics("website")
     async def website(self, ctx: discord.ApplicationContext):
-        await ctx.respond(trl(ctx.user.id, ctx.guild.id, "feedback_visit_website"), ephemeral=True)
+        await ctx.respond(trl(ctx.user.id, ctx.guild.id, "feedback_visit_website", append_tip=True), ephemeral=True)
 
     @discord.slash_command(name="vote", description="Vote on the bot")
     @analytics("vote")
     async def vote(self, ctx: discord.ApplicationContext):
         await ctx.respond(
-            trl(ctx.user.id, ctx.guild.id, "feedback_vote"),
+            trl(ctx.user.id, ctx.guild.id, "feedback_vote", append_tip=True),
             view=VoteView(),
             ephemeral=True
         )
@@ -180,7 +180,7 @@ class SupportCmd(discord.Cog):
     @analytics("privacy policy")
     async def privacy_policy(self, ctx: discord.ApplicationContext):
         await ctx.respond(
-            trl(ctx.user.id, ctx.guild.id, "feedback_privacy_policy"),
+            trl(ctx.user.id, ctx.guild.id, "feedback_privacy_policy", append_tip=True),
             view=PrivacyPolicyView(),
             ephemeral=True
         )
@@ -188,7 +188,7 @@ class SupportCmd(discord.Cog):
     @discord.slash_command(name="donate", description="Donate to the bot to support it")
     @analytics("donate")
     async def donate(self, ctx: discord.ApplicationContext):
-        await ctx.respond(trl(ctx.user.id, ctx.guild.id, "feedback_donate"), ephemeral=True)
+        await ctx.respond(trl(ctx.user.id, ctx.guild.id, "feedback_donate", append_tip=True), ephemeral=True)
 
     @discord.slash_command(name="changelog", description="Get the bot's changelog")
     @discord.option(name="version", description="The version to get the changelog for", choices=["3.3", "3.2", "3.1"])
@@ -223,7 +223,7 @@ class SupportCmd(discord.Cog):
     @cmds_ext.cooldown(1, 300, cmds_ext.BucketType.user)
     @analytics("feedback bug")
     async def report_bug(self, ctx: discord.ApplicationContext):
-        await ctx.respond(content=trl(ctx.user.id, ctx.guild.id, "feedback_bug_report_disclaimer"),
+        await ctx.respond(content=trl(ctx.user.id, ctx.guild.id, "feedback_bug_report_disclaimer", append_tip=True),
                           ephemeral=True,
                           view=ConfirmSubmitBugReport(ctx.user.id))
 
@@ -231,11 +231,11 @@ class SupportCmd(discord.Cog):
     @cmds_ext.cooldown(1, 300, cmds_ext.BucketType.user)
     @analytics("feedback feature")
     async def suggest_feature(self, ctx: discord.ApplicationContext):
-        await ctx.respond(content=trl(ctx.user.id, ctx.guild.id, "feedback_feature_disclaimer"),
+        await ctx.respond(content=trl(ctx.user.id, ctx.guild.id, "feedback_feature_disclaimer", append_tip=True),
                           ephemeral=True,
                           view=ConfirmSubmitFeatureRequest(ctx.user.id))
 
     @discord.slash_command(name="about", description="Get information about the bot")
     @analytics("about")
     async def about(self, ctx: discord.ApplicationContext):
-        await ctx.respond(trl(ctx.user.id, ctx.guild.id, "feedback_about"), ephemeral=True)
+        await ctx.respond(trl(ctx.user.id, ctx.guild.id, "feedback_about", append_tip=True), ephemeral=True)
