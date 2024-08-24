@@ -1,7 +1,9 @@
 import discord
+from discord.ext import commands
+
 from database import conn
-from utils.settings import get_setting, set_setting
 from utils.languages import get_translation_for_key_localized as trl
+from utils.settings import get_setting, set_setting
 
 
 class Suggestions(discord.Cog):
@@ -38,6 +40,9 @@ class Suggestions(discord.Cog):
     suggestions_group = discord.SlashCommandGroup(name='suggestions', description='Suggestion commands')
 
     @suggestions_group.command(name='add_channel', description='Add a suggestion channel')
+    @discord.default_permissions(manage_guild=True)
+    @commands.guild_only()
+    @commands.has_permissions(manage_guild=True)
     async def cmd_add_channel(self, ctx: discord.ApplicationContext, channel: discord.TextChannel):
         cur = conn.cursor()
 
@@ -55,6 +60,9 @@ class Suggestions(discord.Cog):
                           ephemeral=True)
 
     @suggestions_group.command(name='remove_channel', description='Remove a suggestion channel')
+    @discord.default_permissions(manage_guild=True)
+    @commands.guild_only()
+    @commands.has_permissions(manage_guild=True)
     async def cmd_remove_channel(self, ctx: discord.ApplicationContext, channel: discord.TextChannel):
         cur = conn.cursor()
         cur.execute('select * from suggestion_channels where id = ?', (channel.id,))
@@ -71,12 +79,18 @@ class Suggestions(discord.Cog):
                           ephemeral=True)
 
     @suggestions_group.command(name='emoji', description='Choose emoji')
+    @discord.default_permissions(manage_guild=True)
+    @commands.guild_only()
+    @commands.has_permissions(manage_guild=True)
     @discord.option(name='emoji', description='The emoji to use', choices=['👎👍', '✅❌'])
     async def cmd_choose_emoji(self, ctx: discord.ApplicationContext, emoji: str):
         set_setting(ctx.guild.id, 'suggestion_emoji', emoji)
         await ctx.respond('Emoji set to {emoji}'.format(emoji=emoji), ephemeral=True)
 
     @suggestions_group.command(name='message_reminder', description="Message reminder for people posting suggestions")
+    @discord.default_permissions(manage_guild=True)
+    @commands.guild_only()
+    @commands.has_permissions(manage_guild=True)
     async def cmd_message_reminder(self, ctx: discord.ApplicationContext, enabled: bool, message: str):
         if len(message) < 1:
             await ctx.respond("Invalid message input.", ephemeral=True)
