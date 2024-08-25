@@ -44,14 +44,43 @@ def db_get_automod_actions(guild_id: int):
     return actions
 
 
+class AutomodActionsStorage():
+    def __init__(self):
+        self.events = []
+
+    def add_event(self, rule_id, message_id):
+        self.expire_events()
+        print("Adding event", rule_id, message_id)
+        self.events.append((rule_id, message_id, datetime.datetime.now()))
+
+    def check_event(self, rule_id, message_id):
+        self.expire_events()
+        for event in self.events:
+            if event[0] == rule_id and event[1] == message_id:
+                print("Event already exists", event)
+                return True
+        return False
+
+    def expire_events(self):
+        for event in self.events:
+            if event[2] < datetime.datetime.now() - datetime.timedelta(seconds=1):
+                print("Expired event", event)
+                self.events.remove(event)
+
+
 class AutomodActions(discord.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.storage_1 = AutomodActionsStorage()
 
         db_init()
 
     @discord.Cog.listener()
     async def on_auto_moderation_action_execution(self, payload: discord.AutoModActionExecutionEvent):
+        if self.storage_1.check_event(payload.rule_id, payload.message_id):
+            return
+
+        self.storage_1.add_event(payload.rule_id, payload.message_id)
         automod_actions = db_get_automod_actions(payload.guild_id)
         for automod_action in automod_actions:
             if automod_action[1] == payload.rule_id:
