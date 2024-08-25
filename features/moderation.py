@@ -189,9 +189,9 @@ class Moderation(discord.Cog):
 
     @discord.slash_command(name='remove_timeout', description='Remove a timeout from a user on the server')
     @commands_ext.guild_only()
-    @discord.default_permissions(mute_members=True)
-    @commands_ext.has_permissions(mute_members=True)
-    @commands_ext.bot_has_permissions(mute_members=True)
+    @discord.default_permissions(kick_members=True)
+    @commands_ext.has_permissions(kick_members=True)
+    @commands_ext.bot_has_permissions(kick_members=True)
     @discord.option(name='user', description='The user to remove the timeout from', type=discord.Member)
     @discord.option(name='reason', description='The reason for removing', type=str)
     @discord.option(name='send_dm', description='Send a DM to the user', type=bool)
