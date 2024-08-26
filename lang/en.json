@@ -465,5 +465,14 @@
   "suggestions_channel_removed": "Channel {channel} was removed from suggestion channels.",
   "suggestions_channel_already_exists": "Channel already exists.",
   "suggestions_message_reminder_set": "Reminder set to {enabled} with message `{message}`",
-  "suggestions_emoji_set": "Emoji set to {emoji}."
+  "suggestions_emoji_set": "Emoji set to {emoji}.",
+  "temporary_vc_mod_reason": "Temporary voice channels",
+  "temporary_vc_creator_channel_add": "Channel {channel} added to temporary voice channel creators",
+  "temporary_vc_error_channel_not_in_creator": "Channel {channel} is not in the list of creating temporary voice channels",
+  "temporary_vc_creator_channel_remove": "Channel {channel} removed from temporary voice channel creators",
+  "temporary_vc_error_not_a_temporary_channel": "Channel {channel} is not a temporary voice channel",
+  "temporary_vc_name_change": "Name of channel {channel} changed to {name}",
+  "temporary_vc_max_users_change": "Max users of channel {channel} changed to {max_users}",
+  "temporary_vc_bitrate_change": "Bitrate of channel {channel} changed to {bitrate}",
+  "temporary_vc_name_format_change": "Default name format of temporary voice channels changed to `{name}`"
 }
