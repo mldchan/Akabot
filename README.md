@@ -18,6 +18,25 @@ Individual modules have their documentation listed below.
 - [Reaction Roles](https://github.com/Akatsuki2555/Akabot/wiki/Reaction-Roles) - This module allows users to assign or remove roles by reacting to messages containing specific buttons. It provides commands to create different types of reaction role setups, such as normal, add-only, remove-only, and single-choice reaction roles.
 - [Verification](https://github.com/Akatsuki2555/Akabot/wiki/Verification) - This module adds user verification in Discord servers. It prevents bots from accessing your Discord server.
 
+## Available Public Instance
+
+There are 2 public available instance of Akabot you can invite.
+
+### 1. The recommended one
+
+The recommended instance is the last stable version of Akabot. This instance is more stable and receives bug fixes added in the next stable version. This version is always made sure to be stable and
+secure.
+
+This bot instance can be invited using [this link](https://discord.com/oauth2/authorize?client_id=1172922944033411243). A [terms of service](https://mldkyt.com/project/akabot/tos)
+and [privacy policy](https://mldkyt.com/project/akabot/privacy) apply.
+
+### 2. Less recommended version (Beta)
+
+The beta instance is the latest version of Akabot. This instance is less stable and may contain bugs. This version is not recommended for production servers.
+
+This bot instance can be invited using [this link](https://discord.com/oauth2/authorize?client_id=1256907946261090354). A [terms of service](https://mldkyt.com/project/akabot/tos)
+and [privacy policy](https://mldkyt.com/project/akabot/privacy) apply.
+
 ## Self-Hosting an instance of your own
 
 ### Docker
