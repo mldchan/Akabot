@@ -143,7 +143,7 @@ class TemporaryVC(discord.Cog):
         await ctx.channel.edit(bitrate=bitrate)
         await ctx.respond(trl(ctx.user.id, ctx.guild.id, 'temporary_vc_bitrate_change').format(channel=ctx.channel.mention, bitrate=str(bitrate)), ephemeral=True)
 
-    @temporary_vc_commands.command(name='change_default_name', description='Change the default name of a temporary voice channel. Use {name}, {username} and {guild} as placeholders')
+    @temporary_vc_commands.command(name='change_default_name', description='Default name syntax. {name}, {username}, {guild}, {id} are available')
     async def change_default_name(self, ctx: discord.ApplicationContext, name: str):
         set_setting(ctx.guild.id, 'temporary_vc_name', name)
         await ctx.respond(trl(ctx.user.id, ctx.guild.id, 'temporary_vc_name_format_change').format(name=name), ephemeral=True)
