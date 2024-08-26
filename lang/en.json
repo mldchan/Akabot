@@ -474,5 +474,11 @@
   "temporary_vc_name_change": "Name of channel {channel} changed to {name}",
   "temporary_vc_max_users_change": "Max users of channel {channel} changed to {max_users}",
   "temporary_vc_bitrate_change": "Bitrate of channel {channel} changed to {bitrate}",
-  "temporary_vc_name_format_change": "Default name format of temporary voice channels changed to `{name}`"
+  "temporary_vc_name_format_change": "Default name format of temporary voice channels changed to `{name}`",
+  "temporary_vc_error_min_users": "You must have at least 2 max users",
+  "temporary_vc_error_max_users": "You must have at most 99 max users",
+  "temporary_vc_error_min_bitrate": "You must have at least 8kbps bitrate",
+  "temporary_vc_error_max_bitrate": "You must have at most 96kbps bitrate",
+  "temporary_vc_error_name_too_long": "The channel name is too long, it must be at most 16 characters",
+  "temporary_vc_error_name_too_short": "The channel name is too short, it must be at least 1 character"
 }
