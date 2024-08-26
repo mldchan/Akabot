@@ -1,4 +1,5 @@
 import discord
+from discord.ext import commands
 
 from database import conn
 from utils.languages import get_translation_for_key_localized as trl
@@ -85,6 +86,14 @@ class TemporaryVC(discord.Cog):
 
     @temporary_vc_commands.command(name='change_name', description='Change the name of a temporary voice channel')
     async def change_name(self, ctx: discord.ApplicationContext, name: str):
+        if len(name) > 16:
+            await ctx.respond(trl(ctx.user.id, ctx.guild.id, 'temporary_vc_error_name_too_long'), ephemeral=True)
+            return
+
+        if len(name) < 2:
+            await ctx.respond(trl(ctx.user.id, ctx.guild.id, 'temporary_vc_error_name_too_short'), ephemeral=True)
+            return
+
         cur = conn.cursor()
         cur.execute('select * from temporary_vcs where channel_id = ? and guild_id = ? and creator_id = ?', (ctx.channel.id, ctx.guild.id, ctx.user.id))
         if not cur.fetchone():
@@ -96,6 +105,14 @@ class TemporaryVC(discord.Cog):
 
     @temporary_vc_commands.command(name='change_max', description='Change the max users of a temporary voice channel')
     async def change_max(self, ctx: discord.ApplicationContext, max_users: int):
+        if max_users < 2:
+            await ctx.respond(trl(ctx.user.id, ctx.guild.id, 'temporary_vc_error_min_users'), ephemeral=True)
+            return
+
+        if max_users > 99:
+            await ctx.respond(trl(ctx.user.id, ctx.guild.id, 'temporary_vc_error_max_users'), ephemeral=True)
+            return
+
         cur = conn.cursor()
         cur.execute('select * from temporary_vcs where channel_id = ? and guild_id = ? and creator_id = ?', (ctx.channel.id, ctx.guild.id, ctx.user.id))
         if not cur.fetchone():
@@ -107,6 +124,16 @@ class TemporaryVC(discord.Cog):
 
     @temporary_vc_commands.command(name='change_bitrate', description='Change the bitrate of a temporary voice channel')
     async def change_bitrate(self, ctx: discord.ApplicationContext, bitrate: int):
+        if bitrate < 8:
+            await ctx.respond(trl(ctx.user.id, ctx.guild.id, 'temporary_vc_error_min_bitrate'), ephemeral=True)
+            return
+
+        if bitrate > 96:
+            await ctx.respond(trl(ctx.user.id, ctx.guild.id, 'temporary_vc_error_max_bitrate'), ephemeral=True)
+            return
+
+        bitrate = bitrate * 1000
+
         cur = conn.cursor()
         cur.execute('select * from temporary_vcs where channel_id = ? and guild_id = ? and creator_id = ?', (ctx.channel.id, ctx.guild.id, ctx.user.id))
         if not cur.fetchone():
