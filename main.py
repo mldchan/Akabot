@@ -1,5 +1,4 @@
 import logging
-from base64 import bytes_types
 
 import discord
 import sentry_sdk
@@ -10,9 +9,8 @@ from features import welcoming, leveling, antiraid, chat_streaks, chat_revive, c
     logging_mod, admin_cmds, giveaways, feedback_cmd, moderation, cleanup_task, verification, velky_stompies, \
     roles_on_join, heartbeat, automod_actions, power_outage_announcement, per_user_settings, server_settings, \
     bot_help, announcement_channels, tickets, debug_commands, birthday_announcements, send_server_count, \
-    suggestions
+    suggestions, temporary_vc
 from utils.config import get_key
-
 from utils.languages import get_translation_for_key_localized as trl
 
 logging.basicConfig(
@@ -132,5 +130,7 @@ if get_key("Feature_BirthdayAnnouncements", "true") == "true":
 bot.add_cog(send_server_count.SendServerCount(bot))
 if get_key("Feature_SuggestionsEnabled", "true") == "true":
     bot.add_cog(suggestions.Suggestions(bot))
+if get_key('Feature_TemporaryVC', 'true') == 'true':
+    bot.add_cog(temporary_vc.TemporaryVC(bot))
 
 bot.run(get_key("Bot_Token"))
