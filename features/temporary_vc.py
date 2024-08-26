@@ -66,6 +66,8 @@ class TemporaryVC(discord.Cog):
             conn.commit()
 
     @temporary_vc_commands.command(name='add_creator_channel', description='Add a channel to create temporary voice channels')
+    @discord.default_permissions(manage_guild=True)
+    @commands.has_permissions(manage_guild=True)
     async def add_creator_channel(self, ctx: discord.ApplicationContext, channel: discord.VoiceChannel):
         cur = conn.cursor()
         cur.execute('insert into temporary_vc_creator_channels (id, channel_id, guild_id) values (?, ?, ?)', (ctx.author.id, channel.id, ctx.guild.id))
@@ -73,6 +75,8 @@ class TemporaryVC(discord.Cog):
         await ctx.respond(trl(ctx.user.id, ctx.guild.id, 'temporary_vc_creator_channel_add').format(channel=channel.mention), ephemeral=True)
 
     @temporary_vc_commands.command(name='remove_creator_channel', description='Remove a channel to create temporary voice channels')
+    @discord.default_permissions(manage_guild=True)
+    @commands.has_permissions(manage_guild=True)
     async def remove_creator_channel(self, ctx: discord.ApplicationContext, channel: discord.VoiceChannel):
         cur = conn.cursor()
         cur.execute('select * from temporary_vc_creator_channels where channel_id = ? and guild_id = ?', (channel.id, ctx.guild.id))
