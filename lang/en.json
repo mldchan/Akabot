@@ -489,5 +489,6 @@
   "moderation_moderator_role_doesnt_exist": "Role doesn't exist.",
   "moderation_no_moderator_roles": "No moderator roles are currently set.",
   "moderation_moderator_roles_title": "# Moderator roles\n",
-  "moderation_moderator_roles_line": "- {role}\n"
+  "moderation_moderator_roles_line": "- {role}\n",
+  "moderation_no_moderator_role": "You don't have a moderator role."
 }
