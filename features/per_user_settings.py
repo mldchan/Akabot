@@ -101,3 +101,13 @@ class PerUserSettings(discord.Cog):
         unset_per_user_setting(ctx.user.id, 'birthday_reveal_age')
         unset_per_user_setting(ctx.user.id, 'birthday_send_dm')
         await ctx.respond(trl(ctx.user.id, ctx.guild.id, "per_user_birthday_cleared", append_tip=True), ephemeral=True)
+
+    @user_settings_group.command(name='tips', description='Enable or disable tips')
+    @analytics('user_settings tips')
+    async def set_tips(self, ctx: discord.ApplicationContext, state: bool):
+        set_per_user_setting(ctx.user.id, 'tips_enabled', str(state).lower())
+        if state:
+            state_str = trl(ctx.user.id, ctx.guild.id, "per_user_tips_enabled", append_tip=True)
+        else:
+            state_str = trl(ctx.user.id, ctx.guild.id, "per_user_tips_disabled", append_tip=True)
+        await ctx.respond(state_str, ephemeral=True)
