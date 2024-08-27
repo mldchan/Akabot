@@ -3,6 +3,7 @@ import discord
 from utils.announcement_channels import db_init, db_get_announcement_channels, db_remove_announcement_channel, \
     db_add_announcement_channel, db_is_subscribed_to_announcements
 from utils.languages import get_translation_for_key_localized as trl, get_language
+from utils.per_user_settings import get_per_user_setting
 from utils.tips import append_tip_to_message
 
 
@@ -50,6 +51,9 @@ class AnnouncementChannels(discord.Cog):
                               ephemeral=True)
             return
 
-        language = get_language(ctx.guild.id, ctx.user.id)
         channel_mentions = [f"<#{channel[1]}>" for channel in channels]
-        await ctx.respond(append_tip_to_message(ctx.guild.id, ctx.user.id, "\n".join(channel_mentions), language), ephemeral=True)
+        message = "\n".join(channel_mentions)
+        if get_per_user_setting(ctx.user.id, "tips_enabled", "true") == "true":
+            language = get_language(ctx.guild.id, ctx.user.id)
+            message = append_tip_to_message(ctx.guild.id, ctx.user.id, message, language)
+        await ctx.respond(message, ephemeral=True)

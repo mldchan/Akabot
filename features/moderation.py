@@ -10,6 +10,7 @@ from utils.config import get_key
 from utils.generic import pretty_time_delta
 from utils.languages import get_translation_for_key_localized as trl, get_language
 from utils.logging_util import log_into_logs
+from utils.per_user_settings import get_per_user_setting
 from utils.settings import get_setting, set_setting
 from utils.tips import append_tip_to_message
 from utils.warning import add_warning, db_get_warning_actions, db_add_warning_action, db_get_warnings, \
@@ -322,8 +323,9 @@ class Moderation(discord.Cog):
             warning_str += trl(ctx.user.id, ctx.guild.id, "warn_list_line").format(id=warning[0], reason=warning[1],
                                                                                    date=warning[2])
 
-        language = get_language(ctx.guild.id, ctx.user.id)
-        warning_str = append_tip_to_message(ctx.guild.id, ctx.user.id, warning_str, language)
+        if get_per_user_setting(ctx.user.id, 'tips_enabled', 'true') == 'true':
+            language = get_language(ctx.guild.id, ctx.user.id)
+            warning_str = append_tip_to_message(ctx.guild.id, ctx.user.id, warning_str, language)
         await ctx.respond(warning_str, ephemeral=True)
 
     @warning_group.command(name='message', description='Set the message to be sent to a user when they are warned')
@@ -403,8 +405,9 @@ class Moderation(discord.Cog):
 
         ephemerality = get_setting(ctx.guild.id, "moderation_ephemeral", "true")
 
-        language = get_language(ctx.guild.id, ctx.user.id)
-        action_str = append_tip_to_message(ctx.guild.id, ctx.user.id, action_str, language)
+        if get_per_user_setting(ctx.user.id, 'tips_enabled', 'true') == 'true':
+            language = get_language(ctx.guild.id, ctx.user.id)
+            action_str = append_tip_to_message(ctx.guild.id, ctx.user.id, action_str, language)
         await ctx.respond(action_str, ephemeral=ephemerality == "true")
 
     @warning_actions_group.command(name='remove',

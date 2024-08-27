@@ -306,8 +306,9 @@ class Leveling(discord.Cog):
                 response += trl(ctx.user.id, ctx.guild.id, "leveling_level_multiplier_title")
                 response += f'{msg}'
 
-            language = get_language(ctx.guild.id, ctx.user.id)
-            response = append_tip_to_message(ctx.guild.id, ctx.user.id, response, language)
+            if get_per_user_setting(ctx.user.id, 'tips_enabled', 'true') == 'true':
+                language = get_language(ctx.guild.id, ctx.user.id)
+                response = append_tip_to_message(ctx.guild.id, ctx.user.id, response, language)
             await ctx.respond(response, ephemeral=True)
 
     leveling_subcommand = discord.SlashCommandGroup(name='leveling', description='Leveling settings')

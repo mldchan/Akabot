@@ -480,5 +480,7 @@
   "temporary_vc_error_min_bitrate": "You must have at least 8kbps bitrate",
   "temporary_vc_error_max_bitrate": "You must have at most 96kbps bitrate",
   "temporary_vc_error_name_too_long": "The channel name is too long, it must be at most 16 characters",
-  "temporary_vc_error_name_too_short": "The channel name is too short, it must be at least 1 character"
+  "temporary_vc_error_name_too_short": "The channel name is too short, it must be at least 1 character",
+  "per_user_tips_enabled": "Tips are now enabled.",
+  "per_user_tips_disabled": "Tips are now disabled."
 }
