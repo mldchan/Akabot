@@ -42,6 +42,7 @@ async def on_ready():
 
 @bot.event
 async def on_application_command_error(ctx: discord.ApplicationContext, error):
+    print(error)
     if isinstance(error, discord_commands_ext.CommandOnCooldown):
         minutes = int(error.retry_after / 60)
         seconds = int(error.retry_after % 60)
