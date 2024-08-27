@@ -25,6 +25,9 @@ def db_init():
     cur.execute(
         'create table if not exists warnings_actions (id integer primary key autoincrement, guild_id int, warnings int, action text)'
     )
+    cur.execute(
+        'create table if not exists moderator_roles (id integer primary key autoincrement, guild_id int, role_id int)'
+    )
     cur.close()
     conn.commit()
 
@@ -440,3 +443,57 @@ class Moderation(discord.Cog):
             trl(ctx.user.id, ctx.guild.id, "moderation_ephemeral_on", append_tip=True)
             if ephemeral else trl(ctx.user.id, ctx.guild.id, "moderation_ephemeral_off", append_tip=True),
             ephemeral=True)
+
+    @moderation_subcommand.command(name='add_moderator_role', description='Add a moderator role to the server')
+    @commands_ext.has_permissions(manage_guild=True)
+    @commands_ext.guild_only()
+    @discord.default_permissions(manage_guild=True)
+    async def add_moderator_role(self, ctx: discord.ApplicationContext, role: discord.Role):
+        cur = conn.cursor()
+        cur.execute('SELECT * FROM moderator_roles WHERE guild_id = ? AND role_id = ?', (ctx.guild.id, role.id))
+        if cur.fetchone():
+            await ctx.respond(trl(ctx.user.id, ctx.guild.id, "moderation_moderator_role_already_exists").format(role=role.mention), ephemeral=True)
+            return
+
+        cur.execute('INSERT INTO moderator_roles (guild_id, role_id) VALUES (?, ?)', (ctx.guild.id, role.id))
+        conn.commit()
+        cur.close()
+
+        await ctx.respond(trl(ctx.user.id, ctx.guild.id, "moderation_add_moderator_role_response").format(role=role.mention), ephemeral=True)
+
+    @moderation_subcommand.command(name='remove_moderator_role', description='Remove a moderator role from the server')
+    @commands_ext.has_permissions(manage_guild=True)
+    @commands_ext.guild_only()
+    @discord.default_permissions(manage_guild=True)
+    async def remove_moderator_role(self, ctx: discord.ApplicationContext, role: discord.Role):
+        cur = conn.cursor()
+        cur.execute('SELECT * FROM moderator_roles WHERE guild_id = ? AND role_id = ?', (ctx.guild.id, role.id))
+        if not cur.fetchone():
+            await ctx.respond(trl(ctx.user.id, ctx.guild.id, "moderation_moderator_role_doesnt_exist").format(role=role.mention), ephemeral=True)
+            return
+
+        cur.execute('DELETE FROM moderator_roles WHERE guild_id = ? AND role_id = ?', (ctx.guild.id, role.id))
+        conn.commit()
+        cur.close()
+
+        await ctx.respond(trl(ctx.user.id, ctx.guild.id, "moderation_remove_moderator_role_response").format(role=role.mention), ephemeral=True)
+
+    @moderation_subcommand.command(name='list_moderator_roles', description='List all moderator roles on the server')
+    @commands_ext.has_permissions(manage_guild=True)
+    @commands_ext.guild_only()
+    @discord.default_permissions(manage_guild=True)
+    async def list_moderator_roles(self, ctx: discord.ApplicationContext):
+        cur = conn.cursor()
+        cur.execute('SELECT * FROM moderator_roles WHERE guild_id = ?', (ctx.guild.id,))
+        roles = cur.fetchall()
+        cur.close()
+
+        if not roles:
+            await ctx.respond(trl(ctx.user.id, ctx.guild.id, "moderation_no_moderator_roles"), ephemeral=True)
+            return
+
+        message = trl(ctx.user.id, ctx.guild.id, "moderation_moderator_roles_title")
+
+        role_mentions = [trl(ctx.user.id, ctx.guild.id, "moderation_moderator_roles_line").format(role=ctx.guild.get_role(role[1]).mention) for role in roles]
+        message += "\n".join(role_mentions)
+        await ctx.respond(message, ephemeral=True)
