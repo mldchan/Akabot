@@ -71,7 +71,11 @@ async def on_application_command_error(ctx: discord.ApplicationContext, error):
         return
 
     sentry_sdk.capture_exception(error)
-    await ctx.respond(trl(ctx.user.id, ctx.guild.id, "command_error_generic"), ephemeral=True)
+    try:
+        # respond
+        await ctx.respond(trl(ctx.user.id, ctx.guild.id, "command_error_generic"), ephemeral=True)
+    except Exception:
+        print("Failed to respond")
     raise error
 
 

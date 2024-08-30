@@ -14,6 +14,7 @@ def get_translation_for_key_localized(user_id: int, guild_id: int, key: str, app
         user_id (int): User ID, if 0, will skip user language
         guild_id (int): Guild ID, if 0, will skip server language
         key (str): Key
+        append_tip (bool, optional): Append a tip to the message. Defaults to False.
 
     Returns:
         str: Translation
@@ -24,7 +25,10 @@ def get_translation_for_key_localized(user_id: int, guild_id: int, key: str, app
     with open(f"lang/{language}.json", encoding='utf8') as f:
         translations: dict = json.load(f)
 
-    translation = translations.get(key, translation)
+    with open('lang/en.json', encoding='utf8') as f:
+        en_translations: dict = json.load(f)
+
+    translation = translations.get(key, translation) or en_translations.get(key, translation) or f"lang.en.{key}"
 
     if append_tip and get_per_user_setting(user_id, "tips_enabled", "true") == "true":
         return append_tip_to_message(guild_id, user_id, translation, language)
