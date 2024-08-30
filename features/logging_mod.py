@@ -31,42 +31,81 @@ class Logging(discord.Cog):
     @discord.Cog.listener()
     async def on_guild_emojis_update(self, guild: discord.Guild, before: discord.Emoji | None, after: discord.Emoji | None):
         if before is None and after is not None:
+            triggering_user = None
+            if guild.me.guild_permissions.view_audit_log:
+                async for action in guild.audit_logs(action=discord.AuditLogAction.emoji_create, limit=1):
+                    triggering_user = action.user
+
             embed = discord.Embed(title=trl(0, guild.id, "logging_emoji_added_title"), color=discord.Color.green())
 
             if after.animated:
                 embed.description = trl(0, guild.id, "logging_animated_emoji_added").format(name=after.name)
             else:
                 embed.description = trl(0, guild.id, "logging_emoji_added").format(name=after.name)
+
+            embed.add_field(name=trl(0, guild.id, 'logging_moderator'), value=triggering_user.mention if triggering_user else trl(0, guild.id, 'logging_unknown_member'), inline=False)
             await log_into_logs(guild, embed)
 
         if before is not None and after is None:
+            triggering_user = None
+            if guild.me.guild_permissions.view_audit_log:
+                async for action in guild.audit_logs(action=discord.AuditLogAction.emoji_delete, limit=1):
+                    triggering_user = action.user
+
             embed = discord.Embed(title=trl(0, guild.id, "logging_emoji_removed"), color=discord.Color.red())
             if before.animated:
                 embed.description = trl(0, guild.id, "logging_animated_emoji_removed").format(name=before.name)
             else:
                 embed.description = trl(0, guild.id, "logging_emoji_removed").format(name=before.name)
+
+            embed.add_field(name=trl(0, guild.id, 'logging_moderator'), value=triggering_user.mention if triggering_user else trl(0, guild.id, 'logging_unknown_member'), inline=False)
             await log_into_logs(guild, embed)
 
         if before is not None and after is not None:
+            triggering_user = None
+            if guild.me.guild_permissions.view_audit_log:
+                async for action in guild.audit_logs(action=discord.AuditLogAction.emoji_update, limit=1):
+                    triggering_user = action.user
+
             embed = discord.Embed(title=trl(0, guild.id, "logging_emoji_renamed_title"), color=discord.Color.blue())
             if before.name != after.name:
                 embed.add_field(name=trl(0, guild.id, "logging_name"), value=f'{before.name} -> {after.name}')
 
+            if len(embed.fields) > 0:
+                embed.add_field(name=trl(0, guild.id, 'logging_moderator'), value=triggering_user.mention if triggering_user else trl(0, guild.id, 'logging_unknown_member'), inline=False)
             await log_into_logs(guild, embed)
 
     @discord.Cog.listener()
     async def on_guild_stickers_update(self, guild: discord.Guild, before: discord.Sticker | None, after: discord.Sticker | None):
         if before is None and after is not None:
+            triggering_user = None
+            if guild.me.guild_permissions.view_audit_log:
+                async for action in guild.audit_logs(action=discord.AuditLogAction.sticker_create, limit=1):
+                    triggering_user = action.user
+
             embed = discord.Embed(title=trl(0, guild.id, "logging_sticker_added_title"), color=discord.Color.green())
             embed.description = trl(0, guild.id, "logging_sticker_added").format(name=after.name)
+
+            embed.add_field(name=trl(0, guild.id, 'logging_moderator'), value=triggering_user.mention if triggering_user else trl(0, guild.id, 'logging_unknown_member'), inline=False)
             await log_into_logs(guild, embed)
 
         if before is not None and after is None:
+            if guild.me.guild_permissions.view_audit_log:
+                async for action in guild.audit_logs(action=discord.AuditLogAction.sticker_delete, limit=1):
+                    triggering_user = action.user
+
             embed = discord.Embed(title=trl(0, guild.id, "logging_sticker_removed_title"), color=discord.Color.red())
             embed.description = trl(0, guild.id, "logging_sticker_removed").format(name=before.name)
+
+            embed.add_field(name=trl(0, guild.id, 'logging_moderator'), value=triggering_user.mention if triggering_user else trl(0, guild.id, 'logging_unknown_member'), inline=False)
             await log_into_logs(guild, embed)
 
         if before is not None and after is not None:
+            triggering_user = None
+            if guild.me.guild_permissions.view_audit_log:
+                async for action in guild.audit_logs(action=discord.AuditLogAction.sticker_update, limit=1):
+                    triggering_user = action.user
+
             embed = discord.Embed(title=trl(0, guild.id, "logging_sticker_edited"), color=discord.Color.blue())
             if before.name != after.name:
                 embed.add_field(name=trl(0, guild.id, "logging_name"), value=f'{before.name} -> {after.name}')
@@ -74,24 +113,42 @@ class Logging(discord.Cog):
             if before.description != after.description:
                 embed.add_field(name=trl(0, guild.id, "description"), value=f'{before.description} -> {after.description}')
 
+            if len(embed.fields) > 0:
+                embed.add_field(name=trl(0, guild.id, 'logging_moderator'), value=triggering_user.mention if triggering_user else trl(0, guild.id, 'logging_unknown_member'), inline=False)
             await log_into_logs(guild, embed)
 
     @discord.Cog.listener()
     async def on_auto_moderation_rule_create(self, rule: discord.AutoModRule):
+        moderator = None
+        if rule.guild.me.guild_permissions.view_audit_log:
+            async for entry in rule.guild.audit_logs(limit=1, action=discord.AuditLogAction.auto_moderation_rule_create):
+                moderator = entry.user
+
         embed = discord.Embed(title=trl(0, rule.guild.id, "logging_automod_rule_created"), color=discord.Color.green())
         embed.add_field(name=trl(0, rule.guild.id, "logging_rule_name"), value=rule.name)
+        embed.add_field(name=trl(0, rule.guild.id, "logging_moderator"), value=moderator.mention if moderator else trl(0, rule.guild.id, "logging_unknown_member"))
         await log_into_logs(rule.guild, embed)
 
     @discord.Cog.listener()
     async def on_auto_moderation_rule_delete(self, rule: discord.AutoModRule):
+        moderator = None
+        if rule.guild.me.guild_permissions.view_audit_log:
+            async for entry in rule.guild.audit_logs(limit=1, action=discord.AuditLogAction.auto_moderation_rule_delete):
+                moderator = entry.user
         embed = discord.Embed(title=trl(0, rule.guild.id, "logging_automod_rule_delete"), color=discord.Color.red())
         embed.add_field(name=trl(0, rule.guild.id, "logging_rule_name"), value=rule.name)
+        embed.add_field(name=trl(0, rule.guild.id, "logging_moderator"), value=moderator.mention if moderator else trl(0, rule.guild.id, "logging_unknown_member"))
         await log_into_logs(rule.guild, embed)
 
     @discord.Cog.listener()
     async def on_auto_moderation_rule_update(self, rule: discord.AutoModRule):
+        moderator = None
+        if rule.guild.me.guild_permissions.view_audit_log:
+            async for entry in rule.guild.audit_logs(limit=1, action=discord.AuditLogAction.auto_moderation_rule_update):
+                moderator = entry.user
         embed = discord.Embed(title=trl(0, rule.guild.id, "logging_automod_rule_update"), color=discord.Color.blue())
         embed.add_field(name=trl(0, rule.guild.id, "logging_rule_name"), value=rule.name)
+        embed.add_field(name=trl(0, rule.guild.id, "logging_moderator"), value=moderator.mention if moderator else trl(0, rule.guild.id, "logging_unknown_member"))
         await log_into_logs(rule.guild, embed)
 
     @discord.Cog.listener()
@@ -136,6 +193,12 @@ class Logging(discord.Cog):
 
     @discord.Cog.listener()
     async def on_guild_channel_update(self, before: discord.abc.GuildChannel, after: discord.abc.GuildChannel):
+        moderator = None
+        if before.guild.me.guild_permissions.view_audit_log:
+            async for entry in before.guild.audit_logs(limit=1, action=discord.AuditLogAction.channel_update):
+                if entry.target.id == after.id:
+                    moderator = entry.user
+
         embed = discord.Embed(title=trl(0, after.guild.id, "logging_channel_update_title"), color=discord.Color.blue())
         embed.add_field(name=trl(0, after.guild.id, "logging_channel"), value=after.mention)
 
@@ -206,27 +269,51 @@ class Logging(discord.Cog):
 
                 overwrite_embed.add_field(name=trl(0, after.guild.id, "logging_overwrite_permission_changes"), value=changes_str)
 
+                overwrite_embed.add_field(name=trl(0, after.guild.id, "logging_moderator"), value=moderator.mention if moderator else trl(0, after.guild.id, "logging_unknown_member"))
+
                 await log_into_logs(after.guild, overwrite_embed)
 
         if len(embed.fields) > 1:
+            embed.add_field(name=trl(0, after.guild.id, "logging_moderator"), value=moderator.mention if moderator else trl(0, after.guild.id, "logging_unknown_member"))
             await log_into_logs(after.guild, embed)
 
     @discord.Cog.listener()
     async def on_guild_channel_create(self, channel: discord.abc.GuildChannel):
+        moderator = None
+        if channel.guild.me.guild_permissions.view_audit_log:
+            async for entry in channel.guild.audit_logs(limit=1, action=discord.AuditLogAction.channel_create):
+                if entry.target.id == channel.id:
+                    moderator = entry.user
+
         embed = discord.Embed(title=trl(0, channel.guild.id, "logging_channel_create_title"),
                               description=trl(0, channel.guild.id, "logging_channel_create_description").format(type=str_channel_type(channel.type), name=channel.name), color=discord.Color.green())
+
+        embed.add_field(name=trl(0, channel.guild.id, "logging_moderator"), value=moderator.mention if moderator else trl(0, channel.guild.id, "logging_unknown_member"))
 
         await log_into_logs(channel.guild, embed)
 
     @discord.Cog.listener()
     async def on_guild_channel_delete(self, channel: discord.abc.GuildChannel):
+        moderator = None
+        if channel.guild.me.guild_permissions.view_audit_log:
+            async for entry in channel.guild.audit_logs(limit=1, action=discord.AuditLogAction.channel_delete):
+                if entry.target.id == channel.id:
+                    moderator = entry.user
+
         embed = discord.Embed(title=trl(0, channel.guild.id, "logging_channel_delete_title"),
                               description=trl(0, channel.guild.id, "logging_channel_delete_description").format(type=str_channel_type(channel.type), name=channel.name), color=discord.Color.red())
+
+        embed.add_field(name=trl(0, channel.guild.id, "logging_moderator"), value=moderator.mention if moderator else trl(0, channel.guild.id, "logging_unknown_member"))
 
         await log_into_logs(channel.guild, embed)
 
     @discord.Cog.listener()
     async def on_guild_update(self, before: discord.Guild, after: discord.Guild):
+        moderator = None
+        if after.me.guild_permissions.view_audit_log:
+            async for entry in after.audit_logs(limit=1, action=discord.AuditLogAction.guild_update):
+                moderator = entry.user
+
         embed = discord.Embed(title=f"{after.name} Server Updated", color=discord.Color.blue())
 
         if before.name != after.name:
@@ -263,22 +350,48 @@ class Logging(discord.Cog):
             embed.add_field(name=trl(0, after.id, "logging_mfa_level"), value=f'{before.mfa_level} -> {after.mfa_level}')
 
         if len(embed.fields) > 0:
+            embed.add_field(name=trl(0, after.id, "logging_moderator"), value=moderator.mention if moderator else trl(0, after.id, "logging_unknown_member"))
+
             await log_into_logs(after, embed)
 
     @discord.Cog.listener()
     async def on_guild_role_create(self, role: discord.Role):
+        moderator = None
+        if role.guild.me.guild_permissions.view_audit_log:
+            async for entry in role.guild.audit_logs(limit=1, action=discord.AuditLogAction.role_create):
+                if entry.target.id == role.id:
+                    moderator = entry.user
+
         embed = discord.Embed(title=trl(0, role.guild.id, "logging_role_created_title"), description=trl(0, role.guild.id, "logging_role_created_description").format(name=role.name),
                               color=discord.Color.green())
+
+        embed.add_field(name=trl(0, role.guild.id, "logging_moderator"), value=moderator.mention if moderator else trl(0, role.guild.id, "logging_unknown_member"))
+
         await log_into_logs(role.guild, embed)
 
     @discord.Cog.listener()
     async def on_guild_role_delete(self, role: discord.Role):
+        moderator = None
+        if role.guild.me.guild_permissions.view_audit_log:
+            async for entry in role.guild.audit_logs(limit=1, action=discord.AuditLogAction.role_delete):
+                if entry.target.id == role.id:
+                    moderator = entry.user
+
         embed = discord.Embed(title=trl(0, role.guild.id, "logging_role_deleted_title"), description=trl(0, role.guild.id, "logging_role_deleted_description").format(name=role.name),
                               color=discord.Color.red())
+
+        embed.add_field(name=trl(0, role.guild.id, "logging_moderator"), value=moderator.mention if moderator else trl(0, role.guild.id, "logging_unknown_member"))
+
         await log_into_logs(role.guild, embed)
 
     @discord.Cog.listener()
     async def on_guild_role_update(self, before: discord.Role, after: discord.Role):
+        moderator = None
+        if after.guild.me.guild_permissions.view_audit_log:
+            async for entry in after.guild.audit_logs(limit=1, action=discord.AuditLogAction.role_update):
+                if entry.target.id == after.id:
+                    moderator = entry.user
+
         embed = discord.Embed(title=trl(0, after.guild.id, "logging_role_updated_title"), color=discord.Color.blue())
         if before.name != after.name:
             embed.add_field(name=trl(0, after.guild.id, "logging_name"), value=f'{before.name} -> {after.name}')
@@ -309,37 +422,64 @@ class Logging(discord.Cog):
                 embed.add_field(name=trl(0, after.guild.id, "logging_denied_perms"), value=', '.join(changed_deny))
 
         if len(embed.fields) > 0:
+            embed.add_field(name=trl(0, after.guild.id, "logging_moderator"), value=moderator.mention if moderator else trl(0, after.guild.id, "logging_unknown_member"))
+
             await log_into_logs(after.guild, embed)
 
     @discord.Cog.listener()
     async def on_invite_create(self, invite: discord.Invite):
+        moderator = None
+        if invite.guild.me.guild_permissions.view_audit_log:
+            async for entry in invite.guild.audit_logs(limit=1, action=discord.AuditLogAction.invite_create):
+                if entry.target.id == invite.id:
+                    moderator = entry.user
+
         embed = discord.Embed(title=trl(0, invite.guild.id, "logging_invite_created"), color=discord.Color.green())
         embed.add_field(name=trl(0, invite.guild.id, "logging_code"), value=invite.code)
         embed.add_field(name=trl(0, invite.guild.id, "logging_channel"), value=invite.channel.mention)
         embed.add_field(name=trl(0, invite.guild.id, "logging_max_uses"), value=str(invite.max_uses))
         embed.add_field(name=trl(0, invite.guild.id, "logging_max_age"), value=str(invite.max_age))
         embed.add_field(name=trl(0, invite.guild.id, "logging_temporary"), value=str(invite.temporary))
+        embed.add_field(name=trl(0, invite.guild.id, "logging_moderator"), value=moderator.mention if moderator else trl(0, invite.guild.id, "logging_unknown_member"))
         await log_into_logs(invite.guild, embed)
 
     @discord.Cog.listener()
     async def on_invite_delete(self, invite: discord.Invite):
+        moderator = None
+        if invite.guild.me.guild_permissions.view_audit_log:
+            async for entry in invite.guild.audit_logs(limit=1, action=discord.AuditLogAction.invite_delete):
+                if entry.target.id == invite.id:
+                    moderator = entry.user
+
         embed = discord.Embed(title=trl(0, invite.guild.id, "logging_invite_deleted"), color=discord.Color.red())
+
+        embed.add_field(name=trl(0, invite.guild.id, "logging_code"), value=invite.code)
+        embed.add_field(name=trl(0, invite.guild.id, "logging_channel"), value=invite.channel.mention)
+        embed.add_field(name=trl(0, invite.guild.id, "logging_moderator"), value=moderator.mention if moderator else trl(0, invite.guild.id, "logging_unknown_member"))
         await log_into_logs(invite.guild, embed)
 
     @discord.Cog.listener()
     async def on_member_join(self, member: discord.Member):
         embed = discord.Embed(title=trl(0, member.guild.id, "logging_member_join_title"), description=trl(0, member.guild.id, "logging_member_join_description").format(mention=member.mention),
                               color=discord.Color.green())
+        embed.add_field(name=trl(0, member.guild.id, "logging_user"), value=member.mention)
         await log_into_logs(member.guild, embed)
 
     @discord.Cog.listener()
     async def on_member_remove(self, member: discord.Member):
         embed = discord.Embed(title=trl(0, member.guild.id, "logging_member_leave_title"), description=trl(0, member.guild.id, "logging_member_leave_description").format(mention=member.mention),
                               color=discord.Color.red())
+        embed.add_field(name=trl(0, member.guild.id, "logging_user"), value=member.mention)
         await log_into_logs(member.guild, embed)
 
     @discord.Cog.listener()
     async def on_member_update(self, before: discord.Member, after: discord.Member):
+        moderator = None
+        if after.guild.me.guild_permissions.view_audit_log:
+            async for entry in after.guild.audit_logs(limit=1, action=discord.AuditLogAction.member_update):
+                if entry.target.id == after.id:
+                    moderator = entry.user
+
         embed = discord.Embed(title=trl(0, after.guild.id, "logging_member_update_title"), color=discord.Color.blue())
         embed.add_field(name=trl(0, after.guild.id, "logging_user"), value=after.mention)
 
@@ -354,6 +494,7 @@ class Logging(discord.Cog):
                 embed.add_field(name=trl(0, after.guild.id, "logging_removed_roles"), value=', '.join(removed_roles))
 
         if len(embed.fields) > 1:
+            embed.add_field(name=trl(0, after.guild.id, "logging_moderator"), value=moderator.mention if moderator else trl(0, after.guild.id, "logging_unknown_member"))
             await log_into_logs(after.guild, embed)
 
     @discord.Cog.listener()
@@ -422,6 +563,7 @@ class Logging(discord.Cog):
         embed = discord.Embed(title=trl(0, reaction.message.guild.id, "logging_reaction_added_title"), color=discord.Color.green())
         embed.add_field(name=trl(0, reaction.message.guild.id, "logging_message"), value=f"[jump](<{reaction.message.jump_url}>)")
         embed.add_field(name=trl(0, reaction.message.guild.id, "logging_emoji"), value=str(reaction.emoji))
+        embed.add_field(name=trl(0, reaction.message.guild.id, "logging_user"), value=user.mention)
         await log_into_logs(reaction.message.guild, embed)
 
     @discord.Cog.listener()
@@ -429,6 +571,7 @@ class Logging(discord.Cog):
         embed = discord.Embed(title=trl(0, reaction.message.guild.id, "logging_reaction_removed_title"), color=discord.Color.red())
         embed.add_field(name=trl(0, reaction.message.guild.id, "logging_message"), value=f"[jump](<{reaction.message.jump_url}>)")
         embed.add_field(name=trl(0, reaction.message.guild.id, "logging_emoji"), value=str(reaction.emoji))
+        embed.add_field(name=trl(0, reaction.message.guild.id, "logging_user"), value=user.mention)
         await log_into_logs(reaction.message.guild, embed)
 
     @discord.Cog.listener()
@@ -448,16 +591,27 @@ class Logging(discord.Cog):
 
     @discord.Cog.listener()
     async def on_scheduled_event_create(self, event: discord.ScheduledEvent):
+        moderator = None
+        if event.guild.me.guild_permissions.view_audit_log:
+            async for entry in event.guild.audit_logs(limit=1, action=discord.AuditLogAction.scheduled_event_create):
+                moderator = entry.user
+
         embed = discord.Embed(title=trl(0, event.guild.id, "logging_scheduled_event_create"), color=discord.Color.green())
         embed.add_field(name=trl(0, event.guild.id, "logging_name"), value=event.name)
         embed.add_field(name=trl(0, event.guild.id, "description"), value=event.description)
         embed.add_field(name=trl(0, event.guild.id, "logging_location"), value=event.location.value)
         embed.add_field(name=trl(0, event.guild.id, "logging_start"), value=event.start_time.strftime("%Y/%m/%d %H:%M:%S"))
         embed.add_field(name=trl(0, event.guild.id, "logging_end"), value=event.end_time.strftime("%Y/%m/%d %H:%M:%S"))
+        embed.add_field(name=trl(0, event.guild.id, "logging_moderator"), value=moderator.mention if moderator else trl(0, event.guild.id, "logging_unknown_member"))
         await log_into_logs(event.guild, embed)
 
     @discord.Cog.listener()
     async def on_scheduled_event_update(self, before: discord.ScheduledEvent, after: discord.ScheduledEvent):
+        moderator = None
+        if after.guild.me.guild_permissions.view_audit_log:
+            async for entry in after.guild.audit_logs(limit=1, action=discord.AuditLogAction.scheduled_event_update):
+                moderator = entry.user
+
         embed = discord.Embed(title=trl(0, after.guild.id, "logging_scheduled_event_update"), color=discord.Color.blue())
         if before.name != after.name:
             embed.add_field(name=trl(0, after.guild.id, "logging_name"), value=f'{before.name} -> {after.name}')
@@ -470,35 +624,61 @@ class Logging(discord.Cog):
         if before.end_time != after.end_time:
             embed.add_field(name=trl(0, after.guild.id, "logging_end"), value=f'{before.end_time.strftime("%Y/%m/%d %H:%M:%S")} -> {after.end_time.strftime("%Y/%m/%d %H:%M:%S")}')
         if len(embed.fields) > 0:
+            embed.add_field(name=trl(0, after.guild.id, "logging_moderator"), value=moderator.mention if moderator else trl(0, after.guild.id, "logging_unknown_member"))
             await log_into_logs(after.guild, embed)
 
     @discord.Cog.listener()
     async def on_scheduled_event_delete(self, event: discord.ScheduledEvent):
+        moderator = None
+        if event.guild.me.guild_permissions.view_audit_log:
+            async for entry in event.guild.audit_logs(limit=1, action=discord.AuditLogAction.scheduled_event_delete):
+                moderator = entry.user
+
         embed = discord.Embed(title=trl(0, event.guild.id, "logging_scheduled_event_delete"), color=discord.Color.red())
         embed.add_field(name=trl(0, event.guild.id, "logging_name"), value=event.name)
         embed.add_field(name=trl(0, event.guild.id, "description"), value=event.description)
         embed.add_field(name=trl(0, event.guild.id, "logging_location"), value=event.location.value)
         embed.add_field(name=trl(0, event.guild.id, "logging_start"), value=event.start_time.strftime("%Y/%m/%d %H:%M:%S"))
         embed.add_field(name=trl(0, event.guild.id, "logging_end"), value=event.end_time.strftime("%Y/%m/%d %H:%M:%S"))
+        embed.add_field(name=trl(0, event.guild.id, "logging_moderator"), value=moderator.mention if moderator else trl(0, event.guild.id, "logging_unknown_member"))
         await log_into_logs(event.guild, embed)
 
     @discord.Cog.listener()
     async def on_thread_create(self, thread: discord.Thread):
+        moderator = None
+        if thread.guild.me.guild_permissions.view_audit_log:
+            async for entry in thread.guild.audit_logs(limit=1, action=discord.AuditLogAction.thread_create):
+                if entry.target.id == thread.id:
+                    moderator = entry.user
+
         embed = discord.Embed(title=trl(0, thread.guild.id, "logging_thread_create"), description=trl(0, thread.guild.id, "logging_thread_create_description").format(name=thread.name),
                               color=discord.Color.green())
         embed.add_field(name=trl(0, thread.guild.id, "logging_jump_to_thread"), value=f"[jump](<{thread.jump_url}>)")
         embed.add_field(name=trl(0, thread.guild.id, "logging_name"), value=thread.name)
+        embed.add_field(name=trl(0, thread.guild.id, "logging_moderator"), value=moderator.mention if moderator else trl(0, thread.guild.id, "logging_unknown_member"))
         await log_into_logs(thread.guild, embed)
 
     @discord.Cog.listener()
     async def on_thread_delete(self, thread: discord.Thread):
+        moderator = None
+        if thread.guild.me.guild_permissions.view_audit_log:
+            async for entry in thread.guild.audit_logs(limit=1, action=discord.AuditLogAction.thread_delete):
+                if entry.target.id == thread.id:
+                    moderator = entry.user
+
         embed = discord.Embed(title=trl(0, thread.guild.id, "logging_thread_delete"), description=trl(0, thread.guild.id, "logging_thread_delete_description").format(name=thread.name),
                               color=discord.Color.red())
         embed.add_field(name=trl(0, thread.guild.id, "logging_name"), value=thread.name)
+        embed.add_field(name=trl(0, thread.guild.id, "logging_moderator"), value=moderator.mention if moderator else trl(0, thread.guild.id, "logging_unknown_member"))
         await log_into_logs(thread.guild, embed)
 
     @discord.Cog.listener()
     async def on_thread_update(self, before: discord.Thread, after: discord.Thread):
+        if before.guild.me.guild_permissions.view_audit_log:
+            async for entry in before.guild.audit_logs(limit=1, action=discord.AuditLogAction.thread_update):
+                if entry.target.id == after.id:
+                    moderator = entry.user
+
         embed = discord.Embed(title=trl(0, after.guild.id, "logging_thread_update"), color=discord.Color.blue())
 
         if before.name != after.name:
@@ -509,6 +689,7 @@ class Logging(discord.Cog):
             embed.add_field(name=trl(0, after.guild.id, "logging_locked"), value=f'{before.locked} -> {after.locked}')
         if len(embed.fields) > 0:
             embed.add_field(name=trl(0, after.guild.id, "logging_jump_to_thread"), value=f"[jump](<{after.jump_url}>)")
+            embed.add_field(name=trl(0, after.guild.id, "logging_moderator"), value=moderator.mention if moderator else trl(0, after.guild.id, "logging_unknown_member"))
             await log_into_logs(after.guild, embed)
 
     logging_subcommand = discord.SlashCommandGroup(name='logging', description='Logging settings')
