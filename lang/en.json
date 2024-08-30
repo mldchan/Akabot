@@ -490,5 +490,6 @@
   "moderation_no_moderator_roles": "No moderator roles are currently set.",
   "moderation_moderator_roles_title": "# Moderator roles\n",
   "moderation_moderator_roles_line": "- {role}\n",
-  "moderation_no_moderator_role": "You don't have a moderator role."
+  "moderation_no_moderator_role": "You don't have a moderator role.",
+  "moderation_not_moderator": "You are not a moderator. To be a moderator, you must have a role that is in the list of moderator roles."
 }

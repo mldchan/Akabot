@@ -34,8 +34,12 @@ def db_init():
 
 def is_a_moderator(ctx: discord.ApplicationContext):
     cur = conn.cursor()
-    cur.execute('SELECT * FROM moderator_roles WHERE guild_id = ? AND role_id = ?', (ctx.guild.id, ctx.user.top_role.id))
-    return cur.fetchone() is not None
+    cur.execute('SELECT * FROM moderator_roles WHERE guild_id = ?', (ctx.guild.id,))
+    roles = cur.fetchall()
+    for role in roles:
+        if role[2] in [role.id for role in ctx.user.roles]:
+            return True
+    return False
 
 
 class Moderation(discord.Cog):
@@ -527,6 +531,6 @@ class Moderation(discord.Cog):
 
         message = trl(ctx.user.id, ctx.guild.id, "moderation_moderator_roles_title")
 
-        role_mentions = [trl(ctx.user.id, ctx.guild.id, "moderation_moderator_roles_line").format(role=ctx.guild.get_role(role[1]).mention) for role in roles]
+        role_mentions = [trl(ctx.user.id, ctx.guild.id, "moderation_moderator_roles_line").format(role=ctx.guild.get_role(role[2]).mention) for role in roles]
         message += "\n".join(role_mentions)
         await ctx.respond(message, ephemeral=True)
