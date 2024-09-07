@@ -6,6 +6,7 @@ from discord.ext import commands, tasks
 from database import conn
 from utils.settings import set_setting, get_setting
 from utils.tzutil import get_now_for_server
+from utils.logging_util import log_into_logs
 
 
 def db_init():
@@ -221,6 +222,16 @@ class TicketCreateView(discord.ui.View):
         db_add_ticket_channel(interaction.guild.id, channel.id, interaction.user.id)
 
         await interaction.response.send_message("Ticket created! " + channel.mention, ephemeral=True)
+        
+        log_embed = discord.Embed(title="Ticket Created", description=f"Ticket created by {interaction.user.mention} in {channel.mention}")
+        log_embed.add_field(name="Ticket ID", value=channel.id)
+        log_embed.add_field(name="Ticket Creator", value=interaction.user.mention)
+        log_embed.add_field(name="Ticket Channel", value=channel.mention)
+        log_embed.add_field(name="Ticket Category", value=category.name)
+        log_embed.add_field(name="Ticket Creation Time", value=get_now_for_server(interaction.guild.id).isoformat())
+        log_embed.add_field(name="Ticket Message", value=interaction.message.jump_url)
+        
+        await log_into_logs(interaction.guild, log_embed)
 
 
 class Tickets(discord.Cog):
@@ -292,6 +303,15 @@ class Tickets(discord.Cog):
 
         await ctx.channel.send(message, view=TicketCreateView(button_label))
         await ctx.respond("Message sent!", ephemeral=True)
+        
+        log_embed = discord.Embed(title="Ticket Message Sent", description=f"Ticket message sent by {ctx.user.mention} in {ctx.channel.mention}")
+        log_embed.add_field(name="Ticket Message", value=message)
+        log_embed.add_field(name="Ticket Message Button Label", value=button_label)
+        log_embed.add_field(name="Ticket Message Channel", value=ctx.channel.mention)
+        log_embed.add_field(name="Ticket Message Time", value=get_now_for_server(ctx.guild.id).isoformat())
+        log_embed.add_field(name="Ticket Message Message", value=ctx.message.jump_url)
+        
+        await log_into_logs(ctx.guild, log_embed)
 
     @tickets_commands.command(name="set_category",
                               description="Set the category where tickets will be created. Permissions will be copied "
@@ -301,6 +321,14 @@ class Tickets(discord.Cog):
     async def set_category(self, ctx: discord.ApplicationContext, category: discord.CategoryChannel):
         set_setting(ctx.guild.id, "ticket_category", str(category.id))
         await ctx.respond("Category set!", ephemeral=True)
+        
+        log_embed = discord.Embed(title="Ticket Category Set", description=f"Ticket category set by {ctx.user.mention} to {category.name}")
+        log_embed.add_field(name="Ticket Category", value=category.name)
+        log_embed.add_field(name="Ticket Category ID", value=category.id)
+        log_embed.add_field(name="Ticket Category Time", value=get_now_for_server(ctx.guild.id).isoformat())
+        log_embed.add_field(name="Ticket Category Message", value=ctx.message.jump_url)
+        
+        await log_into_logs(ctx.guild, log_embed)
 
     @tickets_commands.command(name="set_hide_time",
                               description="Set the time that the ticket will be available for the creator after it's "
@@ -310,6 +338,13 @@ class Tickets(discord.Cog):
     async def set_hide_time(self, ctx: discord.ApplicationContext, hours: int):
         set_setting(ctx.guild.id, "ticket_hide_time", str(hours))
         await ctx.respond("Hide time set!", ephemeral=True)
+        
+        log_embed = discord.Embed(title="Ticket Hide Time Set", description=f"Ticket hide time set by {ctx.user.mention} to {hours} hours")
+        log_embed.add_field(name="Ticket Hide Time", value=hours)
+        log_embed.add_field(name="Ticket Hide Time Time", value=get_now_for_server(ctx.guild.id).isoformat())
+        log_embed.add_field(name="Ticket Hide Time Message", value=ctx.message.jump_url)
+        
+        await log_into_logs(ctx.guild, log_embed)
 
     @tickets_commands.command(name="set_archive_time",
                               description="Set the time that the ticket will be archived after no activity.")
@@ -318,6 +353,13 @@ class Tickets(discord.Cog):
     async def set_auto_archive_time(self, ctx: discord.ApplicationContext, hours: int):
         set_setting(ctx.guild.id, "ticket_archive_time", str(hours))
         await ctx.respond("Auto archive time set!", ephemeral=True)
+        
+        log_embed = discord.Embed(title="Ticket Archive Time Set", description=f"Ticket archive time set by {ctx.user.mention} to {hours} hours")
+        log_embed.add_field(name="Ticket Archive Time", value=hours)
+        log_embed.add_field(name="Ticket Archive Time Time", value=get_now_for_server(ctx.guild.id).isoformat())
+        log_embed.add_field(name="Ticket Archive Time Message", value=ctx.message.jump_url)
+        
+        await log_into_logs(ctx.guild, log_embed)
 
     @tasks.loop(seconds=60)
     async def handle_hiding(self):
@@ -329,6 +371,12 @@ class Tickets(discord.Cog):
                 member = guild.get_member(db_get_ticket_creator(i[0], i[1]))
                 await channel.set_permissions(member, read_messages=False, send_messages=False)
                 db_remove_ticket_channel(i[0], i[1])
+                
+                log_embed = discord.Embed(title="Ticket Hidden", description=f"Ticket hidden by the system in {channel.mention} because the hide time is up.")
+                log_embed.add_field(name="Ticket Hidden Time", value=get_now_for_server(guild.id).isoformat())
+                log_embed.add_field(name="Ticket Hidden Message", value=channel.jump_url)
+                
+                await log_into_logs(guild, log_embed)
 
     @tasks.loop(seconds=60)
     async def handle_auto_archive(self):
@@ -358,3 +406,9 @@ class Tickets(discord.Cog):
                 # Send closed message
                 await channel.send(
                     "Ticket closed automatically because there was no activity for a certain amount of time.")
+                
+                log_embed = discord.Embed(title="Ticket Closed Automatically", description=f"Ticket closed automatically by the system in {channel.mention} because there was no activity for a certain amount of time.")
+                log_embed.add_field(name="Ticket Closed Automatically Time", value=get_now_for_server(guild.id).isoformat())
+                log_embed.add_field(name="Ticket Closed Automatically Message", value=channel.jump_url)
+                
+                await log_into_logs(guild, log_embed)

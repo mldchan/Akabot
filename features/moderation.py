@@ -15,6 +15,7 @@ from utils.settings import get_setting, set_setting
 from utils.tips import append_tip_to_message
 from utils.warning import add_warning, db_get_warning_actions, db_add_warning_action, db_get_warnings, \
     db_remove_warning_action, db_remove_warning
+from utils.tzutil import get_now_for_server
 
 
 def db_init():
@@ -90,6 +91,14 @@ class Moderation(discord.Cog):
 
         await ctx.respond(
             trl(ctx.user.id, ctx.guild.id, "moderation_kick_response", append_tip=True).format(mention=user.mention, reason=reason))
+        
+        log_embed = discord.Embed(title="User Kicked", description=f"{user.mention} has been kicked by {ctx.user.mention} for {reason}")
+        log_embed.add_field(name="Kicked User", value=user.mention)
+        log_embed.add_field(name="Kicked By", value=ctx.user.mention)
+        log_embed.add_field(name="Kicked Reason", value=reason)
+        log_embed.add_field(name="Kicked Time", value=get_now_for_server(ctx.guild.id).isoformat())
+        
+        await log_into_logs(ctx.guild, log_embed)
 
     @discord.slash_command(name='ban', description='Ban a user from the server')
     @commands_ext.guild_only()
@@ -133,6 +142,14 @@ class Moderation(discord.Cog):
 
         await ctx.respond(
             trl(ctx.user.id, ctx.guild.id, "moderation_ban_response", append_tip=True).format(mention=user.mention, reason=reason))
+        
+        log_embed = discord.Embed(title="User Banned", description=f"{user.mention} has been banned by {ctx.user.mention} for {reason}")
+        log_embed.add_field(name="Banned User", value=user.mention)
+        log_embed.add_field(name="Banned By", value=ctx.user.mention)
+        log_embed.add_field(name="Banned Reason", value=reason)
+        log_embed.add_field(name="Banned Time", value=get_now_for_server(ctx.guild.id).isoformat())
+        
+        await log_into_logs(ctx.guild, log_embed)
 
     @discord.slash_command(name='timeout',
                            description='Time out a user from the server. If a user has a timeout, this will change '
@@ -207,6 +224,14 @@ class Moderation(discord.Cog):
 
         await ctx.respond(
             trl(ctx.user.id, ctx.guild.id, "moderation_timeout_response", append_tip=True).format(mention=user.mention, reason=reason))
+        
+        log_embed = discord.Embed(title="User Timed Out", description=f"{user.mention} has been timed out by {ctx.user.mention} for {reason}")
+        log_embed.add_field(name="Timed Out User", value=user.mention)
+        log_embed.add_field(name="Timed Out By", value=ctx.user.mention)
+        log_embed.add_field(name="Timed Out Reason", value=reason)
+        log_embed.add_field(name="Timed Out Time", value=get_now_for_server(ctx.guild.id).isoformat())
+        
+        await log_into_logs(ctx.guild, log_embed)
 
     @discord.slash_command(name='remove_timeout', description='Remove a timeout from a user on the server')
     @commands_ext.guild_only()
@@ -251,6 +276,14 @@ class Moderation(discord.Cog):
         await ctx.respond(
             trl(ctx.user.id, ctx.guild.id, "moderation_remove_timeout_response", append_tip=True).format(mention=user.mention,
                                                                                         reason=reason))
+        
+        log_embed = discord.Embed(title="User Timeout Removed", description=f"{user.mention} has had their timeout removed by {ctx.user.mention} for {reason}")
+        log_embed.add_field(name="Timeout Removed User", value=user.mention)
+        log_embed.add_field(name="Timeout Removed By", value=ctx.user.mention)
+        log_embed.add_field(name="Timeout Removed Reason", value=reason)
+        log_embed.add_field(name="Timeout Removed Time", value=get_now_for_server(ctx.guild.id).isoformat())
+        
+        await log_into_logs(ctx.guild, log_embed)
 
     @discord.slash_command(name='purge', description='Purge messages from a channel')
     @commands_ext.guild_only()
@@ -290,6 +323,14 @@ class Moderation(discord.Cog):
         await ctx.respond(
             trl(ctx.user.id, ctx.guild.id, "moderation_purge_response", append_tip=True).format(messages=str(len(messages))),
             ephemeral=True)
+        
+        log_embed = discord.Embed(title="Messages Purged", description=f"{ctx.user.mention} has purged {len(messages)} messages from {ctx.channel.mention}")
+        log_embed.add_field(name="Purged Messages", value=str(len(messages)))
+        log_embed.add_field(name="Purged By", value=ctx.user.mention)
+        log_embed.add_field(name="Purged Channel", value=ctx.channel.mention)
+        log_embed.add_field(name="Purged Time", value=get_now_for_server(ctx.guild.id).isoformat())
+        
+        await log_into_logs(ctx.guild, log_embed)
 
     warning_group = discord.SlashCommandGroup(name='warn', description='Warning commands')
 
@@ -309,6 +350,14 @@ class Moderation(discord.Cog):
         await ctx.respond(
             trl(ctx.user.id, ctx.guild.id, "warn_add_response", append_tip=True).format(mention=user.mention, reason=reason, id=warning_id),
             ephemeral=ephemerality == "true")
+        
+        log_embed = discord.Embed(title="Warning Added", description=f"{user.mention} has been warned by {ctx.user.mention} for {reason}")
+        log_embed.add_field(name="Warned User", value=user.mention)
+        log_embed.add_field(name="Warned By", value=ctx.user.mention)
+        log_embed.add_field(name="Warned Reason", value=reason)
+        log_embed.add_field(name="Warned Time", value=get_now_for_server(ctx.guild.id).isoformat())
+        
+        await log_into_logs(ctx.guild, log_embed)
 
     @warning_group.command(name='remove', description='Remove a warning from a user')
     @commands_ext.guild_only()
@@ -336,6 +385,14 @@ class Moderation(discord.Cog):
         ephemerality = get_setting(ctx.guild.id, "moderation_ephemeral", "true")
         await ctx.respond(trl(ctx.user.id, ctx.guild.id, "warn_remove_response", append_tip=True).format(id=warning_id, user=user.mention),
                           ephemeral=ephemerality == "true")
+        
+        log_embed = discord.Embed(title="Warning Removed", description=f"{user.mention} has had warning {warning_id} removed by {ctx.user.mention}")
+        log_embed.add_field(name="Warning Removed User", value=user.mention)
+        log_embed.add_field(name="Warning Removed By", value=ctx.user.mention)
+        log_embed.add_field(name="Warning Removed ID", value=warning_id)
+        log_embed.add_field(name="Warning Removed Time", value=get_now_for_server(ctx.guild.id).isoformat())
+        
+        await log_into_logs(ctx.guild, log_embed)
 
     @warning_group.command(name='list', description='List all warnings for a user')
     @commands_ext.guild_only()
@@ -396,9 +453,15 @@ class Moderation(discord.Cog):
         set_setting(ctx.guild.id, 'send_warning_message', str(enable).lower())
         set_setting(ctx.guild.id, 'warning_message', message)
 
-        ephemerality = get_setting(ctx.guild.id, "moderation_ephemeral", "true")
         await ctx.respond(trl(ctx.user.id, ctx.guild.id, "warn_set_message_response", append_tip=True).format(message=message),
-                          ephemeral=ephemerality == "true")
+                          ephemeral=True)
+        
+        log_embed = discord.Embed(title="Warning Message Set", description=f"{ctx.user.mention} has set the warning message to {message}")
+        log_embed.add_field(name="Warning Message", value=message)
+        log_embed.add_field(name="Warning Message Enabled", value=str(enable).lower())
+        log_embed.add_field(name="Warning Message Time", value=get_now_for_server(ctx.guild.id).isoformat())
+        
+        await log_into_logs(ctx.guild, log_embed)
 
     warning_actions_group = discord.SlashCommandGroup(name='warn_actions', description='Warning action commands')
 
@@ -413,10 +476,16 @@ class Moderation(discord.Cog):
     @analytics("warn_actions add")
     async def add_warning_action(self, ctx: discord.ApplicationContext, warnings: int, action: str):
         db_add_warning_action(ctx.guild.id, action, warnings)
-        ephemerality = get_setting(ctx.guild.id, "moderation_ephemeral", "true")
         await ctx.respond(
             trl(ctx.user.id, ctx.guild.id, "warn_actions_add_response", append_tip=True).format(action=action, warnings=warnings),
-            ephemeral=ephemerality == "true")
+            ephemeral=True)
+        
+        log_embed = discord.Embed(title="Warning Action Added", description=f"{ctx.user.mention} has added a warning action to {action} for {warnings} warnings")
+        log_embed.add_field(name="Warning Action", value=action)
+        log_embed.add_field(name="Warning Action Warnings", value=warnings)
+        log_embed.add_field(name="Warning Action Time", value=get_now_for_server(ctx.guild.id).isoformat())
+        
+        await log_into_logs(ctx.guild, log_embed)
 
     @warning_actions_group.command(name='list',
                                    description='List all actions to be taken on a user with a certain number of '
@@ -469,6 +538,12 @@ class Moderation(discord.Cog):
         ephemerality = get_setting(ctx.guild.id, "moderation_ephemeral", "true")
         await ctx.respond(trl(ctx.user.id, ctx.guild.id, "warn_actions_remove_response", append_tip=True),
                           ephemeral=ephemerality == "true")
+        
+        log_embed = discord.Embed(title="Warning Action Removed", description=f"{ctx.user.mention} has removed a warning action with ID {warning_action_id}")
+        log_embed.add_field(name="Warning Action ID", value=warning_action_id)
+        log_embed.add_field(name="Warning Action Time", value=get_now_for_server(ctx.guild.id).isoformat())
+        
+        await log_into_logs(ctx.guild, log_embed)
 
     @moderation_subcommand.command(name="ephemeral", description="Toggle the ephemeral status of a message")
     @commands_ext.has_permissions(manage_guild=True)
@@ -480,6 +555,12 @@ class Moderation(discord.Cog):
             trl(ctx.user.id, ctx.guild.id, "moderation_ephemeral_on", append_tip=True)
             if ephemeral else trl(ctx.user.id, ctx.guild.id, "moderation_ephemeral_off", append_tip=True),
             ephemeral=True)
+        
+        log_embed = discord.Embed(title="Ephemeral Toggled", description=f"{ctx.user.mention} has toggled the ephemeral status to {ephemeral}")
+        log_embed.add_field(name="Ephemeral Status", value=ephemeral)
+        log_embed.add_field(name="Ephemeral Time", value=get_now_for_server(ctx.guild.id).isoformat())
+        
+        await log_into_logs(ctx.guild, log_embed)
 
     @moderation_subcommand.command(name='add_moderator_role', description='Add a moderator role to the server')
     @commands_ext.has_permissions(manage_guild=True)
@@ -497,6 +578,11 @@ class Moderation(discord.Cog):
         cur.close()
 
         await ctx.respond(trl(ctx.user.id, ctx.guild.id, "moderation_add_moderator_role_response").format(role=role.mention), ephemeral=True)
+        
+        log_embed = discord.Embed(title="Moderator Role Added", description=f"{ctx.user.mention} has added the moderator role {role.mention}")
+        log_embed.add_field(name="Moderator Role", value=role.mention)
+        
+        await log_into_logs(ctx.guild, log_embed)
 
     @moderation_subcommand.command(name='remove_moderator_role', description='Remove a moderator role from the server')
     @commands_ext.has_permissions(manage_guild=True)
@@ -514,6 +600,11 @@ class Moderation(discord.Cog):
         cur.close()
 
         await ctx.respond(trl(ctx.user.id, ctx.guild.id, "moderation_remove_moderator_role_response").format(role=role.mention), ephemeral=True)
+        
+        log_embed = discord.Embed(title="Moderator Role Removed", description=f"{ctx.user.mention} has removed the moderator role {role.mention}")
+        log_embed.add_field(name="Moderator Role", value=role.mention)
+        
+        await log_into_logs(ctx.guild, log_embed)
 
     @moderation_subcommand.command(name='list_moderator_roles', description='List all moderator roles on the server')
     @commands_ext.has_permissions(manage_guild=True)
