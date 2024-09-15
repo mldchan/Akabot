@@ -50,16 +50,22 @@ class MediaDownloader(discord.Cog):
 
     @discord.Cog.listener()
     async def on_message(self, msg: discord.Message):
+        print("On message", msg)
         if msg.author.bot:
             return
 
         urls = [x for x in msg.content.split(" ") if re.match(r'https?://[\da-z\.-]+\.[a-z\.]{2,6}[\/\w \.-]*\/?', x)]
+        print("Urls:", urls)
         if not urls:
             return
 
         first_url = urls[0]
 
-        details = requests.post(random.choice(api_list), headers={
+        print("First url:", first_url)
+
+        instance = random.choice(api_list)
+        print("Instance:", instance)
+        details = requests.post(instance, headers={
             "Accept": "application/json",
             "Content-Type": "application/json"
         }, json={
@@ -70,44 +76,49 @@ class MediaDownloader(discord.Cog):
             "audioBitrate": audio_quality
         })
 
+        print("Details:", details)
         if not details.ok:
             print("Not OK")
             return
 
         details = details.json()
 
+        print("JSON:", details)
+
         if details['status'] == "error":
             print("Error", details)
             return
 
-        if details['status'] == "redirect":
+        if details['status'] == "redirect" or details['status'] == "tunnel":
             with open(details['filename'], "wb") as f:
+                print("Downloading", details['url'])
                 f.write(requests.get(details['url']).content)
 
-            if os.path.exists(details['filename']) and os.path.getsize(details['filename']) > 0 and os.path.getsize(details['filename']) < max_upload_size:
-                await msg.reply(file=discord.File(details['filename']))
-                os.remove(details['filename'])
-
-        if details['status'] == 'tunnel':
-            with open(details['filename'], "wb") as f:
-                f.write(requests.get(details['url']).content)
-
-            if os.path.exists(details['filename']) and os.path.getsize(details['filename']) > 0 and os.path.getsize(details['filename']) < max_upload_size:
+            if os.path.exists(details['filename']) and 0 < os.path.getsize(details['filename']) < max_upload_size:
                 await msg.reply(file=discord.File(details['filename']))
                 os.remove(details['filename'])
 
         if details['status'] == "picker":
+            files_downloaded = []
             files_to_upload = []
             if details['audio']:
-                with open(details['audio_filename'], "wb") as f:
+                with open(details['audioFilename'], "wb") as f:
                     print("Downloading audio", details['audio'])
-                    f.write(requests.get(details['url']).content)
-                    files_to_upload.append(discord.File(details['audio']))
+                    f.write(requests.get(details['audio']).content)
+                    files_downloaded.append(details['audioFilename'])
+                    if os.path.exists(details['audioFilename']) and 0 < os.path.getsize(details['audioFilename']) < max_upload_size:
+                        files_to_upload.append(discord.File(details['audioFilename']))
 
             for i, v in enumerate(details['picker']):
-                with open(v['type'] + str(i) + ".jpeg", "wb") as f:
+                file_name = v['type'] + str(i) + ".jpeg"
+                with open(file_name, "wb") as f:
                     print("Downloading", v['url'], "media", i)
                     f.write(requests.get(v['url']).content)
-                    files_to_upload.append(discord.File(v['type'] + str(i) + ".jpeg"))
+                    files_downloaded.append(file_name)
+                    if os.path.exists(file_name) and 0 < os.path.getsize(file_name) < max_upload_size:
+                        files_to_upload.append(discord.File(file_name))
 
             await msg.reply(files=files_to_upload)
+
+            for file in files_downloaded:
+                os.remove(file)
