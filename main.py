@@ -9,7 +9,7 @@ from features import welcoming, leveling, antiraid, chat_streaks, chat_revive, c
     logging_mod, admin_cmds, giveaways, feedback_cmd, moderation, cleanup_task, verification, velky_stompies, \
     roles_on_join, heartbeat, automod_actions, power_outage_announcement, per_user_settings, server_settings, \
     auto_react, auto_response, bot_help, announcement_channels, tickets, debug_commands, birthday_announcements, \
-    send_server_count, suggestions, temporary_vc
+    send_server_count, suggestions, temporary_vc, rp, media_downloader
 from utils.config import get_key
 from utils.languages import get_translation_for_key_localized as trl
 
@@ -140,5 +140,9 @@ if get_key("Feature_SuggestionsEnabled", "true") == "true":
     bot.add_cog(suggestions.Suggestions(bot))
 if get_key('Feature_TemporaryVC', 'true') == 'true':
     bot.add_cog(temporary_vc.TemporaryVC(bot))
+if get_key("Feature_Roleplay", "true") == "true":
+    bot.add_cog(rp.RoleplayCommands(bot))
+if get_key("Feature_MediaDownloader", "false") == "true":
+    bot.add_cog(media_downloader.MediaDownloader(bot))
 
 bot.run(get_key("Bot_Token"))
