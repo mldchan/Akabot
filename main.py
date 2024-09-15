@@ -28,6 +28,7 @@ if get_key("Sentry_Enabled", "false") == "true":
                     profiles_sample_rate=1.0)
 
 intents = discord.Intents.default()
+intents.message_content = True
 intents.members = True
 
 bot = discord.Bot(intents=intents)
