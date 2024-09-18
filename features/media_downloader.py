@@ -1,6 +1,6 @@
 ### Media Downloader: Use Cobalt.tools to download media and repost it as files.
 ### THIS REQUIRES MESSAGE CONTENT INTENT FOR IT TO WORK!
-
+import datetime
 import json
 import math
 import os
@@ -66,27 +66,29 @@ class MediaDownloader(discord.Cog):
 
     @discord.Cog.listener()
     async def on_message(self, msg: discord.Message):
-        if not get_setting(msg.guild.id, f'{msg.channel.id}_media_downloader_enabled', 'false') == 'true':
-            return
-
         if msg.author.bot:
             return
 
-        urls = [x for x in msg.content.split(" ") if re.match(r'https?://[\da-z\.-]+\.[a-z\.]{2,6}[\/\w \.-]*\/?', x)]
+        if not get_setting(msg.guild.id, f'{msg.channel.id}_media_downloader_enabled', 'false') == 'true':
+            return
+
+        urls = [x for x in msg.content.split(" ") if re.match(r'https?://[\da-z.-]+\.[a-z.]{2,6}[/\w .-]*/?', x)]
 
         if not urls:
             if get_setting(msg.guild.id, f'{msg.channel.id}_media_downloader_verbose', 'false') == 'true':
                 await msg.reply("Could not find any links in the message.\n-# " + get_random_tip())
             return
 
-        if msg.guild.id in self.server_info and self.server_info[msg.guild.id] == "processing":
-            if get_setting(msg.guild.id, f'{msg.channel.id}_media_downloader_verbose', 'false') == 'true':
-                await msg.reply("Can't download right now. Please wait for the other download to finish.\n-# " + get_random_tip())
-            return
+        if msg.guild.id in self.server_info:
+            if (datetime.datetime.now() - self.server_info[msg.guild.id]).total_seconds() < 60:
+                if get_setting(msg.guild.id, f'{msg.channel.id}_media_downloader_verbose', 'false') == 'true':
+                    await msg.reply("Can't download right now. Please wait for the other download to finish.\n-# " + get_random_tip())
+                return
 
-        self.server_info[msg.guild.id] = "processing"
+        self.server_info[msg.guild.id] = datetime.datetime.now()
 
         first_url = urls[0]
+        print("Downloading", first_url)
 
         audio_only = "-a" in msg.content or get_setting(msg.guild.id, f'{msg.channel.id}_media_downloader_music', 'false') == 'true'
         original_audio = "-o" in msg.content
@@ -119,7 +121,7 @@ class MediaDownloader(discord.Cog):
         }, json=json_data)
 
         if not details.ok:
-            if message:
+            if message is not None:
                 await message.edit(content="There was an error downloading the media. Server returned a non-2xx status code.\n-# " + get_random_tip())
                 await message.delete(delay=5)
             del self.server_info[msg.guild.id]
@@ -128,40 +130,46 @@ class MediaDownloader(discord.Cog):
         details = details.json()
 
         if details['status'] == "error":
-            if message:
+            if message is not None:
                 await message.edit(content="There was an error downloading the media. Service returned an error.\n-# " + get_random_tip())
                 await message.delete(delay=5)
             del self.server_info[msg.guild.id]
             return
 
         if details['status'] == "redirect" or details['status'] == "tunnel":
-            await message.edit(content=f"Downloading {details['filename']}...\n-# " + get_random_tip())
+            if message is not None:
+                await message.edit(content=f"Downloading {details['filename']}...\n-# " + get_random_tip())
             with open(details['filename'], "wb") as f:
 
                 f.write(requests.get(details['url']).content)
 
             if os.path.exists(details['filename']) and 0 < os.path.getsize(details['filename']) < max_upload_size:
-                await message.edit(
-                    content=f"Uploading {details['filename']} ({math.floor(os.path.getsize(details['filename']) / 1024)}KB / {math.floor(max_upload_size / 1024)}KB)...\n-# " + get_random_tip())
+                if message is not None:
+                    await message.edit(
+                        content=f"Uploading {details['filename']} ({math.floor(os.path.getsize(details['filename']) / 1024)}KB / {math.floor(max_upload_size / 1024)}KB)...\n-# " + get_random_tip())
                 await msg.reply(file=discord.File(details['filename']))
                 os.remove(details['filename'])
-                await message.edit(content="Done processing.\n-# " + get_random_tip())
-                await message.delete(delay=5)
+                if message is not None:
+                    await message.edit(content="Done processing.\n-# " + get_random_tip())
+                    await message.delete(delay=5)
             elif os.path.getsize(details['filename']) > max_upload_size:
-                await message.edit(content=f"File too large ({os.path.getsize(details['filename'])} > {max_upload_size})\n-# " + get_random_tip())
+                if message is not None:
+                    await message.edit(content=f"File too large ({os.path.getsize(details['filename'])} > {max_upload_size})\n-# " + get_random_tip())
                 os.remove(details['filename'])
-                await message.edit(content="Done processing.\n-# " + get_random_tip())
-                await message.delete(delay=5)
+                if message is not None:
+                    await message.edit(content="Done processing.\n-# " + get_random_tip())
+                    await message.delete(delay=5)
             del self.server_info[msg.guild.id]
             return
 
         if details['status'] == "picker":
-            await message.edit(content="Downloading media...\n-# " + get_random_tip())
+            if message is not None:
+                await message.edit(content="Downloading media...\n-# " + get_random_tip())
 
             files_downloaded = []
             files_to_upload = []
             if details['audio']:
-                if message:
+                if message is not None:
                     await message.edit(content="Attempting to download audio...\n-# " + get_random_tip())
                 with open(details['audioFilename'], "wb") as f:
 
@@ -176,19 +184,23 @@ class MediaDownloader(discord.Cog):
                     file_name = v['type'] + str(i + j) + ".jpeg"
                     with open(file_name, "wb") as f:
 
-                        await message.edit(content=f"Downloading {i + j}/{len(details['picker'])}...\n-# " + get_random_tip())
+                        if message is not None:
+                            await message.edit(content=f"Downloading {i + j}/{len(details['picker'])}...\n-# " + get_random_tip())
                         f.write(requests.get(v['url']).content)
                         files_downloaded.append(file_name)
                         if os.path.exists(file_name) and 0 < os.path.getsize(file_name) < max_upload_size:
                             curr_files_to_upload.append(discord.File(file_name))
 
-                await message.edit(content=f"Uploading media {i + 1}-{i + 9}/{len(details['picker'])}...\n-# " + get_random_tip())
+                if message is not None:
+                    await message.edit(content=f"Uploading media {i + 1}-{i + 9}/{len(details['picker'])}...\n-# " + get_random_tip())
                 await msg.reply(files=curr_files_to_upload)
 
-            await message.edit(content="Finished uploading media. Done processing.\n-# " + get_random_tip())
+            if message is not None:
+                await message.edit(content="Finished uploading media. Done processing.\n-# " + get_random_tip())
             for file in files_downloaded:
                 os.remove(file)
-            await message.delete(delay=5)
+            if message is not None:
+                await message.delete(delay=5)
             del self.server_info[msg.guild.id]
 
     media_downloader_group = discord.SlashCommandGroup(name="media_downloader", description="Media downloader settings")
