@@ -7,8 +7,8 @@ import os
 import random
 import re
 
+import aiohttp
 import discord
-import requests
 from discord.ext import commands
 
 from utils.settings import get_setting, set_setting
@@ -88,7 +88,6 @@ class MediaDownloader(discord.Cog):
         self.server_info[msg.guild.id] = datetime.datetime.now()
 
         first_url = urls[0]
-        print("Downloading", first_url)
 
         audio_only = "-a" in msg.content or get_setting(msg.guild.id, f'{msg.channel.id}_media_downloader_music', 'false') == 'true'
         original_audio = "-o" in msg.content
@@ -115,93 +114,103 @@ class MediaDownloader(discord.Cog):
         if original_audio:
             json_data['tiktokFullAudio'] = True
 
-        details = requests.post(instance, headers={
-            "Accept": "application/json",
-            "Content-Type": "application/json"
-        }, json=json_data)
+        async with aiohttp.ClientSession() as session:
+            async with session.post(instance, headers={
+                "Accept": "application/json",
+                "Content-Type": "application/json"
+            }, json=json_data) as details:
+                if details.status != 200:
+                    if message is not None:
+                        await message.edit(content="There was an error downloading the media. Server returned a non-2xx status code.\n-# " + get_random_tip())
+                        await message.delete(delay=5)
+                    del self.server_info[msg.guild.id]
+                    return
 
-        if not details.ok:
-            if message is not None:
-                await message.edit(content="There was an error downloading the media. Server returned a non-2xx status code.\n-# " + get_random_tip())
-                await message.delete(delay=5)
-            del self.server_info[msg.guild.id]
-            return
+                details = await details.json()
 
-        details = details.json()
+                if details['status'] == "error":
+                    if message is not None:
+                        await message.edit(content="There was an error downloading the media. Service returned an error.\n-# " + get_random_tip())
+                        await message.delete(delay=5)
+                    del self.server_info[msg.guild.id]
+                    return
 
-        if details['status'] == "error":
-            if message is not None:
-                await message.edit(content="There was an error downloading the media. Service returned an error.\n-# " + get_random_tip())
-                await message.delete(delay=5)
-            del self.server_info[msg.guild.id]
-            return
+                if details['status'] == "redirect" or details['status'] == "tunnel":
+                    if message is not None:
+                        await message.edit(content=f"Downloading {details['filename']}...\n-# " + get_random_tip())
+                    async with session.get(details['url']) as r:
+                        with open(details['filename'], "wb") as f:
+                            while True:
+                                chunk = await r.content.read(1024)
+                                if not chunk:
+                                    break
+                                f.write(chunk)
 
-        if details['status'] == "redirect" or details['status'] == "tunnel":
-            if message is not None:
-                await message.edit(content=f"Downloading {details['filename']}...\n-# " + get_random_tip())
-            with open(details['filename'], "wb") as f:
+                    if os.path.exists(details['filename']) and 0 < os.path.getsize(details['filename']) < max_upload_size:
+                        if message is not None:
+                            await message.edit(
+                                content=f"Uploading {details['filename']} ({math.floor(os.path.getsize(details['filename']) / 1024)}KB / {math.floor(max_upload_size / 1024)}KB)...\n-# " + get_random_tip())
+                        await msg.reply(file=discord.File(details['filename']))
+                        os.remove(details['filename'])
+                        if message is not None:
+                            await message.edit(content="Done processing.\n-# " + get_random_tip())
+                            await message.delete(delay=5)
+                    elif os.path.getsize(details['filename']) > max_upload_size:
+                        if message is not None:
+                            await message.edit(content=f"File too large ({os.path.getsize(details['filename'])} > {max_upload_size})\n-# " + get_random_tip())
+                        os.remove(details['filename'])
+                        if message is not None:
+                            await message.edit(content="Done processing.\n-# " + get_random_tip())
+                            await message.delete(delay=5)
+                    del self.server_info[msg.guild.id]
+                    return
 
-                f.write(requests.get(details['url']).content)
+                if details['status'] == "picker":
+                    if message is not None:
+                        await message.edit(content="Downloading media...\n-# " + get_random_tip())
 
-            if os.path.exists(details['filename']) and 0 < os.path.getsize(details['filename']) < max_upload_size:
-                if message is not None:
-                    await message.edit(
-                        content=f"Uploading {details['filename']} ({math.floor(os.path.getsize(details['filename']) / 1024)}KB / {math.floor(max_upload_size / 1024)}KB)...\n-# " + get_random_tip())
-                await msg.reply(file=discord.File(details['filename']))
-                os.remove(details['filename'])
-                if message is not None:
-                    await message.edit(content="Done processing.\n-# " + get_random_tip())
-                    await message.delete(delay=5)
-            elif os.path.getsize(details['filename']) > max_upload_size:
-                if message is not None:
-                    await message.edit(content=f"File too large ({os.path.getsize(details['filename'])} > {max_upload_size})\n-# " + get_random_tip())
-                os.remove(details['filename'])
-                if message is not None:
-                    await message.edit(content="Done processing.\n-# " + get_random_tip())
-                    await message.delete(delay=5)
-            del self.server_info[msg.guild.id]
-            return
+                    files_downloaded = []
+                    files_to_upload = []
+                    if details['audio']:
+                        if message is not None:
+                            await message.edit(content="Attempting to download audio...\n-# " + get_random_tip())
+                        async with session.get(details['audio']) as r:
+                            with open(details['audioFilename'], "wb") as f:
+                                while True:
+                                    chunk = await r.content.read(1024)
+                                    if not chunk:
+                                        break
+                                    f.write(chunk)
+                        files_downloaded.append(details['audioFilename'])
+                        if os.path.exists(details['audioFilename']) and 0 < os.path.getsize(details['audioFilename']) < max_upload_size:
+                            files_to_upload.append(discord.File(details['audioFilename']))
 
-        if details['status'] == "picker":
-            if message is not None:
-                await message.edit(content="Downloading media...\n-# " + get_random_tip())
-
-            files_downloaded = []
-            files_to_upload = []
-            if details['audio']:
-                if message is not None:
-                    await message.edit(content="Attempting to download audio...\n-# " + get_random_tip())
-                with open(details['audioFilename'], "wb") as f:
-
-                    f.write(requests.get(details['audio']).content)
-                    files_downloaded.append(details['audioFilename'])
-                    if os.path.exists(details['audioFilename']) and 0 < os.path.getsize(details['audioFilename']) < max_upload_size:
-                        files_to_upload.append(discord.File(details['audioFilename']))
-
-            for i in range(0, len(details['picker']), 9):
-                curr_files_to_upload = []
-                for j, v in enumerate(details['picker'][i:i + 9]):
-                    file_name = v['type'] + str(i + j) + ".jpeg"
-                    with open(file_name, "wb") as f:
+                    for i in range(0, len(details['picker']), 9):
+                        curr_files_to_upload = []
+                        for j, v in enumerate(details['picker'][i:i + 9]):
+                            file_name = v['type'] + str(i + j) + ".jpeg"
+                            async with session.get(v['url']) as r:
+                                with open(file_name, "wb") as f:
+                                    while True:
+                                        chunk = await r.content.read(1024)
+                                        if not chunk:
+                                            break
+                                        f.write(chunk)
+                            files_downloaded.append(file_name)
+                            if os.path.exists(file_name) and 0 < os.path.getsize(file_name) < max_upload_size:
+                                curr_files_to_upload.append(discord.File(file_name))
 
                         if message is not None:
-                            await message.edit(content=f"Downloading {i + j}/{len(details['picker'])}...\n-# " + get_random_tip())
-                        f.write(requests.get(v['url']).content)
-                        files_downloaded.append(file_name)
-                        if os.path.exists(file_name) and 0 < os.path.getsize(file_name) < max_upload_size:
-                            curr_files_to_upload.append(discord.File(file_name))
+                            await message.edit(content=f"Uploading media {i + 1}-{i + 9}/{len(details['picker'])}...\n-# " + get_random_tip())
+                        await msg.reply(files=curr_files_to_upload)
 
-                if message is not None:
-                    await message.edit(content=f"Uploading media {i + 1}-{i + 9}/{len(details['picker'])}...\n-# " + get_random_tip())
-                await msg.reply(files=curr_files_to_upload)
-
-            if message is not None:
-                await message.edit(content="Finished uploading media. Done processing.\n-# " + get_random_tip())
-            for file in files_downloaded:
-                os.remove(file)
-            if message is not None:
-                await message.delete(delay=5)
-            del self.server_info[msg.guild.id]
+                    if message is not None:
+                        await message.edit(content="Finished uploading media. Done processing.\n-# " + get_random_tip())
+                    for file in files_downloaded:
+                        os.remove(file)
+                    if message is not None:
+                        await message.delete(delay=5)
+                    del self.server_info[msg.guild.id]
 
     media_downloader_group = discord.SlashCommandGroup(name="media_downloader", description="Media downloader settings")
 

@@ -1,5 +1,5 @@
+import aiohttp
 import discord
-import requests
 from discord.ext import tasks
 
 from utils.config import get_key
@@ -30,14 +30,15 @@ class SendServerCount(discord.Cog):
 
     @tasks.loop(seconds=SEND_SECONDS, minutes=SEND_MINUTES, hours=SEND_HOURS)
     async def send_server_count(self):
-        if SEND_METHOD == "get":
-            requests.get(SEND_URL, params={"count": len(self.bot.guilds)})
-        elif SEND_METHOD == "post":
-            requests.post(SEND_URL, json={"count": len(self.bot.guilds)})
-        elif SEND_METHOD == "put":
-            requests.put(SEND_URL, json={"count": len(self.bot.guilds)})
-        else:
-            raise ValueError("Invalid method")
+        async with aiohttp.ClientSession() as session:
+            if SEND_METHOD == "get":
+                await session.get(SEND_URL, params={"count": len(self.bot.guilds)})
+            elif SEND_METHOD == "post":
+                await session.post(SEND_URL, json={"count": len(self.bot.guilds)})
+            elif SEND_METHOD == "put":
+                await session.put(SEND_URL, json={"count": len(self.bot.guilds)})
+            else:
+                raise ValueError("Invalid method")
 
     @tasks.loop(seconds=SEND_SECONDS, minutes=SEND_MINUTES, hours=SEND_HOURS)
     async def send_topgg_server_count(self):
@@ -45,4 +46,5 @@ class SendServerCount(discord.Cog):
             "Authorization": f"Bearer {TOPGG_TOKEN}"
         }
 
-        requests.post(f"https://top.gg/api/bots/{TOPGG_BOT_ID}/stats", headers=headers, json={"server_count": len(self.bot.guilds)})
+        async with aiohttp.ClientSession() as session:
+            await session.post(f"https://top.gg/api/bots/{TOPGG_BOT_ID}/stats", headers=headers, json={"server_count": len(self.bot.guilds)})
