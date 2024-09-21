@@ -1,5 +1,5 @@
+import aiohttp
 import discord
-import requests
 from discord.ext import commands as cmds_ext
 from discord.ui.input_text import InputText
 
@@ -54,18 +54,21 @@ class BugReportModal(discord.ui.Modal):
         git_user = get_key("GitHub_User")
         git_repo = get_key("GitHub_Repo")
         token = get_key("GitHub_Token")
-        requests.post(f"https://api.github.com/repos/{git_user}/{git_repo}/issues",
-                      headers={
-                          "Authorization": f"token {token}",
-                          "Accept": "application/vnd.github.v3+json"
-                      },
-                      json={
-                          "title": "Bug Report: {bug}".format(bug=self.title_input.value),
-                          "body": issue_body,
-                          "labels": ["bug", "in-bot"]
-                      })
-
-        await interaction.respond(trl(self.user_id, 0, "feedback_bug_report_submitted", append_tip=True), ephemeral=True)
+        headers = {
+            "Authorization": f"token {token}",
+            "Accept": "application/vnd.github.v3+json"
+        }
+        data = {
+            "title": "Bug Report: {bug}".format(bug=self.title_input.value),
+            "body": issue_body,
+            "labels": ["bug", "in-bot"]
+        }
+        async with aiohttp.ClientSession() as session:
+            async with session.post(f"https://api.github.com/repos/{git_user}/{git_repo}/issues", headers=headers, json=data) as response:
+                if response.status != 201:
+                    await interaction.response.send_message(f"Failed to submit bug report: {await response.text()}", ephemeral=True)
+                    return
+        await interaction.response.send_message(trl(self.user_id, 0, "feedback_bug_report_submitted", append_tip=True), ephemeral=True)
 
 
 class FeatureModal(discord.ui.Modal):
@@ -95,18 +98,21 @@ class FeatureModal(discord.ui.Modal):
         git_user = get_key("GitHub_User")
         git_repo = get_key("GitHub_Repo")
         token = get_key("GitHub_Token")
-        requests.post(f"https://api.github.com/repos/{git_user}/{git_repo}/issues",
-                      headers={
-                          "Authorization": f"token {token}",
-                          "Accept": "application/vnd.github.v3+json"
-                      },
-                      json={
-                          "title": "Feature request: {title}".format(title=self.title_input.value),
-                          "body": issue_body,
-                          "labels": ["enhancement", "in-bot"]
-                      })
-
-        await interaction.respond(trl(self.user_id, 0, "feedback_feature_submitted", append_tip=True), ephemeral=True)
+        headers = {
+            "Authorization": f"token {token}",
+            "Accept": "application/vnd.github.v3+json"
+        }
+        data = {
+            "title": "Feature request: {title}".format(title=self.title_input.value),
+            "body": issue_body,
+            "labels": ["enhancement", "in-bot"]
+        }
+        async with aiohttp.ClientSession() as session:
+            async with session.post(f"https://api.github.com/repos/{git_user}/{git_repo}/issues", headers=headers, json=data) as response:
+                if response.status != 201:
+                    await interaction.response.send_message(f"Failed to submit feature request: {await response.text()}", ephemeral=True)
+                    return
+        await interaction.response.send_message(trl(self.user_id, 0, "feedback_feature_submitted", append_tip=True), ephemeral=True)
 
 
 class ConfirmSubmitBugReport(discord.ui.View):

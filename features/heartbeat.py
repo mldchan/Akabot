@@ -1,9 +1,10 @@
-import discord
-import requests
 import logging
 
-from utils.config import get_key
+import aiohttp
+import discord
 from discord.ext import tasks
+
+from utils.config import get_key
 
 
 class Heartbeat(discord.Cog):
@@ -23,11 +24,13 @@ class Heartbeat(discord.Cog):
         if self.interval_cnt >= int(get_key("Heartbeat_Interval", '60')):
             self.interval_cnt = 0
             # Send heartbeat
-            if get_key("Heartbeat_HTTPMethod", 'post') == "get":
-                requests.get(get_key("Heartbeat_URL", 'https://example.com'))
-            elif get_key("Heartbeat_HTTPMethod", 'post') == "post":
-                requests.post(get_key("Heartbeat_URL", 'https://example.com'))
-            elif get_key("Heartbeat_HTTPMethod", 'post') == "put":
-                requests.put(get_key("Heartbeat_URL", 'https://example.com'))
-            elif get_key("Heartbeat_HTTPMethod", 'post') == "delete":
-                requests.delete(get_key("Heartbeat_URL", 'https://example.com'))
+            async with aiohttp.ClientSession() as session:
+                method = get_key("Heartbeat_HTTPMethod", 'post').lower()
+                if method == "get":
+                    await session.get(get_key("Heartbeat_URL", 'https://example.com'))
+                elif method == "post":
+                    await session.post(get_key("Heartbeat_URL", 'https://example.com'))
+                elif method == "put":
+                    await session.put(get_key("Heartbeat_URL", 'https://example.com'))
+                elif method == "delete":
+                    await session.delete(get_key("Heartbeat_URL", 'https://example.com'))
