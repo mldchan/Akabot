@@ -402,24 +402,24 @@ class Logging(discord.Cog):
         if before.mentionable != after.mentionable:
             embed.add_field(name=trl(0, after.guild.id, "logging_mentionable"), value=f'{before.mentionable} -> {after.mentionable}')
         if before.permissions != after.permissions:
-            changed_allow = []
             changed_deny = []
+            changed_allow = []
 
             for (perm, value) in iter(after.permissions):
                 if value == dict(before.permissions)[perm]:
                     continue
                 if dict(before.permissions)[perm]:
-                    changed_allow.append(perm)
-                else:
                     changed_deny.append(perm)
+                else:
+                    changed_allow.append(perm)
 
-            changed_allow = [format_perm_name(perm) for perm in changed_allow]
             changed_deny = [format_perm_name(perm) for perm in changed_deny]
+            changed_allow = [format_perm_name(perm) for perm in changed_allow]
 
-            if len(changed_allow) > 0:
-                embed.add_field(name=trl(0, after.guild.id, "logging_allowed_perms"), value=', '.join(changed_allow))
             if len(changed_deny) > 0:
-                embed.add_field(name=trl(0, after.guild.id, "logging_denied_perms"), value=', '.join(changed_deny))
+                embed.add_field(name=trl(0, after.guild.id, "logging_allowed_perms"), value=', '.join(changed_deny))
+            if len(changed_allow) > 0:
+                embed.add_field(name=trl(0, after.guild.id, "logging_denied_perms"), value=', '.join(changed_allow))
 
         if len(embed.fields) > 0:
             embed.add_field(name=trl(0, after.guild.id, "logging_moderator"), value=moderator.mention if moderator else trl(0, after.guild.id, "logging_unknown_member"))
