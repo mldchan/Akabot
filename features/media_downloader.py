@@ -32,7 +32,7 @@ with open("configs/media_downloader.json") as f:
     if "audioQuality" in data:
         audio_quality = data["audioQuality"]
     else:
-        audio_quality = "64"
+        audio_quality = "128"
 
     if "maxUploadSize" in data:
         max_upload_size = data["maxUploadSize"]
