@@ -3,7 +3,7 @@ import datetime
 import discord.ext
 import discord.ext.tasks
 
-from database import conn
+from database import get_conn
 
 class DbCleanupTask(discord.Cog):
     def __init__(self) -> None:
@@ -14,8 +14,8 @@ class DbCleanupTask(discord.Cog):
         now = datetime.datetime.now(datetime.UTC)
 
         if now.weekday() == 6 and now.hour == 0 and now.minute == 0:
-            cur = conn.cursor()
+            cur = await get_conn()
             cur.execute("vacuum")
-            cur.close()
-            conn.commit()
+            await cur.commit()
+            await cur.close()
 

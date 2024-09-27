@@ -61,7 +61,7 @@ class RoleplayCommands(discord.Cog):
     @analytics("rp hug")
     async def hug(self, ctx, member: discord.Member):
         """Hug a member"""
-        if get_setting(ctx.guild.id, "roleplay_enabled", "true") == "false":
+        if await get_setting(ctx.guild.id, "roleplay_enabled", "true") == "false":
             await ctx.respond(content="Roleplay commands are disabled for this server", ephemeral=True)
             return
 
@@ -74,7 +74,7 @@ class RoleplayCommands(discord.Cog):
     @analytics("rp kiss")
     async def kiss(self, ctx, member: discord.Member):
         """Kiss a member"""
-        if get_setting(ctx.guild.id, "roleplay_enabled", "true") == "false":
+        if await get_setting(ctx.guild.id, "roleplay_enabled", "true") == "false":
             await ctx.respond(content="Roleplay commands are disabled for this server", ephemeral=True)
             return
 
@@ -87,7 +87,7 @@ class RoleplayCommands(discord.Cog):
     @analytics("rp bite")
     async def bite(self, ctx, member: discord.Member):
         """Bite a member"""
-        if get_setting(ctx.guild.id, "roleplay_enabled", "true") == "false":
+        if await get_setting(ctx.guild.id, "roleplay_enabled", "true") == "false":
             await ctx.respond(content="Roleplay commands are disabled for this server", ephemeral=True)
             return
 
@@ -100,7 +100,7 @@ class RoleplayCommands(discord.Cog):
     @analytics("rp unbite")
     async def unbite(self, ctx, member: discord.Member):
         """Unbite a member"""
-        if get_setting(ctx.guild.id, "roleplay_enabled", "true") == "false":
+        if await get_setting(ctx.guild.id, "roleplay_enabled", "true") == "false":
             await ctx.respond(content="Roleplay commands are disabled for this server", ephemeral=True)
             return
 
@@ -112,7 +112,7 @@ class RoleplayCommands(discord.Cog):
     @analytics("rp_admin enabled")
     async def rp_enable(self, ctx, enable: bool):
         """Enable or disable roleplay commands"""
-        set_setting(ctx.guild.id, "roleplay_enabled", str(enable).lower())
+        await set_setting(ctx.guild.id, "roleplay_enabled", str(enable).lower())
         await ctx.respond(content=f"Roleplay commands have been {'enabled' if enable else 'disabled'}", ephemeral=True)
 
     @rp_admin_group.command(name="list")
@@ -122,7 +122,7 @@ class RoleplayCommands(discord.Cog):
     @discord.guild_only()
     async def rp_list(self, ctx):
         """List all settings for roleplay"""
-        rp_enabled = get_setting(ctx.guild.id, "roleplay_enabled", "false") == "true"
+        rp_enabled = (await get_setting(ctx.guild.id, "roleplay_enabled", "false")) == "true"
         embed = discord.Embed(title="Roleplay settings")
         embed.add_field(name="Enabled", value='Yes' if rp_enabled else 'No', inline=False)
         await ctx.respond(embed=embed, ephemeral=True)

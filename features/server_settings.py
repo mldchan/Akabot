@@ -16,8 +16,8 @@ class ServerSettings(discord.Cog):
     @analytics("server_settings language")
     async def server_language(self, ctx: discord.ApplicationContext, lang: str):
         lang_code = language_name_to_code(lang)
-        set_setting(ctx.guild.id, 'language', lang_code)
-        await ctx.respond(trl(ctx.user.id, ctx.guild.id, "server_language_response", append_tip=True).format(
+        await set_setting(ctx.guild.id, 'language', lang_code)
+        await ctx.respond(await trl(ctx.user.id, ctx.guild.id, "server_language_response", append_tip=True).format(
             lang=get_language_name(lang_code, completeness=False)), ephemeral=True)
 
     @server_settings_group.command(name='tz', description='Timezone setting')
@@ -25,17 +25,17 @@ class ServerSettings(discord.Cog):
     @analytics("server_settings timezone")
     async def tz_setting(self, ctx: discord.ApplicationContext, tz: float):
         if not re.match(r"^[+-]?\d+(\.\d)?$", str(tz)):
-            await ctx.respond(trl(ctx.user.id, ctx.guild.id, "server_tz_invalid"), ephemeral=True)
+            await ctx.respond(await trl(ctx.user.id, ctx.guild.id, "server_tz_invalid"), ephemeral=True)
             return
 
         # check range
         if tz > 14 or tz < -12:
-            await ctx.respond(trl(ctx.user.id, ctx.guild.id, "server_tz_invalid"), ephemeral=True)
+            await ctx.respond(await trl(ctx.user.id, ctx.guild.id, "server_tz_invalid"), ephemeral=True)
             return
 
-        set_setting(ctx.guild.id, 'timezone_offset', str(tz))
+        await set_setting(ctx.guild.id, 'timezone_offset', str(tz))
 
         tz_formatted = str(tz)
         if re.match(r'^[+-]?\d+\.0$', tz_formatted):
             tz_formatted = tz_formatted[:-2]
-        await ctx.respond(trl(ctx.user.id, ctx.guild.id, "server_tz_response", append_tip=True).format(tz=tz_formatted), ephemeral=True)
+        await ctx.respond(await trl(ctx.user.id, ctx.guild.id, "server_tz_response", append_tip=True).format(tz=tz_formatted), ephemeral=True)

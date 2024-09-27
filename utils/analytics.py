@@ -1,37 +1,41 @@
 from discord.ext import commands as commands_ext
 
-from database import conn as db
+from database import get_conn
 
 
-def db_init():
-    cur = db.cursor()
-    cur.execute("""create table if not exists analytics
+async def db_init():
+    db = await get_conn()
+    await db.execute("""create table if not exists analytics
 (
     command   text
         constraint analytics_pk
             primary key,
     run_count integer
 );""")
-    cur.close()
+    await db.commit()
+    await db.close()
 
 
-def db_add_analytics(command: str):
-    db_init()
-    cur = db.cursor()
-    cur.execute("SELECT run_count FROM analytics WHERE command = ?", (command,))
-    data = cur.fetchone()
+async def db_add_analytics(command: str):
+    await db_init()
+    db = await get_conn()
+    cur = await db.execute("SELECT run_count FROM analytics WHERE command = ?", (command,))
+    data = await cur.fetchone()
     if data:
-        cur.execute("UPDATE analytics SET run_count = ? WHERE command = ?", (data[0] + 1, command))
+        await db.execute("UPDATE analytics SET run_count = ? WHERE command = ?", (data[0] + 1, command))
     else:
-        cur.execute("INSERT INTO analytics (command, run_count) VALUES (?, ?)", (command, 1))
-    cur.close()
-    db.commit()
+        await db.execute("INSERT INTO analytics (command, run_count) VALUES (?, ?)", (command, 1))
+    await db.commit()
+    await db.close()
 
 
 def analytics(command: str):
     def predicate(ctx: commands_ext.Context):
-        db_init()
-        db_add_analytics(command)
+        async def async_def():
+            await db_init()
+            await db_add_analytics(command)
+
+        ctx.bot.loop.create_task(async_def(), name='analytics')
         return True
 
     return commands_ext.check(predicate)

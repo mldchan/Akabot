@@ -7,7 +7,7 @@ from utils.settings import get_setting, set_setting
 from utils.tips import append_tip_to_message
 
 
-def get_translation_for_key_localized(user_id: int, guild_id: int, key: str, append_tip=False) -> str:
+async def get_translation_for_key_localized(user_id: int, guild_id: int, key: str, append_tip=False) -> str:
     """Get translation for a key in the user's language, server language, or English
 
     Args:
@@ -20,7 +20,7 @@ def get_translation_for_key_localized(user_id: int, guild_id: int, key: str, app
         str: Translation
     """
     translation = ""
-    language = get_language(guild_id, user_id)
+    language = await get_language(guild_id, user_id)
 
     with open(f"lang/{language}.json", encoding='utf8') as f:
         translations: dict = json.load(f)
@@ -35,7 +35,7 @@ def get_translation_for_key_localized(user_id: int, guild_id: int, key: str, app
     return translation
 
 
-def get_language(guild_id: int, user_id: int) -> str:
+async def get_language(guild_id: int, user_id: int) -> str:
     """Get the language for a user, guild or use English as a
     fallback
 
@@ -49,9 +49,9 @@ def get_language(guild_id: int, user_id: int) -> str:
 
     # Get user language
     if user_id != 0:
-        user_lang = get_per_user_setting(user_id, "language", "en")
+        user_lang = await get_per_user_setting(user_id, "language", "en")
         if not os.path.exists(f"lang/{user_lang}.json"):
-            set_per_user_setting(user_id, "language", "en")
+            await set_per_user_setting(user_id, "language", "en")
             logging.error(
                 "WARNING: User {id} has somehow set the user language to {lang}, which is not a valid language. "
                 "Reset to EN".format(id=user_id, lang=user_lang))
@@ -59,9 +59,9 @@ def get_language(guild_id: int, user_id: int) -> str:
 
     # Get server language
     if guild_id != 0:
-        server_lang = get_setting(guild_id, "language", "en")
+        server_lang = await get_setting(guild_id, "language", "en")
         if not os.path.exists(f"lang/{server_lang}.json"):
-            set_setting(guild_id, "language", "en")
+            await set_setting(guild_id, "language", "en")
             logging.error(
                 "WARNING: Server {id} has somehow set the server language to {lang}, which is not a valid language. "
                 "Reset to EN".format(id=guild_id, lang=server_lang))

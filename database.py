@@ -1,7 +1,9 @@
 import os
-import sqlite3
+
+import aiosqlite
 
 if not os.path.exists('data'):
     os.mkdir('data')
 
-conn = sqlite3.connect('data/femboybot.db')
+async def get_conn():
+    return await aiosqlite.connect('data/femboybot.db')
