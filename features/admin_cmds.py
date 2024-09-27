@@ -27,7 +27,7 @@ class AdminCommands(discord.Cog):
         members = len(set([member for member in self.bot.get_all_members()]))
 
         await ctx.respond(
-            trl(ctx.user.id, ctx.guild.id, "bot_status_message").format(servers=str(servers), channels=str(channels),
+            await trl(ctx.user.id, ctx.guild.id, "bot_status_message").format(servers=str(servers), channels=str(channels),
                                                                         users=str(members)), ephemeral=True)
 
     @admin_subcommand.command(name="create_announcement", description="List all announcement channels")
@@ -36,11 +36,11 @@ class AdminCommands(discord.Cog):
         await ctx.defer()
 
         if ANNOUNCEMENT_CHANNEL == 0:
-            await ctx.respond(content=trl(ctx.user.id, ctx.guild.id, "announcement_not_set"), ephemeral=True)
+            await ctx.respond(content=await trl(ctx.user.id, ctx.guild.id, "announcement_not_set"), ephemeral=True)
             return
 
         if not announcement_file.filename.endswith(".md"):
-            await ctx.respond(trl(ctx.user.id, ctx.guild.id, "announcement_file_not_md"), ephemeral=True)
+            await ctx.respond(await trl(ctx.user.id, ctx.guild.id, "announcement_file_not_md"), ephemeral=True)
             return
 
         await announcement_file.save("temp.md")
@@ -50,19 +50,21 @@ class AdminCommands(discord.Cog):
             announcement = f.read()
 
         if len(announcement) > 2000:
-            await ctx.respond(trl(ctx.user.id, ctx.guild.id, "announcement_too_long"), ephemeral=True)
+            await ctx.respond(await trl(ctx.user.id, ctx.guild.id, "announcement_too_long"), ephemeral=True)
             return
 
-        msg = await ctx.followup.send(content="Creating announcement...")
+        msg: discord.Message | None = await ctx.followup.send(content="Creating announcement...")
+        if msg is None:
+            return
 
         first_channel = self.bot.get_channel(ANNOUNCEMENT_CHANNEL)
         if not first_channel:
-            await ctx.respond(trl(ctx.user.id, ctx.guild.id, "announcement_channel_not_found"), ephemeral=True)
+            await ctx.respond(await trl(ctx.user.id, ctx.guild.id, "announcement_channel_not_found"), ephemeral=True)
             return
 
         await first_channel.send(announcement, file=discord.File(extra_attachment.filename))
 
-        await msg.edit(content=trl(ctx.user.id, ctx.guild.id, "announcement_sent_sending_to_subscribed"))
+        await msg.edit(content=await trl(ctx.user.id, ctx.guild.id, "announcement_sent_sending_to_subscribed"))
         channels = db_get_all_announcement_channels()
         i = 0
         for channel in channels:
@@ -70,7 +72,7 @@ class AdminCommands(discord.Cog):
 
             if i % 10 == 0:
                 await msg.edit(
-                    content=trl(ctx.user.id, ctx.guild.id, "announcement_sent_sending_to_subscribed_progress").format(
+                    content=await trl(ctx.user.id, ctx.guild.id, "announcement_sent_sending_to_subscribed_progress").format(
                         progress=str(i), count=str(len(channels))))
 
             try:
@@ -82,7 +84,7 @@ class AdminCommands(discord.Cog):
             except discord.Forbidden:
                 continue
 
-        await msg.edit(content=trl(ctx.user.id, ctx.guild.id, "announcement_sent"))
+        await msg.edit(content=await trl(ctx.user.id, ctx.guild.id, "announcement_sent"))
 
         os.remove("temp.md")
         os.remove(extra_attachment.filename)

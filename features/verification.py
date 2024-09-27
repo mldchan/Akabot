@@ -1,3 +1,4 @@
+import asyncio
 import random
 
 import discord
@@ -16,14 +17,14 @@ async def give_verify_role(interaction: discord.Interaction | discord.Applicatio
     # Bot permission check
     if not interaction.guild.me.guild_permissions.manage_roles:
         await interaction.response.send_message(
-            trl(interaction.user.id, interaction.guild.id, "verification_role_no_permission"),
+            await trl(interaction.user.id, interaction.guild.id, "verification_role_no_permission"),
             ephemeral=True)
 
     # Get role from settings and check if it is set
-    role_id = utils.settings.get_setting(interaction.guild.id, "verification_role", "-1")
+    role_id = await utils.settings.get_setting(interaction.guild.id, "verification_role", "-1")
     if role_id == "-1":
         await interaction.response.send_message(
-            trl(interaction.user.id, interaction.guild.id, "verification_role_not_set"),
+            await trl(interaction.user.id, interaction.guild.id, "verification_role_not_set"),
             ephemeral=True)
         return
 
@@ -31,13 +32,13 @@ async def give_verify_role(interaction: discord.Interaction | discord.Applicatio
     role = interaction.guild.get_role(int(role_id))
     if role is None:
         await interaction.response.send_message(
-            trl(interaction.user.id, interaction.guild.id, "verification_role_invalid"), ephemeral=True)
+            await trl(interaction.user.id, interaction.guild.id, "verification_role_invalid"), ephemeral=True)
         return
 
     # Role position check
     if role.position > interaction.guild.me.top_role.position:
         await interaction.response.send_message(
-            trl(interaction.user.id, interaction.guild.id, "verification_role_no_permission"),
+            await trl(interaction.user.id, interaction.guild.id, "verification_role_no_permission"),
             ephemeral=True)
         return
 
@@ -47,7 +48,7 @@ async def give_verify_role(interaction: discord.Interaction | discord.Applicatio
 
 async def is_verified(interaction: discord.ApplicationContext) -> bool:
     # Get role from settings and check if it is set
-    role_id = utils.settings.get_setting(interaction.guild.id, "verification_role", "-1")
+    role_id = await utils.settings.get_setting(interaction.guild.id, "verification_role", "-1")
     if role_id == "-1":
         return False
 
@@ -68,14 +69,14 @@ class VerificationTextReverse(discord.ui.View):
         self.english_word = utils.english_words.get_random_english_word()[::-1]
 
         # Answer button
-        self.answer_btn = discord.ui.Button(label=trl(user_id, 0, "verification_answer"),
+        self.answer_btn = discord.ui.Button(label=asyncio.run(trl(user_id, 0, "verification_answer")),
                                             style=discord.ButtonStyle.primary)
         self.answer_btn.callback = self.respond
         self.add_item(self.answer_btn)
 
-    def message_content(self) -> str:
+    async def message_content(self) -> str:
         # Message
-        return trl(self.user_id, 0, "verification_reverse_word").format(word=self.english_word)
+        return await trl(self.user_id, 0, "verification_reverse_word").format(word=self.english_word)
 
     async def respond(self, ctx: discord.ApplicationContext):
         # Respond with modal
@@ -89,7 +90,7 @@ class VerificationTextReverseModal(discord.ui.Modal):
         self.word_right = word[::-1]
         self.user_id = user_id
 
-        self.text_1 = discord.ui.InputText(label=trl(user_id, 0, "verification_form_reversed_word"), required=True,
+        self.text_1 = discord.ui.InputText(label=asyncio.run(trl(user_id, 0, "verification_form_reversed_word")), required=True,
                                            min_length=len(self.word_right),
                                            max_length=len(self.word_right))
         self.add_item(self.text_1)
@@ -98,12 +99,12 @@ class VerificationTextReverseModal(discord.ui.Modal):
         # We assume the length is correct
         # Verify the English word
         if self.text_1.value != self.word_right:
-            await interaction.response.send_message(trl(self.user_id, 0, "verification_form_word_incorrect"),
+            await interaction.response.send_message(await trl(self.user_id, 0, "verification_form_word_incorrect"),
                                                     ephemeral=True)
             return
 
         await give_verify_role(interaction)
-        await interaction.response.send_message(trl(self.user_id, 0, "verification_success"), ephemeral=True)
+        await interaction.response.send_message(await trl(self.user_id, 0, "verification_success"), ephemeral=True)
 
 
 class VerificationEnglishWord(discord.ui.View):
@@ -114,13 +115,13 @@ class VerificationEnglishWord(discord.ui.View):
         self.length = random.randint(2, 8)
 
         # Answer button
-        self.answer_btn = discord.ui.Button(label=trl(user_id, 0, "verification_answer"),
+        self.answer_btn = discord.ui.Button(label=asyncio.run(trl(user_id, 0, "verification_answer")),
                                             style=discord.ButtonStyle.primary)
         self.answer_btn.callback = self.respond
         self.add_item(self.answer_btn)
 
-    def message_content(self) -> str:
-        return trl(self.user_id, 0, "verification_english_word").format(length=str(self.length))
+    async def message_content(self) -> str:
+        return await trl(self.user_id, 0, "verification_english_word").format(length=str(self.length))
 
     async def respond(self, ctx: discord.ApplicationContext):
         # Respond with modal
@@ -135,7 +136,7 @@ class VerificationEnglishWordModal(discord.ui.Modal):
         self.user_id = user_id
 
         self.text_1 = discord.ui.InputText(
-            label=trl(user_id, 0, "verification_form_english_word").format(length=str(self.length)), required=True,
+            label=asyncio.run(trl(user_id, 0, "verification_form_english_word")).format(length=str(self.length)), required=True,
                                            min_length=self.length, max_length=self.length)
         self.add_item(self.text_1)
 
@@ -143,12 +144,12 @@ class VerificationEnglishWordModal(discord.ui.Modal):
         # We assume the length is correct
         # Verify the English word
         if not utils.english_words.verify_english_word(self.text_1.value):
-            await interaction.response.send_message(trl(self.user_id, 0, "verification_form_not_english"),
+            await interaction.response.send_message(await trl(self.user_id, 0, "verification_form_not_english"),
                                                     ephemeral=True)
             return
 
         await give_verify_role(interaction)
-        await interaction.response.send_message(trl(self.user_id, 0, "verification_success"), ephemeral=True)
+        await interaction.response.send_message(await trl(self.user_id, 0, "verification_success"), ephemeral=True)
 
 
 class VerificationMath(discord.ui.View):
@@ -186,14 +187,14 @@ class VerificationMath(discord.ui.View):
             self.result = self.a * self.b
 
         # Answer button
-        self.answer_btn = discord.ui.Button(label=trl(user_id, 0, "verification_answer"),
+        self.answer_btn = discord.ui.Button(label=asyncio.run(trl(user_id, 0, "verification_answer")),
                                             style=discord.ButtonStyle.primary)
         self.answer_btn.callback = self.respond
         self.add_item(self.answer_btn)
 
-    def message_content(self) -> str:
+    async def message_content(self) -> str:
         # Create a message
-        return trl(self.user_id, 0, "verification_math").format(a=self.a, b=self.b, o=self.op)
+        return await trl(self.user_id, 0, "verification_math").format(a=self.a, b=self.b, o=self.op)
 
     async def respond(self, ctx: discord.ApplicationContext):
         # Respond with modal
@@ -202,19 +203,19 @@ class VerificationMath(discord.ui.View):
 
 class VerificationMathModal(discord.ui.Modal):
     def __init__(self, result: int, user_id: int) -> None:
-        super().__init__(timeout=180, title=trl(user_id, 0, "verification_form_title"))
+        super().__init__(timeout=180, title=asyncio.run(trl(user_id, 0, "verification_form_title")))
         self.user_id = user_id
         self.right_result = str(result)
-        self.text_1 = discord.ui.InputText(label=trl(user_id, 0, "verification_form_math"), required=True, min_length=1,
+        self.text_1 = discord.ui.InputText(label=asyncio.run(trl(user_id, 0, "verification_form_math")), required=True, min_length=1,
                                            max_length=4)
         self.add_item(self.text_1)
 
     async def callback(self, interaction: discord.Interaction):
         if self.text_1.value == self.right_result:
             await give_verify_role(interaction)
-            await interaction.response.send_message(trl(self.user_id, 0, "verification_success"), ephemeral=True)
+            await interaction.response.send_message(await trl(self.user_id, 0, "verification_success"), ephemeral=True)
         else:
-            await interaction.response.send_message(trl(self.user_id, 0, "verification_math_incorrect"), ephemeral=True)
+            await interaction.response.send_message(await trl(self.user_id, 0, "verification_math_incorrect"), ephemeral=True)
 
 
 class VerificationView(discord.ui.View):
@@ -232,7 +233,7 @@ class VerificationView(discord.ui.View):
             await ctx.respond("You're already verified.", ephemeral=True)
             return
 
-        method = utils.settings.get_setting(ctx.guild.id, "verification_method", "none")
+        method = await utils.settings.get_setting(ctx.guild.id, "verification_method", "none")
 
         if method == "none":
             # No verification method, give immediately role
@@ -241,23 +242,23 @@ class VerificationView(discord.ui.View):
         elif method == "easy_math":
             # Verify using a simple math problem
             simple_view = VerificationMath("easy", user_id=ctx.user.id)
-            await ctx.respond(simple_view.message_content(), view=simple_view, ephemeral=True)
+            await ctx.respond(await simple_view.message_content(), view=simple_view, ephemeral=True)
         elif method == "medium_math":
             # Verify using a medium math problem
             medium_view = VerificationMath("medium", ctx.user.id)
-            await ctx.respond(medium_view.message_content(), view=medium_view, ephemeral=True)
+            await ctx.respond(await medium_view.message_content(), view=medium_view, ephemeral=True)
         elif method == "hard_math":
             # Verify using hard math problem
             hard_view = VerificationMath("hard", ctx.user.id)
-            await ctx.respond(hard_view.message_content(), view=hard_view, ephemeral=True)
+            await ctx.respond(await hard_view.message_content(), view=hard_view, ephemeral=True)
         elif method == "english_word":
             # Verify using an English word of a desired length
             english_word = VerificationEnglishWord(user_id=ctx.user.id)
-            await ctx.respond(english_word.message_content(), view=english_word, ephemeral=True)
+            await ctx.respond(await english_word.message_content(), view=english_word, ephemeral=True)
         elif method == "reverse_string":
             # Verify using a reversed English word and make the user reverse it back
             word_reverse = VerificationTextReverse(user_id=ctx.user.id)
-            await ctx.respond(word_reverse.message_content(), view=word_reverse, ephemeral=True)
+            await ctx.respond(await word_reverse.message_content(), view=word_reverse, ephemeral=True)
 
 
 class Verification(discord.Cog):
@@ -276,16 +277,16 @@ class Verification(discord.Cog):
         # Bot permission check
         if not ctx.guild.me.guild_permissions.manage_roles:
             await ctx.respond(
-                trl(ctx.user.id, ctx.guild.id, "verification_set_role_no_perms"),
+                await trl(ctx.user.id, ctx.guild.id, "verification_set_role_no_perms"),
                 ephemeral=True)
 
         # Role position check
         if ctx.guild.me.top_role.position < role.position:
-            await ctx.respond(trl(ctx.user.id, ctx.guild.id, "verification_set_role_no_perms"), ephemeral=True)
+            await ctx.respond(await trl(ctx.user.id, ctx.guild.id, "verification_set_role_no_perms"), ephemeral=True)
             return
 
-        utils.settings.set_setting(ctx.guild.id, "verification_role", str(role.id))
-        await ctx.respond(trl(ctx.user.id, ctx.guild.id, "verification_set_success", append_tip=True), ephemeral=True)
+        await utils.settings.set_setting(ctx.guild.id, "verification_role", str(role.id))
+        await ctx.respond(await trl(ctx.user.id, ctx.guild.id, "verification_set_success", append_tip=True), ephemeral=True)
 
     @verification_subcommand.command(name="set_difficulty", description="Set the verification difficulty")
     @discord.commands.option(name="difficulty",
@@ -296,26 +297,26 @@ class Verification(discord.Cog):
     @analytics("verification set_difficulty")
     async def set_difficulty(self, ctx: discord.ApplicationContext, difficulty: str):
         # Store old difficulty
-        old_difficulty = utils.settings.get_setting(ctx.guild.id, "verification_method", "none")
+        old_difficulty = await utils.settings.get_setting(ctx.guild.id, "verification_method", "none")
 
         # Select new difficulty
         if difficulty == "none":
-            utils.settings.set_setting(ctx.guild.id, "verification_method", "none")
+            await utils.settings.set_setting(ctx.guild.id, "verification_method", "none")
         elif difficulty == "easy math":
-            utils.settings.set_setting(ctx.guild.id, "verification_method", "easy_math")
+            await utils.settings.set_setting(ctx.guild.id, "verification_method", "easy_math")
         elif difficulty == "medium math":
-            utils.settings.set_setting(ctx.guild.id, "verification_method", "medium_math")
+            await utils.settings.set_setting(ctx.guild.id, "verification_method", "medium_math")
         elif difficulty == "hard math":
-            utils.settings.set_setting(ctx.guild.id, "verification_method", "hard_math")
+            await utils.settings.set_setting(ctx.guild.id, "verification_method", "hard_math")
         elif difficulty == "random english word":
-            utils.settings.set_setting(ctx.guild.id, "verification_method", "english_word")
+            await utils.settings.set_setting(ctx.guild.id, "verification_method", "english_word")
         elif difficulty == "reverse text":
-            utils.settings.set_setting(ctx.guild.id, "verification_method", "reverse_string")
+            await utils.settings.set_setting(ctx.guild.id, "verification_method", "reverse_string")
 
         # Generate logging embed
-        logging_embed = discord.Embed(title=trl(0, ctx.guild.id, "verification_set_difficulty_log_title"))
-        logging_embed.add_field(name=trl(0, ctx.guild.id, "logging_user"), value=f"{ctx.user.mention}")
-        logging_embed.add_field(name=trl(0, ctx.guild.id, "logging_difficulty"),
+        logging_embed = discord.Embed(title=await trl(0, ctx.guild.id, "verification_set_difficulty_log_title"))
+        logging_embed.add_field(name=await trl(0, ctx.guild.id, "logging_user"), value=f"{ctx.user.mention}")
+        logging_embed.add_field(name=await trl(0, ctx.guild.id, "logging_difficulty"),
                                 value=f"{old_difficulty} -> {difficulty}")
 
         # Send to logs
@@ -323,7 +324,7 @@ class Verification(discord.Cog):
 
         # Respond
         await ctx.respond(
-            trl(ctx.user.id, ctx.guild.id, "verification_set_difficulty_response", append_tip=True).format(difficulty=difficulty),
+            await trl(ctx.user.id, ctx.guild.id, "verification_set_difficulty_response", append_tip=True).format(difficulty=difficulty),
             ephemeral=True)
 
     @verification_subcommand.command(name="send_message", description="Send the verification message")
@@ -334,26 +335,26 @@ class Verification(discord.Cog):
                            custom_verify_message: str = "Click the verify button below to verify!",
                            custom_verify_label: str = "Verify"):
         # Get the role and verify it was set
-        ver_role_id = utils.settings.get_setting(ctx.guild.id, "verification_role", "-1")
+        ver_role_id = await utils.settings.get_setting(ctx.guild.id, "verification_role", "-1")
         if ver_role_id == "-1":
-            await ctx.respond(trl(ctx.user.id, ctx.guild.id, "verification_send_message_verification_role_not_set"),
+            await ctx.respond(await trl(ctx.user.id, ctx.guild.id, "verification_send_message_verification_role_not_set"),
                               ephemeral=True)
             return
 
         # Role existing check
         ver_role = ctx.guild.get_role(int(ver_role_id))
         if ver_role is None:
-            await ctx.respond(trl(ctx.user.id, ctx.guild.id, "verification_role_doesnt_exist"), ephemeral=True)
+            await ctx.respond(await trl(ctx.user.id, ctx.guild.id, "verification_role_doesnt_exist"), ephemeral=True)
             return
 
         # Role permissions checks
         if ctx.guild.me.top_role.position < ver_role.position:
-            await ctx.respond(trl(ctx.user.id, ctx.guild.id, "verification_role_position"), ephemeral=True)
+            await ctx.respond(await trl(ctx.user.id, ctx.guild.id, "verification_role_position"), ephemeral=True)
             return
 
         # Channel permissions
         if not ctx.channel.can_send():
-            await ctx.respond(trl(ctx.user.id, ctx.guild.id, "verification_channel_send"), ephemeral=True)
+            await ctx.respond(await trl(ctx.user.id, ctx.guild.id, "verification_channel_send"), ephemeral=True)
             return
 
         # Create the view
@@ -363,4 +364,4 @@ class Verification(discord.Cog):
         await ctx.channel.send(content=custom_verify_message, view=view)
 
         # Respond to user that it was successfull
-        await ctx.respond(trl(ctx.user.id, ctx.guild.id, "verification_send_success", append_tip=True), ephemeral=True)
+        await ctx.respond(await trl(ctx.user.id, ctx.guild.id, "verification_send_success", append_tip=True), ephemeral=True)

@@ -47,25 +47,25 @@ async def on_application_command_error(ctx: discord.ApplicationContext, error):
         seconds = int(error.retry_after % 60)
         if minutes > 0:
             await ctx.respond(
-                trl(ctx.user.id, ctx.guild.id, "cooldown_2").format(minutes=str(minutes), seconds=str(seconds)),
+                await trl(ctx.user.id, ctx.guild.id, "cooldown_2").format(minutes=str(minutes), seconds=str(seconds)),
                 ephemeral=True)
         else:
-            await ctx.respond(trl(ctx.user.id, ctx.guild.id, "cooldown_1").format(seconds=str(seconds)), ephemeral=True)
+            await ctx.respond(await trl(ctx.user.id, ctx.guild.id, "cooldown_1").format(seconds=str(seconds)), ephemeral=True)
         return
 
     if isinstance(error, discord_commands_ext.MissingPermissions):
         await ctx.respond(
-            trl(ctx.user.id, ctx.guild.id, "command_no_permission").format(
+            await trl(ctx.user.id, ctx.guild.id, "command_no_permission").format(
                 permissions=', '.join(error.missing_permissions)),
             ephemeral=True)
         return
 
     if isinstance(error, discord_commands_ext.NoPrivateMessage):
-        await ctx.respond(trl(ctx.user.id, ctx.guild.id, "command_no_private"), ephemeral=True)
+        await ctx.respond(await trl(ctx.user.id, ctx.guild.id, "command_no_private"), ephemeral=True)
         return
 
     if isinstance(error, discord_commands_ext.BotMissingPermissions):
-        await ctx.respond(trl(ctx.user.id, ctx.guild.id, "command_bot_no_perm").format(
+        await ctx.respond(await trl(ctx.user.id, ctx.guild.id, "command_bot_no_perm").format(
             permissions=', '.join(error.missing_permissions)),
                           ephemeral=True)
         return
@@ -73,7 +73,7 @@ async def on_application_command_error(ctx: discord.ApplicationContext, error):
     sentry_sdk.capture_exception(error)
     try:
         # respond
-        await ctx.respond(trl(ctx.user.id, ctx.guild.id, "command_error_generic"), ephemeral=True)
+        await ctx.respond(await trl(ctx.user.id, ctx.guild.id, "command_error_generic"), ephemeral=True)
     except Exception:
         print("Failed to respond")
     raise error

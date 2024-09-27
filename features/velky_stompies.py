@@ -8,7 +8,7 @@ from discord.ext import commands
 class VelkyStompies(discord.Cog):
     @discord.slash_command(name="stompies", description="Velky's stompies command")
     async def velky_stompies(self, ctx: discord.ApplicationContext):
-        if get_setting(ctx.guild.id, "stompies_enabled", "True") == "False":
+        if await get_setting(ctx.guild.id, "stompies_enabled", "True") == "False":
             await ctx.respond("The command is disabled", ephemeral=True)
             return
 
@@ -21,7 +21,7 @@ class VelkyStompies(discord.Cog):
     @discord.default_permissions(manage_guild=True)
     @commands.has_permissions(manage_guild=True)
     async def stompies_enable(self, ctx: discord.ApplicationContext, enabled: bool):
-        old_value = get_setting(ctx.guild.id, "stompies_enabled", str(enabled)) == "True"
+        old_value = await get_setting(ctx.guild.id, "stompies_enabled", str(enabled)) == "True"
 
         if old_value != enabled:
             logging_embed = discord.Embed(title="Stompies enabled changed")
@@ -31,7 +31,7 @@ class VelkyStompies(discord.Cog):
 
             await log_into_logs(ctx.guild, logging_embed)
 
-        set_setting(ctx.guild.id, 'stompies_enabled', str(enabled))
+        await set_setting(ctx.guild.id, 'stompies_enabled', str(enabled))
 
         await ctx.respond(f'Succcessfully turned on stompies' if enabled else 'Successfully turned off stompies',
                           ephemeral=True)
