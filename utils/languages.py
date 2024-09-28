@@ -30,7 +30,7 @@ async def get_translation_for_key_localized(user_id: int, guild_id: int, key: st
 
     translation = translations.get(key, translation) or en_translations.get(key, translation) or f"lang.en.{key}"
 
-    if append_tip and get_per_user_setting(user_id, "tips_enabled", "true") == "true":
+    if append_tip and (await get_per_user_setting(user_id, "tips_enabled", "true")) == "true":
         return append_tip_to_message(guild_id, user_id, translation, language)
     return translation
 

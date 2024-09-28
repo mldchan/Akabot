@@ -21,14 +21,14 @@ class PerUserSettings(discord.Cog):
     @discord.option(name='state', description='How notifications should be sent', choices=['enabled', 'only when lost', 'off'])
     @analytics("user_settings chat_streaks_alerts")
     async def chat_streaks_alerts(self, ctx: discord.ApplicationContext, state: str):
-        set_per_user_setting(ctx.user.id, 'chat_streaks_alerts', state)
+        await set_per_user_setting(ctx.user.id, 'chat_streaks_alerts', state)
         if state == 'enabled':
             state = await trl(ctx.user.id, ctx.guild.id, "per_user_chat_streak_state_enabled")
         elif state == 'only when lost':
             state = await trl(ctx.user.id, ctx.guild.id, "per_user_chat_streak_state_only_when_lost")
         else:
             state = await trl(ctx.user.id, ctx.guild.id, "per_user_chat_streak_state_disabled")
-        await ctx.respond(await trl(ctx.user.id, ctx.guild.id, "per_user_chat_streak_response", append_tip=True).format(state=state), ephemeral=True)
+        await ctx.respond((await trl(ctx.user.id, ctx.guild.id, "per_user_chat_streak_response", append_tip=True)).format(state=state), ephemeral=True)
 
     @user_settings_group.command(name='langauge', description='Set your personal language, applies across servers for you')
     @discord.option(name='lang', description='Your language', choices=get_language_names())
@@ -36,8 +36,8 @@ class PerUserSettings(discord.Cog):
     async def set_language(self, ctx: discord.ApplicationContext, lang: str):
         lang_code = language_name_to_code(lang)
 
-        set_per_user_setting(ctx.user.id, 'language', lang_code)
-        await ctx.respond(await trl(ctx.user.id, ctx.guild.id, "per_user_language_set", append_tip=True).format(lang=get_language_name(lang_code, completeness=False)), ephemeral=True)
+        await set_per_user_setting(ctx.user.id, 'language', lang_code)
+        await ctx.respond((await trl(ctx.user.id, ctx.guild.id, "per_user_language_set", append_tip=True)).format(lang=get_language_name(lang_code, completeness=False)), ephemeral=True)
 
     @user_settings_group.command(name='birthday', description='Set your birthday for Birthday Announcements.')
     @discord.option(name='birthday', description='Your birthday in the format YYYY-MM-DD')
