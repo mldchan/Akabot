@@ -122,7 +122,7 @@ class Welcoming(discord.Cog):
         await log_into_logs(ctx.guild, logging_embed)
 
         # Respond
-        await ctx.respond(await trl(ctx.user.id, ctx.guild.id, "welcome_channel_set", append_tip=True).format(channel=channel.mention),
+        await ctx.respond((await trl(ctx.user.id, ctx.guild.id, "welcome_channel_set", append_tip=True)).format(channel=channel.mention),
                           ephemeral=True)
 
     @welcome_subcommands.command(name='type', description="Set whether you want to use message content or embed")
@@ -149,7 +149,7 @@ class Welcoming(discord.Cog):
         await log_into_logs(ctx.guild, logging_embed)
 
         # Respond
-        await ctx.respond(await trl(ctx.user.id, ctx.guild.id, "welcome_type_set", append_tip=True).format(type=message_type), ephemeral=True)
+        await ctx.respond((await trl(ctx.user.id, ctx.guild.id, "welcome_type_set", append_tip=True)).format(type=message_type), ephemeral=True)
 
     @welcome_subcommands.command(name='title', description="Set the title of the welcoming message")
     @discord.default_permissions(manage_guild=True)
@@ -173,7 +173,7 @@ class Welcoming(discord.Cog):
         await log_into_logs(ctx.guild, logging_embed)
 
         # Respond
-        await ctx.respond(await trl(ctx.user.id, ctx.guild.id, "welcome_title_set", append_tip=True).format(title=title), ephemeral=True)
+        await ctx.respond((await trl(ctx.user.id, ctx.guild.id, "welcome_title_set", append_tip=True)).format(title=title), ephemeral=True)
 
     @welcome_subcommands.command(name='text', description="Set the text of the welcoming message")
     @discord.default_permissions(manage_guild=True)
@@ -197,7 +197,7 @@ class Welcoming(discord.Cog):
         await log_into_logs(ctx.guild, logging_embed)
 
         # Respond
-        await ctx.respond(await trl(ctx.user.id, ctx.guild.id, "welcome_text_sent", append_tip=True).format(text=text), ephemeral=True)
+        await ctx.respond((await trl(ctx.user.id, ctx.guild.id, "welcome_text_sent", append_tip=True)).format(text=text), ephemeral=True)
 
     goodbye_subcommands = discord.SlashCommandGroup(name="goodbye", description="Change the goodbye message")
 
@@ -244,7 +244,7 @@ class Welcoming(discord.Cog):
         await log_into_logs(ctx.guild, logging_embed)
 
         # Respond
-        await ctx.respond(await trl(ctx.user.id, ctx.guild.id, "goodbye_channel_set", append_tip=True).format(channel=channel.mention),
+        await ctx.respond((await trl(ctx.user.id, ctx.guild.id, "goodbye_channel_set", append_tip=True)).format(channel=channel.mention),
                           ephemeral=True)
 
     @goodbye_subcommands.command(name='type', description="Set whether you want to use message content or embed")
@@ -271,7 +271,7 @@ class Welcoming(discord.Cog):
         await log_into_logs(ctx.guild, logging_embed)
 
         # Respond
-        await ctx.respond(await trl(ctx.user.id, ctx.guild.id, "goodbye_type_set", append_tip=True).format(type=message_type), ephemeral=True)
+        await ctx.respond((await trl(ctx.user.id, ctx.guild.id, "goodbye_type_set", append_tip=True)).format(type=message_type), ephemeral=True)
 
     @goodbye_subcommands.command(name='title', description="Set the title of the goodbye message")
     @discord.default_permissions(manage_guild=True)
@@ -295,7 +295,7 @@ class Welcoming(discord.Cog):
         await log_into_logs(ctx.guild, logging_embed)
 
         # Respond
-        await ctx.respond(await trl(ctx.user.id, ctx.guild.id, "goodbye_title_set", append_tip=True).format(title=title), ephemeral=True)
+        await ctx.respond((await trl(ctx.user.id, ctx.guild.id, "goodbye_title_set", append_tip=True)).format(title=title), ephemeral=True)
 
     @goodbye_subcommands.command(name='text', description="Set the text of the goodbye message")
     @discord.default_permissions(manage_guild=True)
@@ -319,4 +319,4 @@ class Welcoming(discord.Cog):
         await log_into_logs(ctx.guild, logging_embed)
 
         # Respond
-        await ctx.respond(await trl(ctx.user.id, ctx.guild.id, "goodbye_text_set", append_tip=True).format(text=text), ephemeral=True)
+        await ctx.respond((await trl(ctx.user.id, ctx.guild.id, "goodbye_text_set", append_tip=True)).format(text=text), ephemeral=True)

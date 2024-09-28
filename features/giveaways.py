@@ -57,11 +57,11 @@ class Giveaways(discord.Cog):
             return
 
         # Determine ending date
-        end_date = get_now_for_server(ctx.guild.id)
+        end_date = await get_now_for_server(ctx.guild.id)
         end_date = end_date + datetime.timedelta(days=days, hours=hours, minutes=minutes)
 
         # Send message
-        msg1 = await ctx.channel.send(await trl(0, ctx.guild.id, "giveaways_giveaway_text").format(item=item))
+        msg1 = await ctx.channel.send((await trl(0, ctx.guild.id, "giveaways_giveaway_text")).format(item=item))
         await msg1.add_reaction("🎉")
 
         # Register giveaway
@@ -73,7 +73,7 @@ class Giveaways(discord.Cog):
         await db.close()
 
         # Send success message
-        await ctx.respond(await trl(ctx.user.id, ctx.guild.id, "giveaways_new_success", append_tip=True).format(id=db.lastrowid),
+        await ctx.respond((await trl(ctx.user.id, ctx.guild.id, "giveaways_new_success", append_tip=True)).format(id=db.lastrowid),
                           ephemeral=True)
 
     @giveaways_group.command(name="end", description="End a giveaway IRREVERSIBLY")
@@ -117,19 +117,19 @@ class Giveaways(discord.Cog):
             row_id = i[0]
             item = i[3]
             winners = i[5]
-            time_remaining = datetime.datetime.fromisoformat(i[4]) - get_now_for_server(ctx.guild.id)
+            time_remaining = datetime.datetime.fromisoformat(i[4]) - await get_now_for_server(ctx.guild.id)
             time_remaining = time_remaining.total_seconds()
             time_remaining = await pretty_time_delta(time_remaining, user_id=ctx.user.id, server_id=ctx.guild.id)
 
-            message += await trl(ctx.user.id, ctx.guild.id, "giveaways_list_line").format(id=row_id, item=item,
+            message += (await trl(ctx.user.id, ctx.guild.id, "giveaways_list_line")).format(id=row_id, item=item,
                                                                                     winners=winners,
                                                                                     time=time_remaining)
 
         if len(res) == 0:
             message += await trl(ctx.user.id, ctx.guild.id, "giveaways_list_empty")
 
-        if get_per_user_setting(ctx.user.id, 'tips_enabled', 'true') == 'true':
-            language = get_language(ctx.guild.id, ctx.user.id)
+        if (await get_per_user_setting(ctx.user.id, 'tips_enabled', 'true')) == 'true':
+            language = await get_language(ctx.guild.id, ctx.user.id)
             message = append_tip_to_message(ctx.guild.id, ctx.user.id, message, language)
         await ctx.respond(message, ephemeral=True)
 
@@ -200,14 +200,14 @@ class Giveaways(discord.Cog):
 
         # Get channel and send message
         if len(winners) == 1:
-            msg2 = await trl(0, chan.guild.id, "giveaways_winner").format(item=res[3], mention=f"<@{winners[0]}>")
+            msg2 = (await trl(0, chan.guild.id, "giveaways_winner")).format(item=res[3], mention=f"<@{winners[0]}>")
             await chan.send(msg2)
         else:
             mentions = ", ".join([f"<@{j}>" for j in winners])
             last_mention = mentions.rfind(", ")
             last_mention = mentions[last_mention + 2:]
             mentions = mentions[:last_mention]
-            msg2 = await trl(0, chan.guild.id, "giveaways_winners").format(item=res[3],
+            msg2 = (await trl(0, chan.guild.id, "giveaways_winners")).format(item=res[3],
                                                                      mentions=mentions,
                                                                      last_mention=last_mention)
             await chan.send(msg2)
@@ -233,7 +233,7 @@ class Giveaways(discord.Cog):
 
             time = datetime.datetime.now(datetime.UTC)
             if channel is not None:
-                time = get_now_for_server(channel.guild.id)
+                time = await get_now_for_server(channel.guild.id)
             # Check if the giveaway ended
             end_date = datetime.datetime.fromisoformat(i[4])
             if time > end_date:

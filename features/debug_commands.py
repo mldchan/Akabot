@@ -15,4 +15,5 @@ class DebugCommands(discord.Cog):
 
     @dev_commands_group.command(name="now", description="Get now for server")
     async def now(self, ctx: discord.ApplicationContext):
-        await ctx.respond(f"Current time: {get_now_for_server(ctx.guild.id).isoformat()}", ephemeral=True)
+        server_now = await get_now_for_server(ctx.guild.id)
+        await ctx.respond(f"Current time: {server_now.isoformat()}", ephemeral=True)

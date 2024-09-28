@@ -9,7 +9,7 @@ from utils.settings import get_setting
 
 
 async def add_warning(user: discord.Member, guild: discord.Guild, reason: str) -> int:
-    id = db_add_warning(guild.id, user.id, reason)
+    warning_id = await db_add_warning(guild.id, user.id, reason)
 
     warning_should_dm = await get_setting(guild.id, 'send_warning_message', 'true')
     if warning_should_dm == 'true':
@@ -18,19 +18,19 @@ async def add_warning(user: discord.Member, guild: discord.Guild, reason: str) -
         warning_message = warning_message.replace('{name}', user.display_name)
         warning_message = warning_message.replace('{guild}', guild.name)
         warning_message = warning_message.replace('{reason}', reason)
-        warning_message = warning_message.replace('{warnings}', str(len(db_get_warnings(guild.id, user.id))))
+        warning_message = warning_message.replace('{warnings}', str(len(await db_get_warnings(guild.id, user.id))))
 
         # try dm user
         try:
             await user.send(warning_message)
-        except Exception:
+        except discord.Forbidden:
             pass
 
-    warnings = db_get_warnings(guild.id, user.id)
-    actions = db_get_warning_actions(guild.id)
+    warnings = await db_get_warnings(guild.id, user.id)
+    actions = await db_get_warning_actions(guild.id)
 
     if not actions:
-        return id
+        return warning_id
 
     for action in actions:
         if len(warnings) == action[2]:  # only apply if the number of warnings matches, not if below
@@ -38,19 +38,19 @@ async def add_warning(user: discord.Member, guild: discord.Guild, reason: str) -
                 # try dm user
                 try:
                     await user.send(
-                        await trl(user.id, guild.id, "warn_actions_auto_kick_dm").format(name=guild.name, warnings=action[2]))
-                except Exception:
+                        (await trl(user.id, guild.id, "warn_actions_auto_kick_dm")).format(name=guild.name, warnings=action[2]))
+                except discord.Forbidden:
                     pass
                 await user.kick(
-                    reason=await trl(user.id, guild.id, "warn_actions_auto_kick_reason").format(warnings=action[2]))
+                    reason=(await trl(user.id, guild.id, "warn_actions_auto_kick_reason")).format(warnings=action[2]))
             elif action[1] == 'ban':
                 # try dm user
                 try:
                     await user.send(
-                        await trl(user.id, guild.id, "warn_actions_auto_ban_dm").format(name=guild.name, warnings=action[2]))
-                except Exception:
+                        (await trl(user.id, guild.id, "warn_actions_auto_ban_dm")).format(name=guild.name, warnings=action[2]))
+                except discord.Forbidden:
                     pass
-                await user.ban(reason=await trl(user.id, guild.id, "warn_actions_auto_ban_reason").format(warnings=action[2]))
+                await user.ban(reason=(await trl(user.id, guild.id, "warn_actions_auto_ban_reason")).format(warnings=action[2]))
             elif action[1].startswith('timeout'):
                 time = action[1].split(' ')[1]
                 total_seconds = 0
@@ -66,26 +66,26 @@ async def add_warning(user: discord.Member, guild: discord.Guild, reason: str) -
                 # try dm
                 try:
                     await user.send(
-                        await trl(user.id, guild.id, "warn_actions_auto_timeout_dm").format(name=guild.name,
+                        (await trl(user.id, guild.id, "warn_actions_auto_timeout_dm")).format(name=guild.name,
                                                                                       warnings=action[2],
                                                                                       time=await pretty_time_delta(
                                                                                           total_seconds,
                                                                                           user_id=user.id,
                                                                                           server_id=guild.id)))
-                except Exception:
+                except discord.Forbidden:
                     pass
 
                 await user.timeout_for(datetime.timedelta(seconds=total_seconds),
-                                       reason=await trl(user.id, guild.id, "warn_actions_auto_timeout_reason").format(
+                                       reason=(await trl(user.id, guild.id, "warn_actions_auto_timeout_reason")).format(
                                            warnings=action[2]))
 
-    return id
+    return warning_id
 
 
 async def db_add_warning(guild_id: int, user_id: int, reason: str) -> int:
     db = await get_conn()
     cur = await db.execute('insert into warnings (guild_id, user_id, reason, timestamp) values (?, ?, ?, ?)',
-                (guild_id, user_id, reason, get_date_time_str(guild_id)))
+                           (guild_id, user_id, reason, await get_date_time_str(guild_id)))
     warning_id = cur.lastrowid
     await db.commit()
     await db.close()
@@ -124,8 +124,8 @@ async def db_get_warning_actions(guild_id: int):
     return actions
 
 
-async def db_remove_warning_action(id: int):
+async def db_remove_warning_action(warning_action_id: int):
     db = await get_conn()
-    await db.execute('delete from warnings_actions where id = ?', (id,))
+    await db.execute('delete from warnings_actions where id = ?', (warning_action_id,))
     await db.commit()
     await db.close()

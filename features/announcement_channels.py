@@ -54,6 +54,6 @@ class AnnouncementChannels(discord.Cog):
         channel_mentions = [f"<#{channel[1]}>" for channel in channels]
         message = "\n".join(channel_mentions)
         if get_per_user_setting(ctx.user.id, "tips_enabled", "true") == "true":
-            language = get_language(ctx.guild.id, ctx.user.id)
+            language = await get_language(ctx.guild.id, ctx.user.id)
             message = append_tip_to_message(ctx.guild.id, ctx.user.id, message, language)
         await ctx.respond(message, ephemeral=True)

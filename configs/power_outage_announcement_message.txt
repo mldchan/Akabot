@@ -2,4 +2,4 @@
 
 Akabot was down for {pretty_time} due to a power outage. We are sorry for the inconvenience. We are working hard to prevent this from happening again.
 
-Akabot is now back up and hopefully you can continue using it without any issues.
+Akabot is now back up, and hopefully you can continue using it without any issues.
