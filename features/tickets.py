@@ -98,7 +98,7 @@ async def db_is_archived(guild_id: int, ticket_channel_id: int) -> bool:
 
 
 async def check_ticket_hide_time(guild_id: int, ticket_channel_id: int) -> bool:
-    if not db_is_archived(guild_id, ticket_channel_id):
+    if not await db_is_archived(guild_id, ticket_channel_id):
         return False
 
     hide_time = await get_setting(guild_id, "ticket_hide_time", "0")  # hours, hide time from archive
@@ -106,7 +106,7 @@ async def check_ticket_hide_time(guild_id: int, ticket_channel_id: int) -> bool:
         return False
 
     db = await get_conn()
-    cur = db.execute("select atime from tickets where guild_id = ? and ticket_channel_id = ?", (guild_id, ticket_channel_id))
+    cur = await db.execute("select atime from tickets where guild_id = ? and ticket_channel_id = ?", (guild_id, ticket_channel_id))
     atime = await cur.fetchone()
     await db.close()
 
@@ -166,7 +166,7 @@ class TicketMessageView(discord.ui.View):
     async def close_ticket(self, interaction: discord.Interaction):
         self.disable_all_items()
 
-        if not db_is_ticket_channel(interaction.guild.id, interaction.channel.id):
+        if not await db_is_ticket_channel(interaction.guild.id, interaction.channel.id):
             await interaction.response.send_message("This is not a ticket channel.", ephemeral=True)
             return
 
@@ -222,7 +222,7 @@ class TicketCreateView(discord.ui.View):
         await db_add_ticket_channel(interaction.guild.id, channel.id, interaction.user.id)
 
         await interaction.response.send_message("Ticket created! " + channel.mention, ephemeral=True)
-        
+
         log_embed = discord.Embed(title="Ticket Created", description=f"Ticket created by {interaction.user.mention} in {channel.mention}")
         log_embed.add_field(name="Ticket ID", value=channel.id)
         log_embed.add_field(name="Ticket Creator", value=interaction.user.mention)
@@ -230,7 +230,7 @@ class TicketCreateView(discord.ui.View):
         log_embed.add_field(name="Ticket Category", value=category.name)
         log_embed.add_field(name="Ticket Creation Time", value=(await get_now_for_server(interaction.guild.id)).isoformat())
         log_embed.add_field(name="Ticket Message", value=interaction.message.jump_url)
-        
+
         await log_into_logs(interaction.guild, log_embed)
 
 
@@ -251,36 +251,36 @@ class Tickets(discord.Cog):
         if message.author.bot:
             return
 
-        if not db_is_ticket_channel(message.guild.id, message.channel.id):
+        if not await db_is_ticket_channel(message.guild.id, message.channel.id):
             return
 
-        if db_is_archived(message.guild.id, message.channel.id):
+        if await db_is_archived(message.guild.id, message.channel.id):
             return
 
-        db_update_mtime(message.guild.id, message.channel.id)
+        await db_update_mtime(message.guild.id, message.channel.id)
 
     @discord.Cog.listener()
     async def on_message_edit(self, before: discord.Message, after: discord.Message):
         if after.author.bot:
             return
 
-        if not db_is_ticket_channel(after.guild.id, after.channel.id):
+        if not await db_is_ticket_channel(after.guild.id, after.channel.id):
             return
 
-        db_update_mtime(after.guild.id, after.channel.id)
+        await db_update_mtime(after.guild.id, after.channel.id)
 
     @discord.Cog.listener()
     async def on_reaction_add(self, reaction: discord.Reaction, user: discord.User):
         if user.bot:
             return
 
-        if not db_is_ticket_channel(reaction.message.guild.id, reaction.message.channel.id):
+        if not await db_is_ticket_channel(reaction.message.guild.id, reaction.message.channel.id):
             return
 
-        if db_is_archived(reaction.message.guild.id, reaction.message.channel.id):
+        if await db_is_archived(reaction.message.guild.id, reaction.message.channel.id):
             return
 
-        db_update_mtime(reaction.message.guild.id, reaction.message.channel.id)
+        await db_update_mtime(reaction.message.guild.id, reaction.message.channel.id)
 
     @tickets_commands.command(name="send_message", description="Send a message that allows users to create a ticket")
     @discord.default_permissions(manage_guild=True)
@@ -303,14 +303,14 @@ class Tickets(discord.Cog):
 
         await ctx.channel.send(message, view=TicketCreateView(button_label))
         await ctx.respond("Message sent!", ephemeral=True)
-        
+
         log_embed = discord.Embed(title="Ticket Message Sent", description=f"Ticket message sent by {ctx.user.mention} in {ctx.channel.mention}")
         log_embed.add_field(name="Ticket Message", value=message)
         log_embed.add_field(name="Ticket Message Button Label", value=button_label)
         log_embed.add_field(name="Ticket Message Channel", value=ctx.channel.mention)
         log_embed.add_field(name="Ticket Message Time", value=get_now_for_server(ctx.guild.id).isoformat())
         log_embed.add_field(name="Ticket Message Message", value=ctx.message.jump_url)
-        
+
         await log_into_logs(ctx.guild, log_embed)
 
     @tickets_commands.command(name="set_category",
@@ -321,13 +321,13 @@ class Tickets(discord.Cog):
     async def set_category(self, ctx: discord.ApplicationContext, category: discord.CategoryChannel):
         await set_setting(ctx.guild.id, "ticket_category", str(category.id))
         await ctx.respond("Category set!", ephemeral=True)
-        
+
         log_embed = discord.Embed(title="Ticket Category Set", description=f"Ticket category set by {ctx.user.mention} to {category.name}")
         log_embed.add_field(name="Ticket Category", value=category.name)
         log_embed.add_field(name="Ticket Category ID", value=category.id)
         log_embed.add_field(name="Ticket Category Time", value=get_now_for_server(ctx.guild.id).isoformat())
         log_embed.add_field(name="Ticket Category Message", value=ctx.message.jump_url)
-        
+
         await log_into_logs(ctx.guild, log_embed)
 
     @tickets_commands.command(name="set_hide_time",
@@ -338,12 +338,12 @@ class Tickets(discord.Cog):
     async def set_hide_time(self, ctx: discord.ApplicationContext, hours: int):
         await set_setting(ctx.guild.id, "ticket_hide_time", str(hours))
         await ctx.respond("Hide time set!", ephemeral=True)
-        
+
         log_embed = discord.Embed(title="Ticket Hide Time Set", description=f"Ticket hide time set by {ctx.user.mention} to {hours} hours")
         log_embed.add_field(name="Ticket Hide Time", value=hours)
         log_embed.add_field(name="Ticket Hide Time Time", value=get_now_for_server(ctx.guild.id).isoformat())
         log_embed.add_field(name="Ticket Hide Time Message", value=ctx.message.jump_url)
-        
+
         await log_into_logs(ctx.guild, log_embed)
 
     @tickets_commands.command(name="set_archive_time",
@@ -353,12 +353,12 @@ class Tickets(discord.Cog):
     async def set_auto_archive_time(self, ctx: discord.ApplicationContext, hours: int):
         await set_setting(ctx.guild.id, "ticket_archive_time", str(hours))
         await ctx.respond("Auto archive time set!", ephemeral=True)
-        
+
         log_embed = discord.Embed(title="Ticket Archive Time Set", description=f"Ticket archive time set by {ctx.user.mention} to {hours} hours")
         log_embed.add_field(name="Ticket Archive Time", value=hours)
         log_embed.add_field(name="Ticket Archive Time Time", value=get_now_for_server(ctx.guild.id).isoformat())
         log_embed.add_field(name="Ticket Archive Time Message", value=ctx.message.jump_url)
-        
+
         await log_into_logs(ctx.guild, log_embed)
 
     @tasks.loop(seconds=60)
@@ -367,22 +367,22 @@ class Tickets(discord.Cog):
             guild = self.bot.get_guild(i[0])
             channel = guild.get_channel(i[1])
 
-            if check_ticket_hide_time(i[0], i[1]):
+            if await check_ticket_hide_time(i[0], i[1]):
                 member = guild.get_member(await db_get_ticket_creator(i[0], i[1]))
                 await channel.set_permissions(member, read_messages=False, send_messages=False)
                 await db_remove_ticket_channel(i[0], i[1])
-                
+
                 log_embed = discord.Embed(title="Ticket Hidden", description=f"Ticket hidden by the system in {channel.mention} because the hide time is up.")
                 log_embed.add_field(name="Ticket Hidden Time", value=get_now_for_server(guild.id).isoformat())
                 log_embed.add_field(name="Ticket Hidden Message", value=channel.jump_url)
-                
+
                 await log_into_logs(guild, log_embed)
 
     @tasks.loop(seconds=60)
     async def handle_auto_archive(self):
         # Ticket archiving after certain time of no changes
         for i in await db_list_not_archived_tickets():
-            if check_ticket_archive_time(i[0], i[1]):
+            if await check_ticket_archive_time(i[0], i[1]):
                 await db_archive_ticket(i[0], i[1])
 
                 guild = self.bot.get_guild(i[0])
@@ -406,9 +406,9 @@ class Tickets(discord.Cog):
                 # Send closed message
                 await channel.send(
                     "Ticket closed automatically because there was no activity for a certain amount of time.")
-                
+
                 log_embed = discord.Embed(title="Ticket Closed Automatically", description=f"Ticket closed automatically by the system in {channel.mention} because there was no activity for a certain amount of time.")
                 log_embed.add_field(name="Ticket Closed Automatically Time", value=(await get_now_for_server(guild.id)).isoformat())
                 log_embed.add_field(name="Ticket Closed Automatically Message", value=channel.jump_url)
-                
+
                 await log_into_logs(guild, log_embed)

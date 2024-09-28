@@ -154,7 +154,7 @@ class TemporaryVC(discord.Cog):
         bitrate = bitrate * 1000
 
         db = await get_conn()
-        cur = db.execute('select * from temporary_vcs where channel_id = ? and guild_id = ? and creator_id = ?', (ctx.channel.id, ctx.guild.id, ctx.user.id))
+        cur = await db.execute('select * from temporary_vcs where channel_id = ? and guild_id = ? and creator_id = ?', (ctx.channel.id, ctx.guild.id, ctx.user.id))
         fetch = await cur.fetchone()
         await db.close()
         if not fetch:
