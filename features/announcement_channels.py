@@ -25,7 +25,7 @@ class AnnouncementChannels(discord.Cog):
 
         db_add_announcement_channel(ctx.guild.id, channel.id)
         await ctx.respond(
-            await trl(ctx.user.id, ctx.guild.id, "announcement_subscribed", append_tip=True).format(channel=channel.mention),
+            (await trl(ctx.user.id, ctx.guild.id, "announcement_subscribed", append_tip=True)).format(channel=channel.mention),
             ephemeral=True)
 
     @announcement_channels_group.command(name="unsubscribe",
@@ -33,12 +33,12 @@ class AnnouncementChannels(discord.Cog):
     async def announcement_channels_unsubscribe(self, ctx: discord.ApplicationContext, channel: discord.TextChannel):
         if not db_is_subscribed_to_announcements(ctx.guild.id, channel.id):
             await ctx.respond(
-                await trl(ctx.author.id, ctx.guild.id, "announcement_not_subscribed").format(channel=channel.mention),
+                (await trl(ctx.author.id, ctx.guild.id, "announcement_not_subscribed")).format(channel=channel.mention),
                 ephemeral=True)
             return
 
         db_remove_announcement_channel(ctx.guild.id, channel.id)
-        await ctx.respond(await trl(ctx.author.id, ctx.guild.id, "announcement_unsubscribed", append_tip=True).format(
+        await ctx.respond((await trl(ctx.author.id, ctx.guild.id, "announcement_unsubscribed", append_tip=True)).format(
             channel=channel.mention),
             ephemeral=True)
 

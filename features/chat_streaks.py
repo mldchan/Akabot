@@ -83,8 +83,8 @@ class ChatStreakStorage:
                     (await get_server_midnight_time(guild_id), guild_id, member_id))
         after_update = ((await get_server_midnight_time(guild_id)) - start_time).days
 
-        await db.close()
         await db.commit()
+        await db.close()
 
         if before_update != after_update:
             return "updated", before_update, after_update

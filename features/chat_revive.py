@@ -106,7 +106,7 @@ class ChatRevive(discord.Cog):
         logging_embed.add_field(name=await trl(ctx.user.id, ctx.guild.id, "chat_revive_list_role"),
                                 value=f"{revival_role.mention}", inline=False)
         logging_embed.add_field(name=await trl(ctx.user.id, ctx.guild.id, "chat_revive_log_set_revival_time"),
-                                value=await trl(ctx.user.id, ctx.guild.id, "chat_revive_log_set_revival_time_value").format(
+                                value=(await trl(ctx.user.id, ctx.guild.id, "chat_revive_log_set_revival_time_value")).format(
                                     time=str(revival_minutes)), inline=True)
 
         # Send to logs
@@ -114,7 +114,7 @@ class ChatRevive(discord.Cog):
 
         # Send back response
         await ctx.respond(
-            await trl(ctx.user.id, ctx.guild.id, "chat_revive_set_response_success").format(channel=channel.mention),
+            (await trl(ctx.user.id, ctx.guild.id, "chat_revive_set_response_success")).format(channel=channel.mention),
             ephemeral=True)
 
     @chat_revive_subcommand.command(name="remove", description="List the revive settings")
@@ -144,7 +144,7 @@ class ChatRevive(discord.Cog):
         await log_into_logs(ctx.guild, logging_embed)
 
         # Respond
-        await ctx.respond(await trl(ctx.user.id, ctx.guild.id, "chat_revive_remove_success").format(channel=channel.mention),
+        await ctx.respond((await trl(ctx.user.id, ctx.guild.id, "chat_revive_remove_success")).format(channel=channel.mention),
                           ephemeral=True)
 
     @chat_revive_subcommand.command(name="list", description="List the revive settings")
@@ -159,14 +159,14 @@ class ChatRevive(discord.Cog):
         result = await cur.fetchone()
 
         if not result:
-            await ctx.respond(await trl(ctx.user.id, ctx.guild.id, "chat_revive_list_empty").format(channel=channel.mention),
+            await ctx.respond((await trl(ctx.user.id, ctx.guild.id, "chat_revive_list_empty")).format(channel=channel.mention),
                               ephemeral=True)
             return
 
         role_id, revival_time = result
         role = ctx.guild.get_role(role_id)
 
-        embed = discord.Embed(title=await trl(ctx.user.id, ctx.guild.id, "chat_revive_list_title").format(name=channel.name),
+        embed = discord.Embed(title=(await trl(ctx.user.id, ctx.guild.id, "chat_revive_list_title")).format(name=channel.name),
                               color=discord.Color.blurple())
         embed.add_field(name=await trl(ctx.user.id, ctx.guild.id, "chat_revive_list_role"), value=role.mention)
         embed.add_field(name=await trl(ctx.user.id, ctx.guild.id, "chat_revive_list_time"), value=revival_time)
