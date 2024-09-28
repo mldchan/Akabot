@@ -76,7 +76,7 @@ class VerificationTextReverse(discord.ui.View):
 
     async def message_content(self) -> str:
         # Message
-        return await trl(self.user_id, 0, "verification_reverse_word").format(word=self.english_word)
+        return (await trl(self.user_id, 0, "verification_reverse_word")).format(word=self.english_word)
 
     async def respond(self, ctx: discord.ApplicationContext):
         # Respond with modal
@@ -121,7 +121,7 @@ class VerificationEnglishWord(discord.ui.View):
         self.add_item(self.answer_btn)
 
     async def message_content(self) -> str:
-        return await trl(self.user_id, 0, "verification_english_word").format(length=str(self.length))
+        return (await trl(self.user_id, 0, "verification_english_word")).format(length=str(self.length))
 
     async def respond(self, ctx: discord.ApplicationContext):
         # Respond with modal
@@ -194,7 +194,7 @@ class VerificationMath(discord.ui.View):
 
     async def message_content(self) -> str:
         # Create a message
-        return await trl(self.user_id, 0, "verification_math").format(a=self.a, b=self.b, o=self.op)
+        return (await trl(self.user_id, 0, "verification_math")).format(a=self.a, b=self.b, o=self.op)
 
     async def respond(self, ctx: discord.ApplicationContext):
         # Respond with modal
@@ -324,7 +324,7 @@ class Verification(discord.Cog):
 
         # Respond
         await ctx.respond(
-            await trl(ctx.user.id, ctx.guild.id, "verification_set_difficulty_response", append_tip=True).format(difficulty=difficulty),
+            (await trl(ctx.user.id, ctx.guild.id, "verification_set_difficulty_response", append_tip=True)).format(difficulty=difficulty),
             ephemeral=True)
 
     @verification_subcommand.command(name="send_message", description="Send the verification message")

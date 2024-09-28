@@ -39,9 +39,9 @@ class Logging(discord.Cog):
             embed = discord.Embed(title=await trl(0, guild.id, "logging_emoji_added_title"), color=discord.Color.green())
 
             if after.animated:
-                embed.description = await trl(0, guild.id, "logging_animated_emoji_added").format(name=after.name)
+                embed.description = (await trl(0, guild.id, "logging_animated_emoji_added")).format(name=after.name)
             else:
-                embed.description = await trl(0, guild.id, "logging_emoji_added").format(name=after.name)
+                embed.description = (await trl(0, guild.id, "logging_emoji_added")).format(name=after.name)
 
             embed.add_field(name=await trl(0, guild.id, 'logging_moderator'), value=triggering_user.mention if triggering_user else await trl(0, guild.id, 'logging_unknown_member'), inline=False)
             await log_into_logs(guild, embed)
@@ -54,9 +54,9 @@ class Logging(discord.Cog):
 
             embed = discord.Embed(title=await trl(0, guild.id, "logging_emoji_removed"), color=discord.Color.red())
             if before.animated:
-                embed.description = await trl(0, guild.id, "logging_animated_emoji_removed").format(name=before.name)
+                embed.description = (await trl(0, guild.id, "logging_animated_emoji_removed")).format(name=before.name)
             else:
-                embed.description = await trl(0, guild.id, "logging_emoji_removed").format(name=before.name)
+                embed.description = (await trl(0, guild.id, "logging_emoji_removed")).format(name=before.name)
 
             embed.add_field(name=await trl(0, guild.id, 'logging_moderator'), value=triggering_user.mention if triggering_user else await trl(0, guild.id, 'logging_unknown_member'), inline=False)
             await log_into_logs(guild, embed)
@@ -84,7 +84,7 @@ class Logging(discord.Cog):
                     triggering_user = action.user
 
             embed = discord.Embed(title=await trl(0, guild.id, "logging_sticker_added_title"), color=discord.Color.green())
-            embed.description = await trl(0, guild.id, "logging_sticker_added").format(name=after.name)
+            embed.description = (await trl(0, guild.id, "logging_sticker_added")).format(name=after.name)
 
             embed.add_field(name=await trl(0, guild.id, 'logging_moderator'), value=triggering_user.mention if triggering_user else await trl(0, guild.id, 'logging_unknown_member'), inline=False)
             await log_into_logs(guild, embed)
@@ -95,7 +95,7 @@ class Logging(discord.Cog):
                     triggering_user = action.user
 
             embed = discord.Embed(title=await trl(0, guild.id, "logging_sticker_removed_title"), color=discord.Color.red())
-            embed.description = await trl(0, guild.id, "logging_sticker_removed").format(name=before.name)
+            embed.description = (await trl(0, guild.id, "logging_sticker_removed")).format(name=before.name)
 
             embed.add_field(name=await trl(0, guild.id, 'logging_moderator'), value=triggering_user.mention if triggering_user else await trl(0, guild.id, 'logging_unknown_member'), inline=False)
             await log_into_logs(guild, embed)
@@ -228,11 +228,13 @@ class Logging(discord.Cog):
         if before.overwrites != after.overwrites:
             for overwrite in before.overwrites:
                 if overwrite not in after.overwrites:
-                    embed.add_field(name=await trl(0, after.guild.id, "logging_removed_overwrite"), value=await trl(0, after.guild.id, "logging_removed_overwrite_value").format(target=overwrite.mention))
+                    embed.add_field(name=await trl(0, after.guild.id, "logging_removed_overwrite"),
+                                    value=(await trl(0, after.guild.id, "logging_removed_overwrite_value")).format(target=overwrite.mention))
 
             for overwrite in after.overwrites:
                 if overwrite not in before.overwrites:
-                    embed.add_field(name=await trl(0, after.guild.id, "logging_added_overwrite"), value=await trl(0, after.guild.id, "logging_added_overwrite_value").format(target=overwrite.mention))
+                    embed.add_field(name=await trl(0, after.guild.id, "logging_added_overwrite"),
+                                    value=(await trl(0, after.guild.id, "logging_added_overwrite_value")).format(target=overwrite.mention))
 
             for i in after.overwrites.keys():
                 if i not in before.overwrites.keys():
@@ -257,15 +259,15 @@ class Logging(discord.Cog):
                 changes_str = ""
 
                 for j in allow:
-                    changes_str += await trl(0, after.guild.id, "logging_overwrite_permission_changes_line").format(permission=j[0], old=str(j[1]), new=str(j[2]))
+                    changes_str += (await trl(0, after.guild.id, "logging_overwrite_permission_changes_line")).format(permission=j[0], old=str(j[1]), new=str(j[2]))
 
                 for j in deny:
-                    changes_str += await trl(0, after.guild.id, "logging_overwrite_permission_changes_line").format(permission=j[0], old=str(j[1]), new=str(j[2]))
+                    changes_str += (await trl(0, after.guild.id, "logging_overwrite_permission_changes_line")).format(permission=j[0], old=str(j[1]), new=str(j[2]))
 
                 for j in neutral:
-                    changes_str += await trl(0, after.guild.id, "logging_overwrite_permission_changes_line").format(permission=j[0], old=str(j[1]), new=str(j[2]))
+                    changes_str += (await trl(0, after.guild.id, "logging_overwrite_permission_changes_line")).format(permission=j[0], old=str(j[1]), new=str(j[2]))
 
-                overwrite_embed = discord.Embed(title=await trl(0, after.guild.id, "logging_overwrite_update_title").format(channel=after.mention, target=i.mention), color=discord.Color.blue())
+                overwrite_embed = discord.Embed(title=(await trl(0, after.guild.id, "logging_overwrite_update_title")).format(channel=after.mention, target=i.mention), color=discord.Color.blue())
 
                 overwrite_embed.add_field(name=await trl(0, after.guild.id, "logging_overwrite_permission_changes"), value=changes_str)
 
@@ -286,7 +288,8 @@ class Logging(discord.Cog):
                     moderator = entry.user
 
         embed = discord.Embed(title=await trl(0, channel.guild.id, "logging_channel_create_title"),
-                              description=await trl(0, channel.guild.id, "logging_channel_create_description").format(type=str_channel_type(channel.type), name=channel.name), color=discord.Color.green())
+                              description=(await trl(0, channel.guild.id, "logging_channel_create_description")).format(type=str_channel_type(channel.type), name=channel.name),
+                              color=discord.Color.green())
 
         embed.add_field(name=await trl(0, channel.guild.id, "logging_moderator"), value=moderator.mention if moderator else await trl(0, channel.guild.id, "logging_unknown_member"))
 
@@ -301,7 +304,8 @@ class Logging(discord.Cog):
                     moderator = entry.user
 
         embed = discord.Embed(title=await trl(0, channel.guild.id, "logging_channel_delete_title"),
-                              description=await trl(0, channel.guild.id, "logging_channel_delete_description").format(type=str_channel_type(channel.type), name=channel.name), color=discord.Color.red())
+                              description=(await trl(0, channel.guild.id, "logging_channel_delete_description")).format(type=str_channel_type(channel.type), name=channel.name),
+                              color=discord.Color.red())
 
         embed.add_field(name=await trl(0, channel.guild.id, "logging_moderator"), value=moderator.mention if moderator else await trl(0, channel.guild.id, "logging_unknown_member"))
 
@@ -362,7 +366,7 @@ class Logging(discord.Cog):
                 if entry.target.id == role.id:
                     moderator = entry.user
 
-        embed = discord.Embed(title=await trl(0, role.guild.id, "logging_role_created_title"), description=await trl(0, role.guild.id, "logging_role_created_description").format(name=role.name),
+        embed = discord.Embed(title=await trl(0, role.guild.id, "logging_role_created_title"), description=(await trl(0, role.guild.id, "logging_role_created_description")).format(name=role.name),
                               color=discord.Color.green())
 
         embed.add_field(name=await trl(0, role.guild.id, "logging_moderator"), value=moderator.mention if moderator else await trl(0, role.guild.id, "logging_unknown_member"))
@@ -377,7 +381,7 @@ class Logging(discord.Cog):
                 if entry.target.id == role.id:
                     moderator = entry.user
 
-        embed = discord.Embed(title=await trl(0, role.guild.id, "logging_role_deleted_title"), description=await trl(0, role.guild.id, "logging_role_deleted_description").format(name=role.name),
+        embed = discord.Embed(title=await trl(0, role.guild.id, "logging_role_deleted_title"), description=(await trl(0, role.guild.id, "logging_role_deleted_description")).format(name=role.name),
                               color=discord.Color.red())
 
         embed.add_field(name=await trl(0, role.guild.id, "logging_moderator"), value=moderator.mention if moderator else await trl(0, role.guild.id, "logging_unknown_member"))
@@ -460,14 +464,16 @@ class Logging(discord.Cog):
 
     @discord.Cog.listener()
     async def on_member_join(self, member: discord.Member):
-        embed = discord.Embed(title=await trl(0, member.guild.id, "logging_member_join_title"), description=await trl(0, member.guild.id, "logging_member_join_description").format(mention=member.mention),
+        embed = discord.Embed(title=await trl(0, member.guild.id, "logging_member_join_title"),
+                              description=(await trl(0, member.guild.id, "logging_member_join_description")).format(mention=member.mention),
                               color=discord.Color.green())
         embed.add_field(name=await trl(0, member.guild.id, "logging_user"), value=member.mention)
         await log_into_logs(member.guild, embed)
 
     @discord.Cog.listener()
     async def on_member_remove(self, member: discord.Member):
-        embed = discord.Embed(title=await trl(0, member.guild.id, "logging_member_leave_title"), description=await trl(0, member.guild.id, "logging_member_leave_description").format(mention=member.mention),
+        embed = discord.Embed(title=await trl(0, member.guild.id, "logging_member_leave_title"),
+                              description=(await trl(0, member.guild.id, "logging_member_leave_description")).format(mention=member.mention),
                               color=discord.Color.red())
         embed.add_field(name=await trl(0, member.guild.id, "logging_user"), value=member.mention)
         await log_into_logs(member.guild, embed)
@@ -502,20 +508,23 @@ class Logging(discord.Cog):
         if before.channel is None and after.channel is not None:
             # joined a channel
             embed = discord.Embed(title=await trl(0, member.guild.id, "logging_vc_join"),
-                                  description=await trl(0, member.guild.id, "logging_vc_join_description").format(mention=member.mention, channel_mention=after.channel.mention), color=discord.Color.green())
+                                  description=(await trl(0, member.guild.id, "logging_vc_join_description")).format(mention=member.mention, channel_mention=after.channel.mention),
+                                  color=discord.Color.green())
             await log_into_logs(member.guild, embed)
 
         if before.channel is not None and after.channel is None:
             # left a channel
             embed = discord.Embed(title=await trl(0, member.guild.id, "logging_vc_leave"),
-                                  description=await trl(0, member.guild.id, "logging_vc_leave_description").format(mention=member.mention, channel_mention=before.channel.mention), color=discord.Color.red())
+                                  description=(await trl(0, member.guild.id, "logging_vc_leave_description")).format(mention=member.mention, channel_mention=before.channel.mention),
+                                  color=discord.Color.red())
             await log_into_logs(member.guild, embed)
 
         if before.channel is not None and after.channel is not None:
             # moved to a different channel or was muted/deafened by admin
             if before.channel != after.channel:
                 embed = discord.Embed(title=await trl(0, member.guild.id, "logging_vc_move"),
-                                      description=await trl(0, member.guild.id, "logging_vc_move_description").format(mention=member.mention, previous=before.channel.mention, current=after.channel.mention),
+                                      description=(await trl(0, member.guild.id, "logging_vc_move_description")).format(mention=member.mention, previous=before.channel.mention,
+                                                                                                                        current=after.channel.mention),
                                       color=discord.Color.blue())
                 await log_into_logs(member.guild, embed)
                 return
@@ -531,9 +540,9 @@ class Logging(discord.Cog):
                 embed = discord.Embed(title=await trl(0, member.guild.id, "logging_vc_server_mute"), color=discord.Color.blue())
 
                 if after.mute:
-                    embed.description = await trl(0, member.guild.id, "logging_vc_server_mute_description_enabled").format(mention=member.mention)
+                    embed.description = (await trl(0, member.guild.id, "logging_vc_server_mute_description_enabled")).format(mention=member.mention)
                 else:
-                    embed.description = await trl(0, member.guild.id, "logging_vc_server_mute_description_disabled").format(mention=member.mention)
+                    embed.description = (await trl(0, member.guild.id, "logging_vc_server_mute_description_disabled")).format(mention=member.mention)
 
                 if mod:
                     embed.add_field(name=await trl(0, member.guild.id, "logging_moderator"), value=mod.mention)
@@ -550,9 +559,9 @@ class Logging(discord.Cog):
                 embed = discord.Embed(title=await trl(0, member.guild.id, "logging_vc_server_deafen"), color=discord.Color.blue())
 
                 if after.deaf:
-                    embed.description = await trl(0, member.guild.id, "logging_vc_server_deafen_description_enabled").format(mention=member.mention)
+                    embed.description = (await trl(0, member.guild.id, "logging_vc_server_deafen_description_enabled")).format(mention=member.mention)
                 else:
-                    embed.description = await trl(0, member.guild.id, "logging_vc_server_deafen_description_disabled").format(mention=member.mention)
+                    embed.description = (await trl(0, member.guild.id, "logging_vc_server_deafen_description_disabled")).format(mention=member.mention)
 
                 if mod:
                     embed.add_field(name=await trl(0, member.guild.id, "logging_moderator"), value=mod.mention)
@@ -651,7 +660,7 @@ class Logging(discord.Cog):
                 if entry.target.id == thread.id:
                     moderator = entry.user
 
-        embed = discord.Embed(title=await trl(0, thread.guild.id, "logging_thread_create"), description=await trl(0, thread.guild.id, "logging_thread_create_description").format(name=thread.name),
+        embed = discord.Embed(title=await trl(0, thread.guild.id, "logging_thread_create"), description=(await trl(0, thread.guild.id, "logging_thread_create_description")).format(name=thread.name),
                               color=discord.Color.green())
         embed.add_field(name=await trl(0, thread.guild.id, "logging_jump_to_thread"), value=f"[jump](<{thread.jump_url}>)")
         embed.add_field(name=await trl(0, thread.guild.id, "logging_name"), value=thread.name)
@@ -666,7 +675,7 @@ class Logging(discord.Cog):
                 if entry.target.id == thread.id:
                     moderator = entry.user
 
-        embed = discord.Embed(title=await trl(0, thread.guild.id, "logging_thread_delete"), description=await trl(0, thread.guild.id, "logging_thread_delete_description").format(name=thread.name),
+        embed = discord.Embed(title=await trl(0, thread.guild.id, "logging_thread_delete"), description=(await trl(0, thread.guild.id, "logging_thread_delete_description")).format(name=thread.name),
                               color=discord.Color.red())
         embed.add_field(name=await trl(0, thread.guild.id, "logging_name"), value=thread.name)
         embed.add_field(name=await trl(0, thread.guild.id, "logging_moderator"), value=moderator.mention if moderator else await trl(0, thread.guild.id, "logging_unknown_member"))
@@ -732,4 +741,4 @@ class Logging(discord.Cog):
         await log_into_logs(ctx.guild, logging_embed)
 
         # Respond
-        await ctx.respond(await trl(ctx.user.id, ctx.guild.id, "logging_set_channel_success").format(channel=channel.mention), ephemeral=True)
+        await ctx.respond((await trl(ctx.user.id, ctx.guild.id, "logging_set_channel_success")).format(channel=channel.mention), ephemeral=True)
