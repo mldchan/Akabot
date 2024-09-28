@@ -13,7 +13,6 @@ from discord.ext import commands
 
 from utils.settings import get_setting, set_setting
 
-
 svc_tips = [
     "Append -a to download audio only (Great for music).",
     "Append -o to remove sound from video and only keep music (TikTok only).",
@@ -68,19 +67,19 @@ class MediaDownloader(discord.Cog):
         if msg.author.bot:
             return
 
-        if not get_setting(msg.guild.id, f'{msg.channel.id}_media_downloader_enabled', 'false') == 'true':
+        if not await get_setting(msg.guild.id, f'{msg.channel.id}_media_downloader_enabled', 'false') == 'true':
             return
 
         urls = [x for x in msg.content.split(" ") if re.match(r'https?://[\da-z.-]+\.[a-z.]{2,6}[/\w .-]*/?', x)]
 
         if not urls:
-            if get_setting(msg.guild.id, f'{msg.channel.id}_media_downloader_verbose', 'false') == 'true':
+            if await get_setting(msg.guild.id, f'{msg.channel.id}_media_downloader_verbose', 'false') == 'true':
                 await msg.reply("Could not find any links in the message.\n-# " + get_random_tip())
             return
 
         if msg.guild.id in self.server_info:
             if (datetime.datetime.now() - self.server_info[msg.guild.id]).total_seconds() < 60:
-                if get_setting(msg.guild.id, f'{msg.channel.id}_media_downloader_verbose', 'false') == 'true':
+                if await get_setting(msg.guild.id, f'{msg.channel.id}_media_downloader_verbose', 'false') == 'true':
                     await msg.reply("Can't download right now. Please wait for the other download to finish.\n-# " + get_random_tip())
                 return
 

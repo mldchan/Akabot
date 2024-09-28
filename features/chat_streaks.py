@@ -79,12 +79,12 @@ class ChatStreakStorage:
             return "expired", streak, 0
 
         before_update = (last_message - start_time).days
-        cur.execute('UPDATE chat_streaks SET last_message = ? WHERE guild_id = ? AND member_id = ?',
+        await db.execute('UPDATE chat_streaks SET last_message = ? WHERE guild_id = ? AND member_id = ?',
                     (await get_server_midnight_time(guild_id), guild_id, member_id))
         after_update = ((await get_server_midnight_time(guild_id)) - start_time).days
 
-        cur.close()
-        db.commit()
+        await db.close()
+        await db.commit()
 
         if before_update != after_update:
             return "updated", before_update, after_update
