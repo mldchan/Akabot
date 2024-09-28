@@ -1,6 +1,7 @@
 import discord
 from discord.ext import tasks, commands
 
+from database import get_conn
 from utils.analytics import analytics
 from utils.birthday_announcements import get_birthdays_today, get_age_of_user
 from utils.languages import get_translation_for_key_localized as trl
@@ -16,6 +17,13 @@ class BirthdayAnnouncements(discord.Cog):
         super().__init__()
 
     birthday_announcements_group = discord.SlashCommandGroup(name="birthday_announcements", description="Birthday Announcements commands")
+
+    @discord.Cog.listener()
+    async def on_ready(self):
+        db = await get_conn()
+        await db.execute('create table if not exists birthdays(user_id integer primary key, current_age int, birthday text)')
+        await db.commit()
+        await db.close()
 
     @birthday_announcements_group.command(name="channel", description="Set the channel for birthday announcements")
     @discord.default_permissions(manage_guild=True)
