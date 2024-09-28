@@ -73,8 +73,6 @@ class MediaDownloader(discord.Cog):
         urls = [x for x in msg.content.split(" ") if re.match(r'https?://[\da-z.-]+\.[a-z.]{2,6}[/\w .-]*/?', x)]
 
         if not urls:
-            if await get_setting(msg.guild.id, f'{msg.channel.id}_media_downloader_verbose', 'false') == 'true':
-                await msg.reply("Could not find any links in the message.\n-# " + get_random_tip())
             return
 
         if msg.guild.id in self.server_info:
@@ -87,11 +85,11 @@ class MediaDownloader(discord.Cog):
 
         first_url = urls[0]
 
-        audio_only = "-a" in msg.content or get_setting(msg.guild.id, f'{msg.channel.id}_media_downloader_music', 'false') == 'true'
+        audio_only = "-a" in msg.content or await get_setting(msg.guild.id, f'{msg.channel.id}_media_downloader_music', 'false') == 'true'
         original_audio = "-o" in msg.content
 
         message = None
-        if get_setting(msg.guild.id, f'{msg.channel.id}_media_downloader_verbose', 'false') == 'true':
+        if await get_setting(msg.guild.id, f'{msg.channel.id}_media_downloader_verbose', 'false') == 'true':
             mode = "(Audio only)" if audio_only else ""
             mode += " (Original audio (TikTok))" if original_audio else ""
             message = await msg.reply("Requesting download... " + mode + "\n-# " + get_random_tip())
