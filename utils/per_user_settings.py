@@ -38,15 +38,3 @@ async def unset_per_user_setting(user_id: int, setting_name: str):
     await db.execute("DELETE FROM per_user_settings WHERE user_id = ? AND setting_name = ?", (user_id, setting_name))
     await db.commit()
     await db.close()
-
-
-async def search_settings_by_value(setting_value: str):
-    """Searches for settings
-    Returns: List of settings with the given value
-    user_id, setting_name, setting_value order
-    """
-    db = await get_conn()
-    cur = await db.execute("SELECT user_id, setting_name, setting_value FROM per_user_settings WHERE setting_value = ?", (setting_value,))
-    rows = await cur.fetchall()
-    await db.close()
-    return rows
