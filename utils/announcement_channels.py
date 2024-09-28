@@ -1,5 +1,3 @@
-import aiosqlite
-
 from database import get_conn
 
 

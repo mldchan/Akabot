@@ -49,6 +49,6 @@ def pretty_time(seconds_since_epoch: int | float) -> str:
     return datetime.datetime.fromtimestamp(seconds_since_epoch).strftime('%Y/%m/%d %H:%M:%S')
 
 
-def get_date_time_str(guild_id: int) -> str:
+async def get_date_time_str(guild_id: int) -> str:
     # format: yyyy/mm/dd hh:mm
-    return get_now_for_server(guild_id).strftime('%Y/%m/%d %H:%M')
+    return (await get_now_for_server(guild_id)).strftime('%Y/%m/%d %H:%M')

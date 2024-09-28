@@ -27,7 +27,7 @@ class AdminCommands(discord.Cog):
         members = len(set([member for member in self.bot.get_all_members()]))
 
         await ctx.respond(
-            await trl(ctx.user.id, ctx.guild.id, "bot_status_message").format(servers=str(servers), channels=str(channels),
+            (await trl(ctx.user.id, ctx.guild.id, "bot_status_message")).format(servers=str(servers), channels=str(channels),
                                                                         users=str(members)), ephemeral=True)
 
     @admin_subcommand.command(name="create_announcement", description="List all announcement channels")
@@ -65,14 +65,14 @@ class AdminCommands(discord.Cog):
         await first_channel.send(announcement, file=discord.File(extra_attachment.filename))
 
         await msg.edit(content=await trl(ctx.user.id, ctx.guild.id, "announcement_sent_sending_to_subscribed"))
-        channels = db_get_all_announcement_channels()
+        channels = await db_get_all_announcement_channels()
         i = 0
         for channel in channels:
             i += 1
 
             if i % 10 == 0:
                 await msg.edit(
-                    content=await trl(ctx.user.id, ctx.guild.id, "announcement_sent_sending_to_subscribed_progress").format(
+                    content=(await trl(ctx.user.id, ctx.guild.id, "announcement_sent_sending_to_subscribed_progress")).format(
                         progress=str(i), count=str(len(channels))))
 
             try:

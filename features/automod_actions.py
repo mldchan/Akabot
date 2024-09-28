@@ -151,7 +151,7 @@ class AutomodActions(discord.Cog):
 
         if not automod_rule:
             valid_rules = ', '.join([f"{rule.name}" for rule in automod_actions])
-            await ctx.respond(await trl(ctx.user.id, ctx.guild.id, "automod_rule_doesnt_exist").format(rules=valid_rules),
+            await ctx.respond((await trl(ctx.user.id, ctx.guild.id, "automod_rule_doesnt_exist")).format(rules=valid_rules),
                               ephemeral=True)
             return
 
@@ -173,7 +173,7 @@ class AutomodActions(discord.Cog):
             message_reason = await trl(0, ctx.guild.id, "automod_default")
 
         action_id = db_add_automod_action(ctx.guild.id, automod_rule.id, rule_name, action, additional=message_reason)
-        await ctx.respond(await trl(ctx.user.id, ctx.guild.id, "automod_added", append_tip=True).format(id=action_id), ephemeral=True)
+        await ctx.respond((await trl(ctx.user.id, ctx.guild.id, "automod_added", append_tip=True)).format(id=action_id), ephemeral=True)
 
     @automod_actions_subcommands.command(name='remove', description='Remove an automod action.')
     @discord_commands_ext.bot_has_permissions(manage_guild=True)
@@ -208,5 +208,5 @@ class AutomodActions(discord.Cog):
             return
  
         actions = '\n'.join([f"`{action[0]}`: {action[2]}: {action[3]}" for action in automod_actions])
-        await ctx.respond(await trl(ctx.user.id, ctx.guild.id, "automod_actions_list", append_tip=True).format(actions=actions),
+        await ctx.respond((await trl(ctx.user.id, ctx.guild.id, "automod_actions_list", append_tip=True)).format(actions=actions),
                           ephemeral=True)

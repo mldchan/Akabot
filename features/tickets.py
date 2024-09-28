@@ -63,7 +63,7 @@ async def db_remove_ticket_channel(guild_id: int, ticket_channel_id: int):
 async def db_update_mtime(guild_id: int, ticket_channel_id: int):
     db = await get_conn()
     await db.execute("update tickets set mtime = ? where guild_id = ? and ticket_channel_id = ?",
-                (get_now_for_server(guild_id).isoformat(), guild_id, ticket_channel_id))
+                     ((await get_now_for_server(guild_id)).isoformat(), guild_id, ticket_channel_id))
     await db.commit()
     await db.close()
 
@@ -82,7 +82,7 @@ async def check_ticket_archive_time(guild_id: int, ticket_channel_id: int) -> bo
         return False
 
     mtime = datetime.datetime.fromisoformat(mtime[0])
-    if (get_now_for_server(guild_id) - mtime).total_seconds() / 3600 >= int(archive_time):
+    if (await get_now_for_server(guild_id) - mtime).total_seconds() / 3600 >= int(archive_time):
         return True
 
     return False
@@ -114,7 +114,7 @@ async def check_ticket_hide_time(guild_id: int, ticket_channel_id: int) -> bool:
         return False
 
     atime = datetime.datetime.fromisoformat(atime[0])
-    if (get_now_for_server(guild_id) - atime).total_seconds() / 3600 >= int(hide_time):
+    if (await get_now_for_server(guild_id) - atime).total_seconds() / 3600 >= int(hide_time):
         return True
 
     return False
@@ -123,7 +123,7 @@ async def check_ticket_hide_time(guild_id: int, ticket_channel_id: int) -> bool:
 async def db_archive_ticket(guild_id: int, ticket_channel_id: int):
     db = await get_conn()
     await db.execute("update tickets set atime = ? where guild_id = ? and ticket_channel_id = ?",
-                (get_now_for_server(guild_id).isoformat(), guild_id, ticket_channel_id))
+                     ((await get_now_for_server(guild_id)).isoformat(), guild_id, ticket_channel_id))
     await db.commit()
     await db.close()
 
@@ -228,7 +228,7 @@ class TicketCreateView(discord.ui.View):
         log_embed.add_field(name="Ticket Creator", value=interaction.user.mention)
         log_embed.add_field(name="Ticket Channel", value=channel.mention)
         log_embed.add_field(name="Ticket Category", value=category.name)
-        log_embed.add_field(name="Ticket Creation Time", value=get_now_for_server(interaction.guild.id).isoformat())
+        log_embed.add_field(name="Ticket Creation Time", value=(await get_now_for_server(interaction.guild.id)).isoformat())
         log_embed.add_field(name="Ticket Message", value=interaction.message.jump_url)
         
         await log_into_logs(interaction.guild, log_embed)

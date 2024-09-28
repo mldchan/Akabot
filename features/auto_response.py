@@ -94,10 +94,10 @@ class AutoResponse(discord.Cog):
     @discord_commands_ext.has_permissions(manage_messages=True)
     @discord_commands_ext.bot_has_permissions(read_message_history=True, add_reactions=True)
     @discord.default_permissions(manage_messages=True)
-    async def edit_trigger_auto_response(self, ctx: discord.ApplicationContext, id: int, new_trigger: str):
+    async def edit_trigger_auto_response(self, ctx: discord.ApplicationContext, edit_response_id: int, new_trigger: str):
         db = await get_conn()
         # Check if ID exists
-        cur = await db.execute("SELECT * FROM auto_response WHERE guild_id=? AND id=?", (ctx.guild.id, id))
+        cur = await db.execute("SELECT * FROM auto_response WHERE guild_id=? AND id=?", (ctx.guild.id, edit_response_id))
         if await cur.fetchone() is None:
             await ctx.respond(
                 trl(ctx.user.id, ctx.guild.id, "auto_response_setting_not_found"),
@@ -105,7 +105,7 @@ class AutoResponse(discord.Cog):
             return
 
         # Update
-        await db.execute("UPDATE auto_response SET trigger_text=? WHERE id=?", (new_trigger, id))
+        await db.execute("UPDATE auto_response SET trigger_text=? WHERE id=?", (new_trigger, edit_response_id))
 
         # Save
         await db.commit()
@@ -118,10 +118,10 @@ class AutoResponse(discord.Cog):
     @discord_commands_ext.has_permissions(manage_messages=True)
     @discord_commands_ext.bot_has_permissions(read_message_history=True, add_reactions=True)
     @discord.default_permissions(manage_messages=True)
-    async def delete_auto_response(self, ctx: discord.ApplicationContext, id: int):
+    async def delete_auto_response(self, ctx: discord.ApplicationContext, delete_response_id: int):
         db = await get_conn()
         # Check if ID exists
-        cur = await db.execute("SELECT * FROM auto_response WHERE guild_id=? AND id=?", (ctx.guild.id, id))
+        cur = await db.execute("SELECT * FROM auto_response WHERE guild_id=? AND id=?", (ctx.guild.id, delete_response_id))
         if await cur.fetchone() is None:
             await ctx.respond(
                 trl(ctx.user.id, ctx.guild.id, "auto_response_setting_not_found"),
@@ -129,7 +129,7 @@ class AutoResponse(discord.Cog):
             return
 
         # Delete
-        await db.execute("DELETE FROM auto_response WHERE id=?", (id,))
+        await db.execute("DELETE FROM auto_response WHERE id=?", (delete_response_id,))
 
         # Save
         await db.commit()
@@ -142,10 +142,10 @@ class AutoResponse(discord.Cog):
     @discord_commands_ext.has_permissions(manage_messages=True)
     @discord_commands_ext.bot_has_permissions(read_message_history=True, add_reactions=True)
     @discord.default_permissions(manage_messages=True)
-    async def edit_response_auto_response(self, ctx: discord.ApplicationContext, id: int, new_response: str):
+    async def edit_response_auto_response(self, ctx: discord.ApplicationContext, edit_response_id: int, new_response: str):
         db = await get_conn()
         # Check if ID exists
-        cur = await db.execute("SELECT * FROM auto_response WHERE guild_id=? AND id=?", (ctx.guild.id, id))
+        cur = await db.execute("SELECT * FROM auto_response WHERE guild_id=? AND id=?", (ctx.guild.id, edit_response_id))
         if await cur.fetchone() is None:
             await ctx.respond(
                 trl(ctx.user.id, ctx.guild.id, "auto_response_setting_not_found"),
@@ -153,7 +153,7 @@ class AutoResponse(discord.Cog):
             return
 
         # Update
-        await db.execute("UPDATE auto_response SET reply_text=? WHERE id=?", (new_response, id))
+        await db.execute("UPDATE auto_response SET reply_text=? WHERE id=?", (new_response, edit_response_id))
 
         # Save
         await db.commit()

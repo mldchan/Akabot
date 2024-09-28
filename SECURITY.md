@@ -8,7 +8,7 @@ The 3.1 version receives bug fixes and some fixes only.
 Anything below 3.1 is unsupported.
 
 | Version | Supported                                     |
-| ------- | --------------------------------------------- |
+|---------|-----------------------------------------------|
 | 3.2     | :white_check_mark: Fully supported            |
 | 3.1     | :warning: Bug fixes only                      |
 | <3.1    | :x: Not supported AT ALL (javascript-version) |

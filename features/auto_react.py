@@ -114,17 +114,17 @@ class AutoReact(discord.Cog):
     @discord_commands_ext.has_permissions(manage_messages=True)
     @discord_commands_ext.bot_has_permissions(read_message_history=True, add_reactions=True)
     @discord.default_permissions(manage_messages=True)
-    async def edit_trigger_auto_react(self, ctx: discord.ApplicationContext, id: int, new_trigger: str):
+    async def edit_trigger_auto_react(self, ctx: discord.ApplicationContext, edit_react_id: int, new_trigger: str):
         db = await get_conn()
         # Check if ID exists
-        cur = await db.execute("SELECT * FROM auto_react WHERE guild_id=? AND id=?", (ctx.guild.id, id))
+        cur = await db.execute("SELECT * FROM auto_react WHERE guild_id=? AND id=?", (ctx.guild.id, edit_react_id))
         if await cur.fetchone() is None:
             await ctx.respond(trl(ctx.user.id, ctx.guild.id, "auto_react_setting_not_found"),
                               ephemeral=True)
             return
 
         # Update
-        await db.execute("UPDATE auto_react SET trigger_text=? WHERE id=?", (new_trigger, id))
+        await db.execute("UPDATE auto_react SET trigger_text=? WHERE id=?", (new_trigger, edit_react_id))
 
         # Save
         await db.commit()
@@ -137,10 +137,10 @@ class AutoReact(discord.Cog):
     @discord_commands_ext.has_permissions(manage_messages=True)
     @discord_commands_ext.bot_has_permissions(read_message_history=True, add_reactions=True)
     @discord.default_permissions(manage_messages=True)
-    async def delete_auto_react(self, ctx: discord.ApplicationContext, id: int):
+    async def delete_auto_react(self, ctx: discord.ApplicationContext, delete_react_id: int):
         db = await get_conn()
         # Check if ID exists
-        cur = await db.execute("SELECT * FROM auto_react WHERE guild_id=? AND id=?", (ctx.guild.id, id))
+        cur = await db.execute("SELECT * FROM auto_react WHERE guild_id=? AND id=?", (ctx.guild.id, delete_react_id))
         if await cur.fetchone() is None:
             await ctx.respond(
                 trl(ctx.user.id, ctx.guild.id, "auto_react_setting_not_found"),
@@ -148,7 +148,7 @@ class AutoReact(discord.Cog):
             return
 
         # Delete
-        await db.execute("DELETE FROM auto_react WHERE id=?", (id,))
+        await db.execute("DELETE FROM auto_react WHERE id=?", (delete_react_id,))
 
         # Save
         await db.commit()
@@ -161,7 +161,7 @@ class AutoReact(discord.Cog):
     @discord_commands_ext.has_permissions(manage_messages=True)
     @discord_commands_ext.bot_has_permissions(read_message_history=True, add_reactions=True)
     @discord.default_permissions(manage_messages=True)
-    async def edit_response_auto_react(self, ctx: discord.ApplicationContext, id: int, new_emoji: str):
+    async def edit_response_auto_react(self, ctx: discord.ApplicationContext, edit_react_id: int, new_emoji: str):
         # Parse le emoji
         emoji = discord.PartialEmoji.from_str(new_emoji.strip())
         if emoji.is_custom_emoji():
@@ -181,7 +181,7 @@ class AutoReact(discord.Cog):
 
         db = await get_conn()
         # Check if ID exists
-        cur = await db.execute("SELECT * FROM auto_react WHERE guild_id=? AND id=?", (ctx.guild.id, id))
+        cur = await db.execute("SELECT * FROM auto_react WHERE guild_id=? AND id=?", (ctx.guild.id, edit_react_id))
         if await cur.fetchone() is None:
             await ctx.respond(
                 trl(ctx.user.id, ctx.guild.id, "auto_react_setting_not_found"),
@@ -189,7 +189,7 @@ class AutoReact(discord.Cog):
             return
 
         # Update
-        await db.execute("UPDATE auto_react SET emoji=? WHERE id=?", (str(emoji), id))
+        await db.execute("UPDATE auto_react SET emoji=? WHERE id=?", (str(emoji), edit_react_id))
 
         # Save
         await db.commit()

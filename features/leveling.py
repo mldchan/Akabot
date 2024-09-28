@@ -27,12 +27,12 @@ async def db_init():
 async def db_calculate_multiplier(guild_id: int):
     multiplier = int(await get_setting(guild_id, 'leveling_xp_multiplier', '1'))
 
-    multipliers = db_multiplier_getall(guild_id)
+    multipliers = await db_multiplier_getall(guild_id)
     for m in multipliers:
         start_month, start_day = map(int, m[3].split('-'))
         end_month, end_day = map(int, m[4].split('-'))
 
-        now = get_now_for_server(guild_id)
+        now = await get_now_for_server(guild_id)
         start_date = datetime.datetime(now.year, start_month, start_day)
         end_date = datetime.datetime(now.year, end_month, end_day, hour=23, minute=59, second=59)
 
@@ -62,7 +62,7 @@ async def db_add_user_xp(guild_id: int, user_id: int, xp: int):
     data = await cur.fetchone()
     if data:
         current_xp = data[0]
-        multiplier = db_calculate_multiplier(guild_id)
+        multiplier = await db_calculate_multiplier(guild_id)
         await db.execute("UPDATE leveling SET xp = ? WHERE guild_id = ? AND user_id = ?", (current_xp + (xp * int(multiplier)), guild_id, user_id))
     else:
         await db.execute("INSERT INTO leveling (guild_id, user_id, xp) VALUES (?, ?, ?)", (guild_id, user_id, xp))
@@ -72,21 +72,23 @@ async def db_add_user_xp(guild_id: int, user_id: int, xp: int):
 
 async def get_level_for_xp(guild_id: int, xp: int):
     level = 0
-    xp_needed = await db_calculate_multiplier(guild_id) * int(await get_setting(guild_id, 'leveling_xp_per_level', '500'))
+    leveling_xp_per_level = await get_setting(guild_id, 'leveling_xp_per_level', '500')
+    xp_needed = await db_calculate_multiplier(guild_id) * int(leveling_xp_per_level)
     while xp >= xp_needed:
         level += 1
         xp -= xp_needed
-        xp_needed = await db_calculate_multiplier(guild_id) * int(await get_setting(guild_id, 'leveling_xp_per_level', '500'))
+        xp_needed = await db_calculate_multiplier(guild_id) * int(leveling_xp_per_level)
 
     return level
 
 
 async def get_xp_for_level(guild_id: int, level: int):
     xp = 0
-    xp_needed = await db_calculate_multiplier(guild_id) * int(await get_setting(guild_id, 'leveling_xp_per_level', '500'))
+    leveling_xp_per_level = await get_setting(guild_id, 'leveling_xp_per_level', '500')
+    xp_needed = await db_calculate_multiplier(guild_id) * int(leveling_xp_per_level)
     for _ in range(level):
         xp += xp_needed
-        xp_needed = await db_calculate_multiplier(guild_id) * int(await get_setting(guild_id, 'leveling_xp_per_level', '500'))
+        xp_needed = await db_calculate_multiplier(guild_id) * int(leveling_xp_per_level)
 
     return xp
 
@@ -95,7 +97,7 @@ async def db_multiplier_add(guild_id: int, name: str, multiplier: int, start_dat
     await db_init()
     db = await get_conn()
     await db.execute("INSERT INTO leveling_multiplier (guild_id, name, multiplier, start_date, end_date) VALUES (?, ?, ?, ?, ?)",
-        (guild_id, name, multiplier, '{:02d}-{:02d}'.format(start_date_month, start_date_day), '{:02d}-{:02d}'.format(end_date_month, end_date_day)))
+                     (guild_id, name, multiplier, '{:02d}-{:02d}'.format(start_date_month, start_date_day), '{:02d}-{:02d}'.format(end_date_month, end_date_day)))
     await db.commit()
     await db.close()
 
@@ -242,9 +244,9 @@ class Leveling(discord.Cog):
         if msg.author.bot:
             return
 
-        before_level = get_level_for_xp(msg.guild.id, db_get_user_xp(msg.guild.id, msg.author.id))
-        db_add_user_xp(msg.guild.id, msg.author.id, 3)
-        after_level = get_level_for_xp(msg.guild.id, db_get_user_xp(msg.guild.id, msg.author.id))
+        before_level = get_level_for_xp(msg.guild.id, await db_get_user_xp(msg.guild.id, msg.author.id))
+        await db_add_user_xp(msg.guild.id, msg.author.id, 3)
+        after_level = get_level_for_xp(msg.guild.id, await db_get_user_xp(msg.guild.id, msg.author.id))
 
         if not msg.channel.permissions_for(msg.guild.me).send_messages:
             return
@@ -276,7 +278,7 @@ class Leveling(discord.Cog):
             start_month, start_day = map(int, i[3].split('-'))
             end_month, end_day = map(int, i[4].split('-'))
 
-            now = get_now_for_server(ctx.guild.id)
+            now = await get_now_for_server(ctx.guild.id)
             start_date = datetime.datetime(now.year, start_month, start_day)
             end_date = datetime.datetime(now.year, end_month, end_day, hour=23, minute=59, second=59)
 
@@ -291,7 +293,8 @@ class Leveling(discord.Cog):
 
         if user == ctx.user:
             icon = get_per_user_setting(ctx.user.id, 'leveling_icon', '')
-            response = await trl(ctx.user.id, ctx.guild.id, "leveling_level_info_self").format(icon=icon, level=level, level_xp=level_xp, next_level_xp=next_level_xp, next_level=level + 1, multiplier=multiplier)
+            response = await trl(ctx.user.id, ctx.guild.id, "leveling_level_info_self").format(icon=icon, level=level, level_xp=level_xp, next_level_xp=next_level_xp, next_level=level + 1,
+                                                                                               multiplier=multiplier)
 
             if len(msg) > 0:
                 response += await trl(ctx.user.id, ctx.guild.id, "leveling_level_multiplier_title")
@@ -300,15 +303,16 @@ class Leveling(discord.Cog):
             await ctx.respond(response, ephemeral=True)
         else:
             icon = get_per_user_setting(user.id, 'leveling_icon', '')
-            response = await trl(ctx.user.id, ctx.guild.id, "leveling_level_info_another").format(icon=icon, user=user.mention, level=level, level_xp=level_xp, next_level_xp=next_level_xp, next_level=level + 1,
-                                                                                            multiplier=multiplier)
+            response = await trl(ctx.user.id, ctx.guild.id, "leveling_level_info_another").format(icon=icon, user=user.mention, level=level, level_xp=level_xp, next_level_xp=next_level_xp,
+                                                                                                  next_level=level + 1,
+                                                                                                  multiplier=multiplier)
 
             if len(msg) > 0:
                 response += await trl(ctx.user.id, ctx.guild.id, "leveling_level_multiplier_title")
                 response += f'{msg}'
 
             if get_per_user_setting(ctx.user.id, 'tips_enabled', 'true') == 'true':
-                language = get_language(ctx.guild.id, ctx.user.id)
+                language = await get_language(ctx.guild.id, ctx.user.id)
                 response = append_tip_to_message(ctx.guild.id, ctx.user.id, response, language)
             await ctx.respond(response, ephemeral=True)
 
@@ -386,7 +390,7 @@ class Leveling(discord.Cog):
         start_month, start_day = map(int, start_date.split('-'))
         end_month, end_day = map(int, end_date.split('-'))
 
-        now = get_now_for_server(ctx.guild.id)
+        now = await get_now_for_server(ctx.guild.id)
         # Use the validate_day method to check if the start and end dates are valid
         if not validate_day(start_month, start_day, now.year):
             await ctx.respond(await trl(ctx.user.id, ctx.guild.id, "leveling_error_invalid_start_date"), ephemeral=True)
@@ -483,7 +487,7 @@ class Leveling(discord.Cog):
     @discord.option(name="start_date", description="The new start date of the multiplier, in format MM-DD", type=str)
     @analytics("leveling change multiplier start date")
     async def change_multiplier_start_date(self, ctx: discord.ApplicationContext, name: str, start_date: str):
-        if not db_multiplier_exists(ctx.guild.id, name):
+        if not await db_multiplier_exists(ctx.guild.id, name):
             await ctx.respond(await trl(ctx.user.id, ctx.guild.id, "leveling_multiplier_doesnt_exist").format(name=name), ephemeral=True)
             return
 
@@ -495,7 +499,7 @@ class Leveling(discord.Cog):
         # Verify the month and day values
         start_month, start_day = map(int, start_date.split('-'))
 
-        now = get_now_for_server(ctx.guild.id)
+        now = await get_now_for_server(ctx.guild.id)
         # Use the validate_day method to check if the start date is valid
         if not validate_day(start_month, start_day, now.year):
             await ctx.respond(await trl(ctx.user.id, ctx.guild.id, "leveling_error_invalid_start_date"), ephemeral=True)
@@ -504,7 +508,7 @@ class Leveling(discord.Cog):
         start_year = now.year
 
         # Set new setting
-        db_multiplier_change_start_date(ctx.guild.id, name, datetime.datetime(start_year, start_month, start_day))
+        await db_multiplier_change_start_date(ctx.guild.id, name, datetime.datetime(start_year, start_month, start_day))
 
         # Logging embed
         logging_embed = discord.Embed(title=await trl(0, ctx.guild.id, "leveling_start_date_log_title"))
@@ -642,7 +646,7 @@ class Leveling(discord.Cog):
         else:
             logging_embed.add_field(name=await trl(0, ctx.guild.id, "logging_role"),
                                     value=await trl(0, ctx.guild.id, "leveling_set_reward_log_role_changed").format(old_reward=old_role.mention if old_role is not None else old_role_id,
-                                        new_reward=role.mention))
+                                                                                                                    new_reward=role.mention))
 
         # Send into logs
         await log_into_logs(ctx.guild, logging_embed)

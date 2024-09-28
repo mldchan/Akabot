@@ -40,8 +40,8 @@ class TemporaryVC(discord.Cog):
         await db.close()
 
         if '{id}' in new_ch_name:
-            id = db.lastrowid
-            new_ch_name = new_ch_name.replace('{id}', str(id))
+            temporary_vc_id = db.lastrowid
+            new_ch_name = new_ch_name.replace('{id}', str(temporary_vc_id))
             await new_ch.edit(name=new_ch_name)
 
         return new_ch
@@ -81,7 +81,7 @@ class TemporaryVC(discord.Cog):
         await db.execute('insert into temporary_vc_creator_channels (id, channel_id, guild_id) values (?, ?, ?)', (ctx.author.id, channel.id, ctx.guild.id))
         await db.commit()
         await db.close()
-        await ctx.respond(await trl(ctx.user.id, ctx.guild.id, 'temporary_vc_creator_channel_add').format(channel=channel.mention), ephemeral=True)
+        await ctx.respond((await trl(ctx.user.id, ctx.guild.id, 'temporary_vc_creator_channel_add')).format(channel=channel.mention), ephemeral=True)
 
     @temporary_vc_commands.command(name='remove_creator_channel', description='Remove a channel to create temporary voice channels')
     @discord.default_permissions(manage_guild=True)
@@ -90,14 +90,14 @@ class TemporaryVC(discord.Cog):
         db = await get_conn()
         cur = await db.execute('select * from temporary_vc_creator_channels where channel_id = ? and guild_id = ?', (channel.id, ctx.guild.id))
         if not await cur.fetchone():
-            await ctx.respond(await trl(ctx.user.id, ctx.guild.id, 'temporary_vc_error_channel_not_in_creator').format(channel=channel.mention), ephemeral=True)
+            await ctx.respond((await trl(ctx.user.id, ctx.guild.id, 'temporary_vc_error_channel_not_in_creator')).format(channel=channel.mention), ephemeral=True)
             await db.close()
             return
 
         await db.execute('delete from temporary_vc_creator_channels where channel_id = ? and guild_id = ?', (channel.id, ctx.guild.id))
         await db.commit()
         await db.close()
-        await ctx.respond(await trl(ctx.user.id, ctx.guild.id, 'temporary_vc_creator_channel_remove').format(channel=channel.mention), ephemeral=True)
+        await ctx.respond((await trl(ctx.user.id, ctx.guild.id, 'temporary_vc_creator_channel_remove')).format(channel=channel.mention), ephemeral=True)
 
     @temporary_vc_commands.command(name='change_name', description='Change the name of a temporary voice channel')
     async def change_name(self, ctx: discord.ApplicationContext, name: str):
@@ -114,11 +114,11 @@ class TemporaryVC(discord.Cog):
         fetch = await cur.fetchone()
         await db.close()
         if not fetch:
-            await ctx.respond(await trl(ctx.user.id, ctx.guild.id, 'temporary_vc_error_not_a_temporary_channel').format(channel=ctx.channel.mention), ephemeral=True)
+            await ctx.respond((await trl(ctx.user.id, ctx.guild.id, 'temporary_vc_error_not_a_temporary_channel')).format(channel=ctx.channel.mention), ephemeral=True)
             return
 
         await ctx.channel.edit(name=name)
-        await ctx.respond(await trl(ctx.user.id, ctx.guild.id, 'temporary_vc_name_change').format(channel=ctx.channel.mention, name=name), ephemeral=True)
+        await ctx.respond((await trl(ctx.user.id, ctx.guild.id, 'temporary_vc_name_change')).format(channel=ctx.channel.mention, name=name), ephemeral=True)
 
     @temporary_vc_commands.command(name='change_max', description='Change the max users of a temporary voice channel')
     async def change_max(self, ctx: discord.ApplicationContext, max_users: int):
@@ -135,11 +135,11 @@ class TemporaryVC(discord.Cog):
         fetch = await cur.fetchone()
         await db.close()
         if not fetch:
-            await ctx.respond(await trl(ctx.user.id, ctx.guild.id, 'temporary_vc_error_not_a_temporary_channel').format(channel=ctx.channel.mention), ephemeral=True)
+            await ctx.respond((await trl(ctx.user.id, ctx.guild.id, 'temporary_vc_error_not_a_temporary_channel')).format(channel=ctx.channel.mention), ephemeral=True)
             return
 
         await ctx.channel.edit(user_limit=max_users)
-        await ctx.respond(await trl(ctx.user.id, ctx.guild.id, 'temporary_vc_max_users_change').format(channel=ctx.channel.mention, max_users=str(max_users)), ephemeral=True)
+        await ctx.respond((await trl(ctx.user.id, ctx.guild.id, 'temporary_vc_max_users_change')).format(channel=ctx.channel.mention, max_users=str(max_users)), ephemeral=True)
 
     @temporary_vc_commands.command(name='change_bitrate', description='Change the bitrate of a temporary voice channel')
     async def change_bitrate(self, ctx: discord.ApplicationContext, bitrate: int):
@@ -158,13 +158,13 @@ class TemporaryVC(discord.Cog):
         fetch = await cur.fetchone()
         await db.close()
         if not fetch:
-            await ctx.respond(await trl(ctx.user.id, ctx.guild.id, 'temporary_vc_error_not_a_temporary_channel').format(channel=ctx.channel.mention), ephemeral=True)
+            await ctx.respond((await trl(ctx.user.id, ctx.guild.id, 'temporary_vc_error_not_a_temporary_channel')).format(channel=ctx.channel.mention), ephemeral=True)
             return
 
         await ctx.channel.edit(bitrate=bitrate)
-        await ctx.respond(await trl(ctx.user.id, ctx.guild.id, 'temporary_vc_bitrate_change').format(channel=ctx.channel.mention, bitrate=str(bitrate)), ephemeral=True)
+        await ctx.respond((await trl(ctx.user.id, ctx.guild.id, 'temporary_vc_bitrate_change')).format(channel=ctx.channel.mention, bitrate=str(bitrate)), ephemeral=True)
 
     @temporary_vc_commands.command(name='change_default_name', description='Default name syntax. {name}, {username}, {guild}, {id} are available')
     async def change_default_name(self, ctx: discord.ApplicationContext, name: str):
         await set_setting(ctx.guild.id, 'temporary_vc_name', name)
-        await ctx.respond(await trl(ctx.user.id, ctx.guild.id, 'temporary_vc_name_format_change').format(name=name), ephemeral=True)
+        await ctx.respond((await trl(ctx.user.id, ctx.guild.id, 'temporary_vc_name_format_change')).format(name=name), ephemeral=True)

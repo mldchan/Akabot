@@ -17,7 +17,7 @@ class ServerSettings(discord.Cog):
     async def server_language(self, ctx: discord.ApplicationContext, lang: str):
         lang_code = language_name_to_code(lang)
         await set_setting(ctx.guild.id, 'language', lang_code)
-        await ctx.respond(await trl(ctx.user.id, ctx.guild.id, "server_language_response", append_tip=True).format(
+        await ctx.respond((await trl(ctx.user.id, ctx.guild.id, "server_language_response", append_tip=True)).format(
             lang=get_language_name(lang_code, completeness=False)), ephemeral=True)
 
     @server_settings_group.command(name='tz', description='Timezone setting')
@@ -38,4 +38,4 @@ class ServerSettings(discord.Cog):
         tz_formatted = str(tz)
         if re.match(r'^[+-]?\d+\.0$', tz_formatted):
             tz_formatted = tz_formatted[:-2]
-        await ctx.respond(await trl(ctx.user.id, ctx.guild.id, "server_tz_response", append_tip=True).format(tz=tz_formatted), ephemeral=True)
+        await ctx.respond((await trl(ctx.user.id, ctx.guild.id, "server_tz_response", append_tip=True)).format(tz=tz_formatted), ephemeral=True)

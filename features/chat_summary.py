@@ -1,4 +1,3 @@
-import asyncio
 import datetime
 
 import discord
@@ -125,7 +124,7 @@ class ChatSummary(discord.Cog):
         db = await get_conn()
         cur = await db.execute('SELECT guild_id, channel_id, messages FROM chat_summary WHERE enabled = 1')
         for i in await cur.fetchall():
-            yesterday = get_now_for_server(i[0])
+            yesterday = await get_now_for_server(i[0])
 
             if yesterday.hour != 0 or yesterday.minute != 0:
                 continue
@@ -170,9 +169,9 @@ class ChatSummary(discord.Cog):
             else:
                 date = f"{yesterday.year}/{month}/{day}"
 
-            chat_summary_message = await trl(0, guild.id, "chat_summary_title").format(date=date)
+            chat_summary_message = (await trl(0, guild.id, "chat_summary_title")).format(date=date)
             chat_summary_message += '\n'
-            chat_summary_message += await trl(0, guild.id, "chat_summary_messages").format(messages=i[2])
+            chat_summary_message += (await trl(0, guild.id, "chat_summary_messages")).format(messages=i[2])
 
             await db.execute(
                 'SELECT member_id, messages FROM chat_summary_members WHERE guild_id = ? AND channel_id = ? ORDER BY '
@@ -183,11 +182,11 @@ class ChatSummary(discord.Cog):
                 jndex += 1
                 member = guild.get_member(j[0])
                 if member is not None:
-                    chat_summary_message += await trl(0, guild.id, "chat_summary_line").format(position=jndex,
+                    chat_summary_message += (await trl(0, guild.id, "chat_summary_line")).format(position=jndex,
                                                                                          name=member.display_name,
                                                                                          messages=j[1])
                 else:
-                    chat_summary_message += await trl(0, guild.id, "chat_summary_line_unknown_user").format(position=jndex,
+                    chat_summary_message += (await trl(0, guild.id, "chat_summary_line_unknown_user")).format(position=jndex,
                                                                                                       id=j[0],
                                                                                                       messages=j[1])
 
@@ -317,7 +316,7 @@ class ChatSummary(discord.Cog):
         await log_into_logs(ctx.guild, logging_embed)
 
         # Respond
-        await ctx.respond(await trl(ctx.user.id, ctx.guild.id, "chat_summary_dateformat_set", append_tip=True).format(format=date_format),
+        await ctx.respond((await trl(ctx.user.id, ctx.guild.id, "chat_summary_dateformat_set", append_tip=True)).format(format=date_format),
                           ephemeral=True)
 
     @chat_summary_subcommand.command(name="countedits",

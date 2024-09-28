@@ -13,7 +13,6 @@ from discord.ext import commands
 
 from utils.settings import get_setting, set_setting
 
-api_list = []
 
 svc_tips = [
     "Append -a to download audio only (Great for music).",
@@ -139,12 +138,12 @@ class MediaDownloader(discord.Cog):
                     if message is not None:
                         await message.edit(content=f"Downloading {details['filename']}...\n-# " + get_random_tip())
                     async with session.get(details['url']) as r:
-                        with open(details['filename'], "wb") as f:
+                        with open(details['filename'], "wb") as f2:
                             while True:
                                 chunk = await r.content.read(1024)
                                 if not chunk:
                                     break
-                                f.write(chunk)
+                                f2.write(chunk)
 
                     if os.path.exists(details['filename']) and 0 < os.path.getsize(details['filename']) < max_upload_size:
                         if message is not None:
@@ -175,12 +174,12 @@ class MediaDownloader(discord.Cog):
                         if message is not None:
                             await message.edit(content="Attempting to download audio...\n-# " + get_random_tip())
                         async with session.get(details['audio']) as r:
-                            with open(details['audioFilename'], "wb") as f:
+                            with open(details['audioFilename'], "wb") as f2:
                                 while True:
                                     chunk = await r.content.read(1024)
                                     if not chunk:
                                         break
-                                    f.write(chunk)
+                                    f2.write(chunk)
                         files_downloaded.append(details['audioFilename'])
                         if os.path.exists(details['audioFilename']) and 0 < os.path.getsize(details['audioFilename']) < max_upload_size:
                             files_to_upload.append(discord.File(details['audioFilename']))
@@ -190,12 +189,12 @@ class MediaDownloader(discord.Cog):
                         for j, v in enumerate(details['picker'][i:i + 9]):
                             file_name = v['type'] + str(i + j) + ".jpeg"
                             async with session.get(v['url']) as r:
-                                with open(file_name, "wb") as f:
+                                with open(file_name, "wb") as f2:
                                     while True:
                                         chunk = await r.content.read(1024)
                                         if not chunk:
                                             break
-                                        f.write(chunk)
+                                        f2.write(chunk)
                             files_downloaded.append(file_name)
                             if os.path.exists(file_name) and 0 < os.path.getsize(file_name) < max_upload_size:
                                 curr_files_to_upload.append(discord.File(file_name))
@@ -219,7 +218,7 @@ class MediaDownloader(discord.Cog):
     @commands.has_permissions(manage_guild=True)
     @commands.guild_only()
     async def enabled(self, ctx: discord.ApplicationContext, enabled: bool):
-        set_setting(ctx.guild.id, f"{ctx.channel.id}_media_downloader_enabled", str(enabled).lower())
+        await set_setting(ctx.guild.id, f"{ctx.channel.id}_media_downloader_enabled", str(enabled).lower())
         await ctx.respond("Set enabled to " + str(enabled) + " in this channel.", ephemeral=True)
 
     @media_downloader_group.command(name="verbose", description="Set if the media downloader should be verbose.")
@@ -227,7 +226,7 @@ class MediaDownloader(discord.Cog):
     @commands.has_permissions(manage_guild=True)
     @commands.guild_only()
     async def verbose(self, ctx: discord.ApplicationContext, verbose: bool):
-        set_setting(ctx.guild.id, f"{ctx.channel.id}_media_downloader_verbose", str(verbose).lower())
+        await set_setting(ctx.guild.id, f"{ctx.channel.id}_media_downloader_verbose", str(verbose).lower())
         await ctx.respond("Set verbose to " + str(verbose) + " in this channel.", ephemeral=True)
 
     @media_downloader_group.command(name="music", description="Set if the media downloader should be in music mode.")
@@ -235,5 +234,5 @@ class MediaDownloader(discord.Cog):
     @commands.has_permissions(manage_guild=True)
     @commands.guild_only()
     async def is_music_channel(self, ctx: discord.ApplicationContext, music_mode: bool):
-        set_setting(ctx.guild.id, f"{ctx.channel.id}_media_downloader_music", str(music_mode).lower())
+        await set_setting(ctx.guild.id, f"{ctx.channel.id}_media_downloader_music", str(music_mode).lower())
         await ctx.respond("Set is music channel to " + str(music_mode) + " in this channel.", ephemeral=True)
