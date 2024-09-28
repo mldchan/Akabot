@@ -46,14 +46,14 @@ class ReactionRoles(discord.Cog):
 
     reaction_roles_subcommand = discord.SlashCommandGroup(name="reaction_roles", description="Create a reaction role")
 
-    def create_view(self, type: str, roles: list[discord.Role]) -> discord.ui.View:
+    def create_view(self, rr_type: str, roles: list[discord.Role]) -> discord.ui.View:
         view = discord.ui.View()
         for role in roles:
             if role is None:
                 continue
 
             view.add_item(
-                discord.ui.Button(style=discord.ButtonStyle.primary, label=role.name, custom_id=f"rr{type}-{role.id}"))
+                discord.ui.Button(style=discord.ButtonStyle.primary, label=role.name, custom_id=f"rr{rr_type}-{role.id}"))
 
         return view
 
@@ -65,23 +65,23 @@ class ReactionRoles(discord.Cog):
     @commands_ext.guild_only()
     @commands_ext.bot_has_permissions(send_messages=True)
     @analytics("create_reaction_role")
-    async def create_reaction_role(self, interaction: discord.ApplicationContext, type: str, message: str,
+    async def create_reaction_role(self, interaction: discord.ApplicationContext, rr_type: str, message: str,
                                    role_1: discord.Role, role_2: discord.Role = None, role_3: discord.Role = None,
                                    role_4: discord.Role = None, role_5: discord.Role = None,
                                    role_6: discord.Role = None, role_7: discord.Role = None,
                                    role_8: discord.Role = None, role_9: discord.Role = None,
                                    role_10: discord.Role = None) -> None:
-        if type == "single":
-            type = "s"
-        elif type == "add only":
-            type = "a"
-        elif type == "remove only":
-            type = "r"
+        if rr_type == "single":
+            rr_type = "s"
+        elif rr_type == "add only":
+            rr_type = "a"
+        elif rr_type == "remove only":
+            rr_type = "r"
         else:
-            type = "n"
+            rr_type = "n"
 
         roles = [role_1, role_2, role_3, role_4, role_5, role_6, role_7, role_8, role_9, role_10]
-        view = self.create_view(type, roles)
+        view = self.create_view(rr_type, roles)
 
         await interaction.channel.send(content=message, view=view)
         await interaction.response.send_message(
@@ -167,13 +167,13 @@ class ReactionRoles(discord.Cog):
         if split[0] == "rrn":
             if role in interaction.user.roles:
                 await interaction.response.send_message(
-                    await trl(interaction.user.id, interaction.guild.id, "reaction_roles_role_removed", append_tip=True).format(
+                    (await trl(interaction.user.id, interaction.guild.id, "reaction_roles_role_removed", append_tip=True)).format(
                         mention=role.mention), ephemeral=True)
                 await interaction.user.remove_roles(role, reason="Reaction role")
                 return
             if role not in interaction.user.roles:
                 await interaction.response.send_message(
-                    await trl(interaction.user.id, interaction.guild.id, "reaction_roles_role_added", append_tip=True).format(
+                    (await trl(interaction.user.id, interaction.guild.id, "reaction_roles_role_added", append_tip=True)).format(
                         mention=role.mention), ephemeral=True)
                 await interaction.user.add_roles(role, reason="Reaction role")
                 return
@@ -185,7 +185,7 @@ class ReactionRoles(discord.Cog):
                 return
             if role not in interaction.user.roles:
                 await interaction.response.send_message(
-                    await trl(interaction.user.id, interaction.guild.id, "reaction_roles_role_added", append_tip=True).format(
+                    (await trl(interaction.user.id, interaction.guild.id, "reaction_roles_role_added", append_tip=True)).format(
                         mention=role.mention), ephemeral=True)
                 await interaction.user.add_roles(role, reason="Reaction role")
                 return
@@ -197,7 +197,7 @@ class ReactionRoles(discord.Cog):
                 return
             if role in interaction.user.roles:
                 await interaction.response.send_message(
-                    await trl(interaction.user.id, interaction.guild.id, "reaction_roles_role_removed", append_tip=True).format(
+                    (await trl(interaction.user.id, interaction.guild.id, "reaction_roles_role_removed", append_tip=True)).format(
                         mention=role.mention), ephemeral=True)
                 await interaction.user.remove_roles(role, reason="Reaction role")
                 return
@@ -205,13 +205,13 @@ class ReactionRoles(discord.Cog):
         if split[0] == "rrs":
             if role in interaction.user.roles:
                 await interaction.response.send_message(
-                    await trl(interaction.user.id, interaction.guild.id, "reaction_roles_already_selected").format(
+                    (await trl(interaction.user.id, interaction.guild.id, "reaction_roles_already_selected")).format(
                         mention=role.mention), ephemeral=True)
                 return
 
             roles = get_roles(interaction.message)
             await interaction.response.send_message(
-                await trl(interaction.user.id, interaction.guild.id, "reaction_roles_selected", append_tip=True).format(mention=role.mention),
+                (await trl(interaction.user.id, interaction.guild.id, "reaction_roles_selected", append_tip=True)).format(mention=role.mention),
                 ephemeral=True)
             await interaction.user.remove_roles(*roles, reason="Reaction role")
             await interaction.user.add_roles(role, reason="Reaction role")
