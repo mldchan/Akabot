@@ -1,11 +1,10 @@
-import datetime
-
 import discord
 from discord.ext import tasks, commands
 
 from utils.analytics import analytics
+from utils.birthday_announcements import get_birthdays_today, get_age_of_user
 from utils.languages import get_translation_for_key_localized as trl
-from utils.per_user_settings import search_settings_by_value, get_per_user_setting
+from utils.per_user_settings import get_per_user_setting
 from utils.settings import get_setting
 from utils.settings import set_setting
 from utils.tzutil import get_now_for_server
@@ -25,7 +24,7 @@ class BirthdayAnnouncements(discord.Cog):
     @analytics("birthday_announcements channel")
     async def set_channel(self, ctx: discord.ApplicationContext, channel: discord.TextChannel):
         await set_setting(ctx.guild.id, "birthday_announcements_channel", str(channel.id))
-        await ctx.respond(await trl(ctx.user.id, ctx.guild.id, "birthday_announcements_channel_set", append_tip=True).format(channel=channel.mention), ephemeral=True)
+        await ctx.respond((await trl(ctx.user.id, ctx.guild.id, "birthday_announcements_channel_set", append_tip=True)).format(channel=channel.mention), ephemeral=True)
 
     @discord.Cog.listener()
     async def on_ready(self):
@@ -35,51 +34,46 @@ class BirthdayAnnouncements(discord.Cog):
     async def birthday_announcements(self):
         await self.handle_birthday_announcements()
 
+    @tasks.loop(seconds=60)
     async def handle_birthday_announcements(self):
-
-        date_string = datetime.datetime.now().strftime("%m-%d")
-
         for guild in self.bot.guilds:
-            birthday_announcements_channel = int(await get_setting(guild.id, "birthday_announcements_channel", "0"))
-            if birthday_announcements_channel == 0:
-                continue
-
             now = await get_now_for_server(guild.id)
-            if now.hour != 12 or now.minute != 0:
+            (hour, minute) = (now.hour, now.minute)
+            if hour != 12 and minute != 0:
                 continue
 
-            birthdays_this_day = await search_settings_by_value(date_string)
-            for i in birthdays_this_day:
-                member = guild.get_member(i[0])
-                if member is None:
+            for birthday in await get_birthdays_today():
+                user = guild.get_member(birthday[0])
+                if user is None:
                     continue
 
-                if get_per_user_setting(member.id, f'birthday_announcements_{str(guild.id)}', 'true') == 'true':
-                    message = await get_setting(guild.id, "birthday_announcements_message", "Today is {mention}'s birthday! 🎉 Say happy birthday! 🎂")
-                    message = message.replace("{mention}", member.mention)
-                    message = message.replace("{name}", member.display_name)
-                    message = message.replace("{guild}", guild.name)
-                    message = message.replace("{birthday}", i[1])
+                send_dm = await get_per_user_setting(user.id, "birthday_send_dm", "true") == "true"
 
-                    if get_per_user_setting(member.id, 'birthday_reveal_age', 'false') == 'true':
-                        message = message.replace("{age}", str(now.year - int(i[1][:4])))
-                    else:
-                        message = message.replace("{age}", "*this user's age is hidden*")
-
-                    # Send the message
-                    channel = guild.get_channel(birthday_announcements_channel)
-                    await channel.send(message)
-
-                # Send DM if enabled
-                if get_per_user_setting(member.id, 'birthday_send_dm', 'false') == 'true':
+                if send_dm:
                     try:
-                        if get_per_user_setting(member.id, 'birthday_reveal_age', 'false'):
-                            await member.send(await trl(member.id, 0, "birthday_dm_age").format(age=str(now.year - int(i[1][:4]))))
-                        else:
-                            await member.send(await trl(member.id, 0, "birthday_dm"))
-
+                        await user.send(await trl(user.id, guild.id, "birthday_dm"))
                     except discord.Forbidden:
                         pass
+
+                if await get_per_user_setting(user.id, f"birthday_announcements_{guild.id}", "true") == "true":
+                    channel_id = await get_setting(guild.id, "birthday_announcements_channel", "0")
+                    channel = guild.get_channel(int(channel_id))
+                    if channel is None:
+                        continue
+
+                    message = await get_setting(guild.id, "birthday_announcements_message", "Happy birthday {user}!")
+                    message = message.replace("{date}", now.strftime("%B %d"))
+                    message = message.replace("{year}", str(now.year))
+                    message = message.replace("{time}", now.strftime("%H:%M"))
+                    message = message.replace("{age}", str(await get_age_of_user(user.id)))
+                    message = message.replace("{user}", user.mention)
+                    message = message.replace("{username}", user.display_name)
+                    message = message.replace("{server}", guild.name)
+                    message = message.replace("{server_id}", str(guild.id))
+                    message = message.replace("{user_id}", str(user.id))
+
+                    await channel.send(message)
+
 
     @birthday_announcements_group.command(name="message", description="Customize the birthday announcement message")
     @discord.option(name="message", description="The message to send on birthdays")

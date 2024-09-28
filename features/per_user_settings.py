@@ -1,11 +1,14 @@
 import re
+from datetime import datetime
 
 import discord
 
 from utils.analytics import analytics
-from utils.languages import get_language_names, language_name_to_code, get_language_name
+from utils.birthday_announcements import set_birthday, remove_birthday
+from utils.languages import get_language_names, language_name_to_code, get_language_name, get_language
 from utils.languages import get_translation_for_key_localized as trl
 from utils.per_user_settings import set_per_user_setting, db_init, get_per_user_setting, unset_per_user_setting
+from utils.tips import append_tip_to_message
 from utils.tzutil import get_now_for_server
 
 
@@ -49,40 +52,38 @@ class PerUserSettings(discord.Cog):
             return
 
         # Validate valid year, month, and day
-        if int(birthday[:4]) < 1900 or int(birthday[:4]) > get_now_for_server(ctx.guild.id).year - 14 or int(birthday[5:7]) < 1 or int(birthday[5:7]) > 12 or int(birthday[8:]) < 1 or int(
+        if int(birthday[:4]) < 1900 or int(birthday[:4]) > (await get_now_for_server(ctx.guild.id)).year - 14 or int(birthday[5:7]) < 1 or int(birthday[5:7]) > 12 or int(birthday[8:]) < 1 or int(
                 birthday[8:]) > 31:
             await ctx.respond(await trl(ctx.user.id, ctx.guild.id, "per_user_birthday_invalid"), ephemeral=True)
             return
 
-        set_per_user_setting(ctx.user.id, 'birthday_date', birthday[5:])
-        set_per_user_setting(ctx.user.id, 'birthday_year', birthday[:4])
-        await ctx.respond(await trl(ctx.user.id, ctx.guild.id, "per_user_birthday_set", append_tip=True).format(birthday=birthday), ephemeral=True)
+        await set_birthday(ctx.user.id, datetime.strptime(birthday, '%Y-%m-%d'))
+        await ctx.respond((await trl(ctx.user.id, ctx.guild.id, "per_user_birthday_set", append_tip=True)).format(birthday=birthday), ephemeral=True)
 
     @user_settings_group.command(name="birthday_settings", description="Personalize your birthday settings")
-    @discord.option(name="reveal_age", type=bool, description="Whether to display age in birthday announcements")
     @discord.option(name="send_dm", type=bool, description="Whether to allow this bot to send DMs to you")
     @analytics("user_settings birthday_settings")
-    async def set_birthday_settings(self, ctx: discord.ApplicationContext, reveal_age: bool | None = None, send_dm: bool | None = None):
-        if reveal_age is not None:
-            set_per_user_setting(ctx.user.id, 'birthday_reveal_age', str(reveal_age).lower())
+    async def set_birthday_settings(self, ctx: discord.ApplicationContext, send_dm: bool | None = None):
         if send_dm is not None:
-            set_per_user_setting(ctx.user.id, 'birthday_send_dm', str(send_dm).lower())
+            await set_per_user_setting(ctx.user.id, 'birthday_send_dm', str(send_dm).lower())
 
-        reveal_age = get_per_user_setting(ctx.user.id, 'birthday_reveal_age', "false")
-        send_dm = get_per_user_setting(ctx.user.id, 'birthday_send_dm', "false")
-
-        reveal_age = await trl(ctx.user.id, ctx.guild.id, "per_user_birthday_reveal_age_enabled") if reveal_age else await trl(ctx.user.id, ctx.guild.id, "per_user_birthday_reveal_age_disabled")
-
-        send_dm = await trl(ctx.user.id, ctx.guild.id, "per_user_birthday_send_dm_enabled", append_tip=True) if send_dm else await trl(ctx.user.id, ctx.guild.id, "per_user_birthday_send_dm_disabled",
+        send_dm = await get_per_user_setting(ctx.user.id, 'birthday_send_dm', "false")
+        send_dm = await trl(ctx.user.id, ctx.guild.id, "per_user_birthday_send_dm_enabled") if send_dm else await trl(ctx.user.id, ctx.guild.id, "per_user_birthday_send_dm_disabled",
                                                                                                                            append_tip=True)
 
-        await ctx.respond(f"{reveal_age}\n{send_dm}", ephemeral=True)
+        try:
+            await ctx.user.send("This is a test message to see if I can send you DMs. If you can see this, then I can send you birthday announcements!")
+        except discord.Forbidden:
+            send_dm += "\n\n" + await trl(ctx.user.id, ctx.guild.id, "birthdays_enable_dms")
+
+        send_dm = append_tip_to_message(ctx.guild.id, ctx.user.id, send_dm, await get_language(ctx.guild.id, ctx.user.id))
+        await ctx.respond(f"{send_dm}", ephemeral=True)
 
     @user_settings_group.command(name="birthday_announcements", description="Whether to announce birthdays in the server you're currently in")
     @discord.option(name="state", description="Send announcements in this server")
     @analytics("user_settings birthday_announcements")
     async def set_birthday_announcement(self, ctx: discord.ApplicationContext, state: bool):
-        set_per_user_setting(ctx.user.id, f'birthday_announcements_{str(ctx.guild.id)}', str(state).lower())
+        await set_per_user_setting(ctx.user.id, f'birthday_announcements_{str(ctx.guild.id)}', str(state).lower())
         if state:
             state_str = await trl(ctx.user.id, ctx.guild.id, "per_user_birthday_announcements_enabled", append_tip=True)
         else:
@@ -92,16 +93,15 @@ class PerUserSettings(discord.Cog):
     @user_settings_group.command(name='clear_birthday', description='Clear all data about your birthday from the bot')
     @analytics("user_settings clear_birthday")
     async def clear_birthday(self, ctx: discord.ApplicationContext):
-        unset_per_user_setting(ctx.user.id, 'birthday_date')
-        unset_per_user_setting(ctx.user.id, 'birthday_year')
-        unset_per_user_setting(ctx.user.id, 'birthday_reveal_age')
-        unset_per_user_setting(ctx.user.id, 'birthday_send_dm')
+        await remove_birthday(ctx.user.id)
+        await unset_per_user_setting(ctx.user.id, 'birthday_reveal_age')
+        await unset_per_user_setting(ctx.user.id, 'birthday_send_dm')
         await ctx.respond(await trl(ctx.user.id, ctx.guild.id, "per_user_birthday_cleared", append_tip=True), ephemeral=True)
 
     @user_settings_group.command(name='tips', description='Enable or disable tips')
     @analytics('user_settings tips')
     async def set_tips(self, ctx: discord.ApplicationContext, state: bool):
-        set_per_user_setting(ctx.user.id, 'tips_enabled', str(state).lower())
+        await set_per_user_setting(ctx.user.id, 'tips_enabled', str(state).lower())
         if state:
             state_str = await trl(ctx.user.id, ctx.guild.id, "per_user_tips_enabled", append_tip=True)
         else:
