@@ -244,9 +244,9 @@ class Leveling(discord.Cog):
         if msg.author.bot:
             return
 
-        before_level = get_level_for_xp(msg.guild.id, await db_get_user_xp(msg.guild.id, msg.author.id))
+        before_level = await get_level_for_xp(msg.guild.id, await db_get_user_xp(msg.guild.id, msg.author.id))
         await db_add_user_xp(msg.guild.id, msg.author.id, 3)
-        after_level = get_level_for_xp(msg.guild.id, await db_get_user_xp(msg.guild.id, msg.author.id))
+        after_level = await get_level_for_xp(msg.guild.id, await db_get_user_xp(msg.guild.id, msg.author.id))
 
         if not msg.channel.permissions_for(msg.guild.me).send_messages:
             return
@@ -267,11 +267,11 @@ class Leveling(discord.Cog):
     async def get_level(self, ctx: discord.ApplicationContext, user: discord.User = None):
         user = user or ctx.user
 
-        level_xp = db_get_user_xp(ctx.guild.id, user.id)
-        level = get_level_for_xp(ctx.guild.id, level_xp)
-        multiplier = db_calculate_multiplier(ctx.guild.id)
-        next_level_xp = get_xp_for_level(ctx.guild.id, level + 1)
-        multiplier_list = db_multiplier_getall(ctx.guild.id)
+        level_xp = await db_get_user_xp(ctx.guild.id, user.id)
+        level = await get_level_for_xp(ctx.guild.id, level_xp)
+        multiplier = await db_calculate_multiplier(ctx.guild.id)
+        next_level_xp = await get_xp_for_level(ctx.guild.id, level + 1)
+        multiplier_list = await db_multiplier_getall(ctx.guild.id)
 
         msg = ""
         for i in multiplier_list:
@@ -292,9 +292,9 @@ class Leveling(discord.Cog):
             msg += (await trl(ctx.user.id, ctx.guild.id, "leveling_level_multiplier_row")).format(name=i[1], multiplier=i[2], start=i[3], end=i[4])
 
         if user == ctx.user:
-            icon = get_per_user_setting(ctx.user.id, 'leveling_icon', '')
+            icon = await get_per_user_setting(ctx.user.id, 'leveling_icon', '')
             response = (await trl(ctx.user.id, ctx.guild.id, "leveling_level_info_self")).format(icon=icon, level=level, level_xp=level_xp, next_level_xp=next_level_xp, next_level=level + 1,
-                                                                                               multiplier=multiplier)
+                                                                                                 multiplier=multiplier)
 
             if len(msg) > 0:
                 response += await trl(ctx.user.id, ctx.guild.id, "leveling_level_multiplier_title")
@@ -302,16 +302,15 @@ class Leveling(discord.Cog):
 
             await ctx.respond(response, ephemeral=True)
         else:
-            icon = get_per_user_setting(user.id, 'leveling_icon', '')
+            icon = await get_per_user_setting(user.id, 'leveling_icon', '')
             response = (await trl(ctx.user.id, ctx.guild.id, "leveling_level_info_another")).format(icon=icon, user=user.mention, level=level, level_xp=level_xp, next_level_xp=next_level_xp,
-                                                                                                  next_level=level + 1,
-                                                                                                  multiplier=multiplier)
+                                                                                                    next_level=level + 1, multiplier=multiplier)
 
             if len(msg) > 0:
                 response += await trl(ctx.user.id, ctx.guild.id, "leveling_level_multiplier_title")
                 response += f'{msg}'
 
-            if get_per_user_setting(ctx.user.id, 'tips_enabled', 'true') == 'true':
+            if await get_per_user_setting(ctx.user.id, 'tips_enabled', 'true') == 'true':
                 language = await get_language(ctx.guild.id, ctx.user.id)
                 response = append_tip_to_message(ctx.guild.id, ctx.user.id, response, language)
             await ctx.respond(response, ephemeral=True)
@@ -326,7 +325,7 @@ class Leveling(discord.Cog):
     async def list_settings(self, ctx: discord.ApplicationContext):
         leveling_xp_multiplier = await get_setting(ctx.guild.id, 'leveling_xp_multiplier', '1')
 
-        multiplier_list = db_multiplier_getall(ctx.guild.id)
+        multiplier_list = await db_multiplier_getall(ctx.guild.id)
         multiplier_list_msg = ""
 
         for i in multiplier_list:
@@ -382,7 +381,7 @@ class Leveling(discord.Cog):
             return
 
         # Verify if the multiplier already exists
-        if db_multiplier_exists(ctx.guild.id, name):
+        if await db_multiplier_exists(ctx.guild.id, name):
             await ctx.respond((await trl(ctx.user.id, ctx.guild.id, "leveling_multiplier_already_exists")).format(name=name), ephemeral=True)
             return
 
@@ -401,7 +400,7 @@ class Leveling(discord.Cog):
             return
 
         # Multipliers apply to every year
-        db_multiplier_add(ctx.guild.id, name, multiplier, start_month, start_day, end_month, end_day)
+        await db_multiplier_add(ctx.guild.id, name, multiplier, start_month, start_day, end_month, end_day)
 
         # Logging embed
         logging_embed = discord.Embed(title=await trl(0, ctx.guild.id, "leveling_add_multiplier_log_title"))
@@ -425,11 +424,11 @@ class Leveling(discord.Cog):
     @discord.option(name="new_name", description="The new name of the multiplier", type=str)
     @analytics("leveling change multiplier name")
     async def change_multiplier_name(self, ctx: discord.ApplicationContext, old_name: str, new_name: str):
-        if not db_multiplier_exists(ctx.guild.id, old_name):
+        if not await db_multiplier_exists(ctx.guild.id, old_name):
             await ctx.respond((await trl(ctx.user.id, ctx.guild.id, "leveling_multiplier_doesnt_exist")).format(name=old_name), ephemeral=True)
             return
 
-        if db_multiplier_exists(ctx.guild.id, new_name):
+        if await db_multiplier_exists(ctx.guild.id, new_name):
             await ctx.respond((await trl(ctx.user.id, ctx.guild.id, "leveling_multiplier_already_exists")).format(name=new_name), ephemeral=True)
             return
 
@@ -456,15 +455,15 @@ class Leveling(discord.Cog):
     @discord.option(name="multiplier", description="The new multiplier", type=int)
     @analytics("leveling change multiplier multiplier")
     async def change_multiplier_multiplier(self, ctx: discord.ApplicationContext, name: str, multiplier: int):
-        if not db_multiplier_exists(ctx.guild.id, name):
+        if not await db_multiplier_exists(ctx.guild.id, name):
             await ctx.respond(await trl(ctx.user.id, ctx.guild.id, "leveling_multiplier_doesnt_exist"), ephemeral=True)
             return
 
         # Get old setting
-        old_multiplier = db_multiplier_get(ctx.guild.id, name)[2]
+        old_multiplier = await db_multiplier_get(ctx.guild.id, name)[2]
 
         # Set new setting
-        db_multiplier_change_multiplier(ctx.guild.id, name, multiplier)
+        await db_multiplier_change_multiplier(ctx.guild.id, name, multiplier)
 
         # Logging embed
         logging_embed = discord.Embed(title=await trl(0, ctx.guild.id, "leveling_multiplier_logs_title"))
@@ -530,7 +529,7 @@ class Leveling(discord.Cog):
     @discord.option(name="end_date", description="The new end date of the multiplier, in format MM-DD", type=str)
     @analytics("leveling change multiplier end date")
     async def change_multiplier_end_date(self, ctx: discord.ApplicationContext, name: str, end_date: str):
-        if not db_multiplier_exists(ctx.guild.id, name):
+        if not await db_multiplier_exists(ctx.guild.id, name):
             await ctx.respond((await trl(ctx.user.id, ctx.guild.id, "leveling_multiplier_doesnt_exist")).format(name=name), ephemeral=True)
             return
 
@@ -551,7 +550,7 @@ class Leveling(discord.Cog):
         year = now.year
 
         # Set new setting
-        db_multiplier_change_end_date(ctx.guild.id, name, datetime.datetime(year, end_month, end_day))
+        await db_multiplier_change_end_date(ctx.guild.id, name, datetime.datetime(year, end_month, end_day))
 
         # Logging embed
         logging_embed = discord.Embed(title=await trl(0, ctx.guild.id, "leveling_end_date_log_title"))
@@ -572,15 +571,15 @@ class Leveling(discord.Cog):
     @discord.option(name="name", description="The name of the multiplier", type=str)
     @analytics("leveling remove multiplier")
     async def remove_multiplier(self, ctx: discord.ApplicationContext, name: str):
-        if not db_multiplier_exists(ctx.guild.id, name):
+        if not await db_multiplier_exists(ctx.guild.id, name):
             await ctx.respond((await trl(ctx.user.id, ctx.guild.id, "leveling_multiplier_doesnt_exist")).format(name=name), ephemeral=True)
             return
 
         # Get old setting
-        old_multiplier = db_multiplier_get(ctx.guild.id, name)[2]
+        old_multiplier = await db_multiplier_get(ctx.guild.id, name)[2]
 
         # Set new setting
-        db_multiplier_remove(ctx.guild.id, name)
+        await db_multiplier_remove(ctx.guild.id, name)
 
         # Logging embed
         logging_embed = discord.Embed(title=await trl(ctx.user.id, ctx.guild.id, "leveling_remove_multiplier_log_title"))
@@ -600,7 +599,7 @@ class Leveling(discord.Cog):
     @commands_ext.guild_only()
     @analytics("leveling get multiplier")
     async def get_multiplier(self, ctx: discord.ApplicationContext):
-        multiplier = db_calculate_multiplier(ctx.guild.id)
+        multiplier = await db_calculate_multiplier(ctx.guild.id)
         await ctx.respond((await trl(ctx.user.id, ctx.guild.id, "leveling_get_multiplier_response", append_tip=True)).format(multiplier=multiplier), ephemeral=True)
 
     @leveling_subcommand.command(name='set_xp_per_level', description='Set the XP per level')
@@ -646,7 +645,7 @@ class Leveling(discord.Cog):
         else:
             logging_embed.add_field(name=await trl(0, ctx.guild.id, "logging_role"),
                                     value=(await trl(0, ctx.guild.id, "leveling_set_reward_log_role_changed")).format(old_reward=old_role.mention if old_role is not None else old_role_id,
-                                                                                                                    new_reward=role.mention))
+                                                                                                                      new_reward=role.mention))
 
         # Send into logs
         await log_into_logs(ctx.guild, logging_embed)

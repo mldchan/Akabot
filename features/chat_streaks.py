@@ -133,14 +133,14 @@ class ChatStreaks(discord.Cog):
         if state == "expired":
             if old_streak == 0:
                 return
-            if get_per_user_setting(message.author.id, 'chat_streaks_alerts', 'on') == 'off':
+            if await get_per_user_setting(message.author.id, 'chat_streaks_alerts', 'on') == 'off':
                 return
             msg = await message.reply(
                 (await trl(message.author.id, message.guild.id, "chat_streaks_expired")).format(streak=old_streak))
             await msg.delete(delay=3)
 
         if state == "updated":
-            if get_per_user_setting(message.author.id, 'chat_streaks_alerts', 'on') != 'on':
+            if await get_per_user_setting(message.author.id, 'chat_streaks_alerts', 'on') != 'on':
                 return  # Only trigger if the user has the setting on
             msg = await message.reply(
                 (await trl(message.author.id, message.guild.id, "chat_streaks_updated")).format(streak=new_streak))
@@ -221,7 +221,7 @@ class ChatStreaks(discord.Cog):
                                                                                              user=member.mention,
                                                                                              days=str(days))
 
-        if get_per_user_setting(ctx.user.id, 'tips_enabled', 'true') == 'true':
+        if await get_per_user_setting(ctx.user.id, 'tips_enabled', 'true') == 'true':
             language = await get_language(ctx.guild.id, ctx.user.id)
             message = append_tip_to_message(ctx.guild.id, ctx.user.id, message, language)
         await ctx.respond(message, ephemeral=True)

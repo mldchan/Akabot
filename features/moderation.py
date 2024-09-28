@@ -513,7 +513,7 @@ class Moderation(discord.Cog):
 
         ephemerality = await get_setting(ctx.guild.id, "moderation_ephemeral", "true")
 
-        if get_per_user_setting(ctx.user.id, 'tips_enabled', 'true') == 'true':
+        if await get_per_user_setting(ctx.user.id, 'tips_enabled', 'true') == 'true':
             language = await get_language(ctx.guild.id, ctx.user.id)
             action_str = append_tip_to_message(ctx.guild.id, ctx.user.id, action_str, language)
         await ctx.respond(action_str, ephemeral=ephemerality == "true")
