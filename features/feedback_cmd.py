@@ -123,11 +123,11 @@ class ConfirmSubmitBugReport(discord.ui.View):
         self.cancel_github.callback = self.cancel_gh
         self.add_item(self.cancel_github)
 
-    async def submit(self, button: discord.ui.Button, interaction: discord.Interaction):
+    async def submit(self, interaction: discord.Interaction):
         modal = BugReportModal(self.user_id)
         await interaction.response.send_modal(modal)
 
-    async def cancel_gh(self, button: discord.ui.Button, interaction: discord.Interaction):
+    async def cancel_gh(self, interaction: discord.Interaction):
         self.disable_all_items()
         await interaction.respond(
             trl(self.user_id, 0, "feedback_bug_report_direct", append_tip=True),
@@ -148,11 +148,11 @@ class ConfirmSubmitFeatureRequest(discord.ui.View):
         self.cancel_github.callback = self.cancel_gh
         self.add_item(self.cancel_github)
 
-    async def submit(self, button: discord.ui.Button, interaction: discord.Interaction):
+    async def submit(self, interaction: discord.Interaction):
         modal = FeatureModal(self.user_id)
         await interaction.response.send_modal(modal)
 
-    async def cancel_gh(self, button: discord.ui.Button, interaction: discord.Interaction):
+    async def cancel_gh(self, interaction: discord.Interaction):
         await interaction.respond(
             trl(self.user_id, 0, "feedback_feature_direct", append_tip=True),
             ephemeral=True)
