@@ -158,7 +158,7 @@ class ChatSummary(discord.Cog):
                                  'messages DESC LIMIT 5', (i[0], i[1]))
 
                 jndex = 0  # idk
-                for j in cur.fetchall():
+                for j in await cur.fetchall():
                     jndex += 1
                     member = guild.get_member(j[0])
                     if member is not None:
