@@ -38,31 +38,32 @@ class ChatRevive(discord.Cog):
     @tasks.loop(minutes=1)
     async def revive_channels(self):
         db = await get_conn()
-        for guild in self.bot.guilds:
-            cur = await db.execute('SELECT * FROM chat_revive WHERE guild_id = ?', (guild.id,))
-            settings = await cur.fetchall()
-            for revive_channel in settings:
-                if revive_channel[5]:
-                    continue
-
-                if time.time() - revive_channel[4] > revive_channel[3]:
-                    role = guild.get_role(revive_channel[2])
-                    if role is None:
+        try:
+            for guild in self.bot.guilds:
+                cur = await db.execute('SELECT * FROM chat_revive WHERE guild_id = ?', (guild.id,))
+                settings = await cur.fetchall()
+                for revive_channel in settings:
+                    if revive_channel[5]:
                         continue
 
-                    channel = guild.get_channel(revive_channel[1])
-                    if channel is None:
-                        continue
+                    if time.time() - revive_channel[4] > revive_channel[3]:
+                        role = guild.get_role(revive_channel[2])
+                        if role is None:
+                            continue
 
-                    if not channel.can_send():
-                        continue
+                        channel = guild.get_channel(revive_channel[1])
+                        if channel is None:
+                            continue
 
-                    await channel.send(f'{role.mention}, this channel has been inactive for a while.')
-                    await db.execute('UPDATE chat_revive SET revived = ? WHERE guild_id = ? AND channel_id = ?',
-                                (True, guild.id, revive_channel[1]))
+                        if not channel.can_send():
+                            continue
 
-        await db.commit()
-        await db.close()
+                        await channel.send(f'{role.mention}, this channel has been inactive for a while.')
+                        await db.execute('UPDATE chat_revive SET revived = ? WHERE guild_id = ? AND channel_id = ?',
+                                         (True, guild.id, revive_channel[1]))
+        finally:
+            await db.commit()
+            await db.close()
 
     chat_revive_subcommand = discord.SlashCommandGroup(name='chatrevive', description='Revive channels')
 
@@ -130,8 +131,8 @@ class ChatRevive(discord.Cog):
         await db.execute('DELETE FROM chat_revive WHERE guild_id = ? AND channel_id = ?', (ctx.guild.id, channel.id))
 
         # Save
-        await db.close()
         await db.commit()
+        await db.close()
 
         # Create embed
         logging_embed = discord.Embed(title=await trl(ctx.user.id, ctx.guild.id, "chat_revive_remove_log_title"))
