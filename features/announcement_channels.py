@@ -1,6 +1,6 @@
 import discord
 
-from utils.announcement_channels import db_init, db_get_announcement_channels, db_remove_announcement_channel, \
+from utils.announcement_channels import db_get_announcement_channels, db_remove_announcement_channel, \
     db_add_announcement_channel, db_is_subscribed_to_announcements
 from utils.languages import get_translation_for_key_localized as trl, get_language
 from utils.per_user_settings import get_per_user_setting
@@ -9,7 +9,6 @@ from utils.tips import append_tip_to_message
 
 class AnnouncementChannels(discord.Cog):
     def __init__(self, bot: discord.Bot):
-        db_init()
         self.bot = bot
 
     announcement_channels_group = discord.SlashCommandGroup(name="announcement_channels",
