@@ -1,50 +1,50 @@
 import datetime
 
 import discord
+from bson import ObjectId
 from discord.ext import commands as discord_commands_ext
 
-from database import conn
+from database import client
 from utils.analytics import analytics
 from utils.config import get_key
 from utils.languages import get_translation_for_key_localized as trl
 from utils.warning import add_warning
 
 
-def db_init():
-    cur = conn.cursor()
-    cur.execute(
-        "create table if not exists automod_actions (id integer primary key autoincrement, guild_id bigint, rule_id bigint, rule_name text, action text, additional text)")
-    cur.close()
-    conn.commit()
+def db_add_automod_action(guild_id: int, rule_id: int, rule_name: str, action: str, additional) -> ObjectId:
+    # cur = conn.cursor()
+    # cur.execute("insert into automod_actions(guild_id, rule_id, rule_name, action, additional) values (?, ?, ?, ?, ?)",
+    #             (guild_id, rule_id, rule_name, action, additional))
+    # last_row_id = cur.lastrowid
+    # cur.close()
+    # conn.commit()
+    insert_result = client['AutomodActions'].insert_one(
+        {'GuildID': guild_id, 'RuleID': rule_id, 'RuleName': rule_name, 'Action': action, 'Additional': additional})
+
+    return insert_result.inserted_id
 
 
-def db_add_automod_action(guild_id: int, rule_id: int, rule_name: str, action: str, additional: str = "") -> int:
-    cur = conn.cursor()
-    cur.execute("insert into automod_actions(guild_id, rule_id, rule_name, action, additional) values (?, ?, ?, ?, ?)",
-                (guild_id, rule_id, rule_name, action, additional))
-    last_row_id = cur.lastrowid
-    cur.close()
-    conn.commit()
-    return last_row_id
+def db_remove_automod_action(action_id: ObjectId):
+    # cur = conn.cursor()
+    # cur.execute("delete from automod_actions where id = ?", (action_id,))
+    # cur.close()
+    # conn.commit()
 
+    client['AutomodActions'].delete_one({'_id': action_id})
 
-def db_remove_automod_action(action_id: int):
-    cur = conn.cursor()
-    cur.execute("delete from automod_actions where id = ?", (action_id,))
-    cur.close()
-    conn.commit()
 
 
 def db_get_automod_actions(guild_id: int):
-    cur = conn.cursor()
-    cur.execute("select id, rule_id, rule_name, action, additional from automod_actions where guild_id = ?",
-                (guild_id,))
-    actions = cur.fetchall()
-    cur.close()
-    return actions
+    # cur = conn.cursor()
+    # cur.execute("select id, rule_id, rule_name, action, additional from automod_actions where guild_id = ?",
+    #             (guild_id,))
+    # actions = cur.fetchall()
+    # cur.close()
+    result = client['AutomodActions'].find({'GuildID': guild_id}).to_list()
+    return [(i['_id'], i['RuleID'], i['RuleName'], i['Action'], i['Additional']) for i in result]
 
 
-class AutomodActionsStorage():
+class AutomodActionsStorage:
     def __init__(self):
         self.events = []
 
@@ -72,8 +72,6 @@ class AutomodActions(discord.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.storage_1 = AutomodActionsStorage()
-
-        db_init()
 
     @discord.Cog.listener()
     async def on_auto_moderation_action_execution(self, payload: discord.AutoModActionExecutionEvent):
@@ -173,15 +171,20 @@ class AutomodActions(discord.Cog):
             message_reason = trl(0, ctx.guild.id, "automod_default")
 
         action_id = db_add_automod_action(ctx.guild.id, automod_rule.id, rule_name, action, additional=message_reason)
-        await ctx.respond(trl(ctx.user.id, ctx.guild.id, "automod_added", append_tip=True).format(id=action_id), ephemeral=True)
+        await ctx.respond(trl(ctx.user.id, ctx.guild.id, "automod_added", append_tip=True).format(id=str(action_id)),
+                          ephemeral=True)
 
     @automod_actions_subcommands.command(name='remove', description='Remove an automod action.')
     @discord_commands_ext.bot_has_permissions(manage_guild=True)
     @discord_commands_ext.has_permissions(manage_messages=True)
     @discord.option(name="rule_name", description="Name of the rule, as it is in the settings.")
     @analytics("automod action remove")
-    async def automod_actions_remove(self, ctx: discord.ApplicationContext, action_id: int):
+    async def automod_actions_remove(self, ctx: discord.ApplicationContext, action_id: str):
         # verify action exists, rule_name is NOT rule_id
+
+        if not ObjectId.is_valid(action_id):
+            await ctx.respond(trl(ctx.user.id, ctx.guild.id, "automod_rule_doesnt_exist_2"), ephemeral=True)
+            return
 
         automod_actions = db_get_automod_actions(ctx.guild.id)
         automod_rule = None
@@ -194,7 +197,7 @@ class AutomodActions(discord.Cog):
             await ctx.respond(trl(ctx.user.id, ctx.guild.id, "automod_rule_doesnt_exist_2"), ephemeral=True)
             return
 
-        db_remove_automod_action(action_id)
+        db_remove_automod_action(ObjectId(action_id))
         await ctx.respond(trl(ctx.user.id, ctx.guild.id, "automod_removed", append_tip=True), ephemeral=True)
 
     @automod_actions_subcommands.command(name='list', description='List automod actions.')
