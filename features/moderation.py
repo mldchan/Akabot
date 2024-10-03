@@ -13,9 +13,9 @@ from utils.logging_util import log_into_logs
 from utils.per_user_settings import get_per_user_setting
 from utils.settings import get_setting, set_setting
 from utils.tips import append_tip_to_message
+from utils.tzutil import get_now_for_server
 from utils.warning import add_warning, db_get_warning_actions, db_add_warning_action, db_get_warnings, \
     db_remove_warning_action, db_remove_warning
-from utils.tzutil import get_now_for_server
 
 
 def db_init():
@@ -389,7 +389,7 @@ class Moderation(discord.Cog):
         log_embed = discord.Embed(title="Warning Removed", description=f"{user.mention} has had warning {warning_id} removed by {ctx.user.mention}")
         log_embed.add_field(name="Warning Removed User", value=user.mention)
         log_embed.add_field(name="Warning Removed By", value=ctx.user.mention)
-        log_embed.add_field(name="Warning Removed ID", value=warning_id)
+        log_embed.add_field(name="Warning Removed ID", value=str(warning_id))
         log_embed.add_field(name="Warning Removed Time", value=get_now_for_server(ctx.guild.id).isoformat())
         
         await log_into_logs(ctx.guild, log_embed)
@@ -482,7 +482,7 @@ class Moderation(discord.Cog):
         
         log_embed = discord.Embed(title="Warning Action Added", description=f"{ctx.user.mention} has added a warning action to {action} for {warnings} warnings")
         log_embed.add_field(name="Warning Action", value=action)
-        log_embed.add_field(name="Warning Action Warnings", value=warnings)
+        log_embed.add_field(name="Warning Action Warnings", value=str(warnings))
         log_embed.add_field(name="Warning Action Time", value=get_now_for_server(ctx.guild.id).isoformat())
         
         await log_into_logs(ctx.guild, log_embed)
@@ -540,7 +540,7 @@ class Moderation(discord.Cog):
                           ephemeral=ephemerality == "true")
         
         log_embed = discord.Embed(title="Warning Action Removed", description=f"{ctx.user.mention} has removed a warning action with ID {warning_action_id}")
-        log_embed.add_field(name="Warning Action ID", value=warning_action_id)
+        log_embed.add_field(name="Warning Action ID", value=str(warning_action_id))
         log_embed.add_field(name="Warning Action Time", value=get_now_for_server(ctx.guild.id).isoformat())
         
         await log_into_logs(ctx.guild, log_embed)
@@ -557,7 +557,7 @@ class Moderation(discord.Cog):
             ephemeral=True)
         
         log_embed = discord.Embed(title="Ephemeral Toggled", description=f"{ctx.user.mention} has toggled the ephemeral status to {ephemeral}")
-        log_embed.add_field(name="Ephemeral Status", value=ephemeral)
+        log_embed.add_field(name="Ephemeral Status", value=str(ephemeral))
         log_embed.add_field(name="Ephemeral Time", value=get_now_for_server(ctx.guild.id).isoformat())
         
         await log_into_logs(ctx.guild, log_embed)
