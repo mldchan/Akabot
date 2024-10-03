@@ -53,7 +53,9 @@ class AdminCommands(discord.Cog):
             await ctx.respond(trl(ctx.user.id, ctx.guild.id, "announcement_too_long"), ephemeral=True)
             return
 
-        msg = await ctx.followup.send(content="Creating announcement...")
+        msg: discord.Message | None = await ctx.followup.send(content="Creating announcement...")
+        if not msg:
+            return
 
         first_channel = self.bot.get_channel(ANNOUNCEMENT_CHANNEL)
         if not first_channel:

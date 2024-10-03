@@ -1,7 +1,3 @@
-import os
-import sqlite3
+from pymongo import MongoClient
 
-if not os.path.exists('data'):
-    os.mkdir('data')
-
-conn = sqlite3.connect('data/femboybot.db')
+client = MongoClient('AUTH HERE', 27017)['akabot']
