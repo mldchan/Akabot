@@ -1,37 +1,28 @@
-from database import conn
-
-
-def db_init():
-    cur = conn.cursor()
-    cur.execute("CREATE TABLE IF NOT EXISTS announcement_channels (guild_id BIGINT, channel_id BIGINT)")
-    conn.commit()
+from database import client
 
 
 def db_add_announcement_channel(guild_id: int, channel_id: int):
-    cur = conn.cursor()
-    cur.execute("INSERT INTO announcement_channels (guild_id, channel_id) VALUES (?, ?)", (guild_id, channel_id))
-    conn.commit()
+    data = client['AnnouncementChannels'].find_one({'GuildID': {'$eq': guild_id}, 'ChannelID': {'$eq': channel_id}})
+    if not data:
+        client['AnnouncementChannels'].insert_one({'GuildID': guild_id, 'ChannelID': channel_id})
 
 
 def db_remove_announcement_channel(guild_id: int, channel_id: int):
-    cur = conn.cursor()
-    cur.execute("DELETE FROM announcement_channels WHERE guild_id = ? AND channel_id = ?", (guild_id, channel_id))
-    conn.commit()
+    data = client['AnnouncementChannels'].find_one({'GuildID': {'$eq': guild_id}, 'ChannelID': {'$eq': channel_id}})
+    if data:
+        client['AnnouncementChannels'].delete_one({'GuildID': {'$eq': guild_id}, 'ChannelID': {'$eq': channel_id}})
 
 
 def db_is_subscribed_to_announcements(guild_id: int, channel_id: int):
-    cur = conn.cursor()
-    cur.execute("SELECT * FROM announcement_channels WHERE guild_id = ? AND channel_id = ?", (guild_id, channel_id))
-    return cur.fetchone() is not None
+    data = client['AnnouncementChannels'].find_one({'GuildID': {'$eq': guild_id}, 'ChannelID': {'$eq': channel_id}})
+    return data is not None
 
 
 def db_get_announcement_channels(guild_id: int):
-    cur = conn.cursor()
-    cur.execute("SELECT * FROM announcement_channels WHERE guild_id = ?", (guild_id,))
-    return cur.fetchall()
+    data = client['AnnouncementChannels'].find({'GuildID': {'$eq': guild_id}}).to_list()
+    return [(i['GuildID'], i['ChannelID']) for i in data]
 
 
 def db_get_all_announcement_channels():
-    cur = conn.cursor()
-    cur.execute("SELECT * FROM announcement_channels")
-    return cur.fetchall()
+    data = client['AnnouncementChannels'].find().to_list()
+    return [(i['GuildID'], i['ChannelID']) for i in data]

@@ -1,10 +1,9 @@
 import discord
-from discord.ext import pages as dc_pages
-from discord.ext import commands as discord_commands_ext
-
-from database import conn
 import emoji as emoji_package
+from discord.ext import commands as discord_commands_ext
+from discord.ext import pages as dc_pages
 
+from database import client
 from utils.languages import get_translation_for_key_localized as trl
 
 
@@ -12,16 +11,6 @@ class AutoReact(discord.Cog):
     def __init__(self, bot: discord.Bot) -> None:
         self.bot = bot
         super().__init__()
-
-        cur = conn.cursor()
-
-        # Create table
-        cur.execute(
-            "CREATE TABLE IF NOT EXISTS auto_react(id integer primary key autoincrement, guild_id integer, trigger_text text, emoji text)")
-
-        # Save changes
-        cur.close()
-        conn.commit()
 
     auto_react_group = discord.SlashCommandGroup(name="auto_react", description="Auto react settings")
 
@@ -51,15 +40,8 @@ class AutoReact(discord.Cog):
                 await ctx.respond(trl(ctx.user.id, ctx.guild.id, "auto_react_emoji_invalid"), ephemeral=True)
                 return
 
-        cur = conn.cursor()
-
-        # Insert
-        cur.execute("INSERT INTO auto_react(guild_id, trigger_text, emoji) VALUES (?, ?, ?)",
-                    (ctx.guild.id, trigger, str(emoji)))
-
-        # Save
-        cur.close()
-        conn.commit()
+        id = client['AutoReact'].count_documents({'GuildID': {'$eq': ctx.guild.id}}) + 1
+        client['AutoReact'].insert_one({'ID': id, 'GuildID': ctx.guild.id, 'TriggerText': trigger, 'Emoji': str(emoji)})
 
         # Respond
         await ctx.respond(
@@ -71,16 +53,13 @@ class AutoReact(discord.Cog):
     @discord_commands_ext.bot_has_permissions(read_message_history=True, add_reactions=True)
     @discord.default_permissions(manage_messages=True)
     async def list_auto_reacts(self, ctx: discord.ApplicationContext):
-        cur = conn.cursor()
-
         # Define a message variable
         message_groups = []
         current_group = 0
         current_group_msg = ""
 
         # List
-        cur.execute("SELECT * FROM auto_react WHERE guild_id = ?", (ctx.guild.id,))
-        all_settings = cur.fetchall()
+        all_settings = client['AutoReact'].find({'GuildID': {'$eq': ctx.guild.id}}).to_list()
         if len(all_settings) == 0:
             await ctx.respond(trl(ctx.user.id, ctx.guild.id, "auto_react_list_empty"), ephemeral=True)
             return
@@ -89,8 +68,8 @@ class AutoReact(discord.Cog):
             # Format: **{id}**: {trigger} -> {reply}
 
             # current_group_msg += f"**ID: `{i[0]}`**: Trigger: `{i[2]}` -> Will react with `{i[3]}`\n"
-            current_group_msg += trl(ctx.user.id, ctx.guild.id, "auto_react_list_row").format(id=i[0], trigger=i[2],
-                                                                                              emoji=i[3])
+            current_group_msg += trl(ctx.user.id, ctx.guild.id, "auto_react_list_row").format(id=str(i['ID']), trigger=i['TriggerText'],
+                                                                                              emoji=i['Emoji'])
             current_group += 1
 
             # Split message group
@@ -112,22 +91,13 @@ class AutoReact(discord.Cog):
     @discord_commands_ext.bot_has_permissions(read_message_history=True, add_reactions=True)
     @discord.default_permissions(manage_messages=True)
     async def edit_trigger_auto_react(self, ctx: discord.ApplicationContext, id: int, new_trigger: str):
-        cur = conn.cursor()
-        # Check if ID exists
-        cur.execute("SELECT * FROM auto_react WHERE guild_id=? AND id=?", (ctx.guild.id, id))
-        if cur.fetchone() is None:
+        edited = client['AutoReact'].update_one({'ID': {'$eq': id}, 'GuildID': {'$eq': ctx.guild.id}}, {'$set': {'TriggerText': new_trigger}})
+
+        if edited.modified_count == 0:
             await ctx.respond(trl(ctx.user.id, ctx.guild.id, "auto_react_setting_not_found"),
                               ephemeral=True)
             return
 
-        # Update
-        cur.execute("UPDATE auto_react SET trigger_text=? WHERE id=?", (new_trigger, id))
-
-        # Save
-        cur.close()
-        conn.commit()
-
-        # Respond
         await ctx.respond(trl(ctx.user.id, ctx.guild.id, "auto_react_keyword_updated_success"), ephemeral=True)
 
     @auto_react_group.command(name="delete", description="Delete an auto react setting")
@@ -135,21 +105,12 @@ class AutoReact(discord.Cog):
     @discord_commands_ext.bot_has_permissions(read_message_history=True, add_reactions=True)
     @discord.default_permissions(manage_messages=True)
     async def delete_auto_react(self, ctx: discord.ApplicationContext, id: int):
-        cur = conn.cursor()
-        # Check if ID exists
-        cur.execute("SELECT * FROM auto_react WHERE guild_id=? AND id=?", (ctx.guild.id, id))
-        if cur.fetchone() is None:
-            await ctx.respond(
-                trl(ctx.user.id, ctx.guild.id, "auto_react_setting_not_found"),
-                ephemeral=True)
+        delete = client['AutoReact'].delete_one({'ID': {'$eq': id}, 'GuildID': {'$eq': ctx.guild.id}})
+
+        if delete.deleted_count == 0:
+            await ctx.respond(trl(ctx.user.id, ctx.guild.id, "auto_react_setting_not_found"),
+                              ephemeral=True)
             return
-
-        # Delete
-        cur.execute("DELETE FROM auto_react WHERE id=?", (id,))
-
-        # Save
-        cur.close()
-        conn.commit()
 
         # Respond
         await ctx.respond(trl(ctx.user.id, ctx.guild.id, "auto_react_delete_success"), ephemeral=True)
@@ -176,39 +137,27 @@ class AutoReact(discord.Cog):
                 await ctx.respond(trl(ctx.user.id, ctx.guild.id, "auto_react_emoji_invalid"), ephemeral=True)
                 return
 
-        cur = conn.cursor()
-        # Check if ID exists
-        cur.execute("SELECT * FROM auto_react WHERE guild_id=? AND id=?", (ctx.guild.id, id))
-        if cur.fetchone() is None:
-            await ctx.respond(
-                trl(ctx.user.id, ctx.guild.id, "auto_react_setting_not_found"),
+        updated = client['AutoReact'].update_one({'ID': {'$eq': id}, 'GuildID': {'$eq': ctx.guild.id}})
+
+        if updated.modified_count == 0:
+            await ctx.respond(trl(ctx.user.id, ctx.guild.id, "auto_react_setting_not_found"),
                 ephemeral=True)
             return
-
-        # Update
-        cur.execute("UPDATE auto_react SET emoji=? WHERE id=?", (str(emoji), id))
-
-        # Save
-        cur.close()
-        conn.commit()
 
         # Respond
         await ctx.respond(trl(ctx.user.id, ctx.guild.id, "auto_react_emoji_set_success"), ephemeral=True)
 
     @discord.Cog.listener()
     async def on_message(self, msg: discord.Message):
-
-        cur = conn.cursor()
-
         # Check if it's the bot
         if msg.author.bot:
             return
 
         # Find all created settings
-        cur.execute("SELECT * FROM auto_react WHERE guild_id=?", (msg.guild.id,))
-        for i in cur.fetchall():
+        data = client['AutoReact'].find({'GuildID': msg.guild.id}).to_list()
+        for i in data:
             # If it contains the message
-            if i[2] in msg.content:
+            if i['TriggerText'] in msg.content:
                 # Parse the emoji
                 emoji = discord.PartialEmoji.from_str(i[3])
                 # Add le reaction to it
