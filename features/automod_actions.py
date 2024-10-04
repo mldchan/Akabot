@@ -12,12 +12,6 @@ from utils.warning import add_warning
 
 
 def db_add_automod_action(guild_id: int, rule_id: int, rule_name: str, action: str, additional) -> ObjectId:
-    # cur = conn.cursor()
-    # cur.execute("insert into automod_actions(guild_id, rule_id, rule_name, action, additional) values (?, ?, ?, ?, ?)",
-    #             (guild_id, rule_id, rule_name, action, additional))
-    # last_row_id = cur.lastrowid
-    # cur.close()
-    # conn.commit()
     insert_result = client['AutomodActions'].insert_one(
         {'GuildID': guild_id, 'RuleID': rule_id, 'RuleName': rule_name, 'Action': action, 'Additional': additional})
 
@@ -25,21 +19,11 @@ def db_add_automod_action(guild_id: int, rule_id: int, rule_name: str, action: s
 
 
 def db_remove_automod_action(action_id: ObjectId):
-    # cur = conn.cursor()
-    # cur.execute("delete from automod_actions where id = ?", (action_id,))
-    # cur.close()
-    # conn.commit()
-
     client['AutomodActions'].delete_one({'_id': action_id})
 
 
 
 def db_get_automod_actions(guild_id: int):
-    # cur = conn.cursor()
-    # cur.execute("select id, rule_id, rule_name, action, additional from automod_actions where guild_id = ?",
-    #             (guild_id,))
-    # actions = cur.fetchall()
-    # cur.close()
     result = client['AutomodActions'].find({'GuildID': guild_id}).to_list()
     return [(i['_id'], i['RuleID'], i['RuleName'], i['Action'], i['Additional']) for i in result]
 

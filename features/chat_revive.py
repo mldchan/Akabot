@@ -4,7 +4,7 @@ import discord
 from discord.ext import commands as commands_ext
 from discord.ext import tasks
 
-from database import conn as db
+from database import client
 from utils.analytics import analytics
 from utils.languages import get_translation_for_key_localized as trl
 from utils.logging_util import log_into_logs
@@ -13,12 +13,6 @@ from utils.logging_util import log_into_logs
 class ChatRevive(discord.Cog):
     def __init__(self, bot: discord.Bot):
         self.bot = bot
-
-        cur = db.cursor()
-        cur.execute(
-            "CREATE TABLE IF NOT EXISTS chat_revive (guild_id INTEGER, channel_id INTEGER, role_id INTEGER, revival_time INTEGER, last_message DATETIME, revived BOOLEAN)")
-        cur.close()
-        db.commit()
 
     @discord.Cog.listener()
     async def on_ready(self):
@@ -29,23 +23,18 @@ class ChatRevive(discord.Cog):
         if message.author.bot:
             return
 
-        cur = db.cursor()
-        cur.execute('UPDATE chat_revive SET last_message = ?, revived = ? WHERE guild_id = ? AND channel_id = ?',
-                    (time.time(), False, message.guild.id, message.channel.id))
-        cur.close()
-        db.commit()
+        client['ChatRevive'].update_one({'GuildID': message.guild.id, 'ChannelID': message.channel.id},
+                                        {'$set': {'LastMessage': time.time(), 'Revived': False}})
 
     @tasks.loop(minutes=1)
     async def revive_channels(self):
         for guild in self.bot.guilds:
-            cur = db.cursor()
-            cur.execute('SELECT * FROM chat_revive WHERE guild_id = ?', (guild.id,))
-            settings = cur.fetchall()
-            for revive_channel in settings:
-                if revive_channel[5]:
+            data = client['ChatRevive'].find({'GuildID': guild.id}).to_list()
+            for revive_channel in data:
+                if revive_channel['Revived']:
                     continue
 
-                if time.time() - revive_channel[4] > revive_channel[3]:
+                if time.time() - revive_channel['LastMessage'] > revive_channel['RevivalTime']:
                     role = guild.get_role(revive_channel[2])
                     if role is None:
                         continue
@@ -58,11 +47,8 @@ class ChatRevive(discord.Cog):
                         continue
 
                     await channel.send(f'{role.mention}, this channel has been inactive for a while.')
-                    cur.execute('UPDATE chat_revive SET revived = ? WHERE guild_id = ? AND channel_id = ?',
-                                (True, guild.id, revive_channel[1]))
-
-            cur.close()
-            db.commit()
+                    client['ChatRevive'].update_one({'GuildID': guild.id, 'ChannelID': revive_channel[channel.id]},
+                                                    {'$set': {'Revived': True}})
 
     chat_revive_subcommand = discord.SlashCommandGroup(name='chatrevive', description='Revive channels')
 
@@ -83,19 +69,14 @@ class ChatRevive(discord.Cog):
             return
 
         # Database access
-        cur = db.cursor()
 
         # Delete existing record
-        cur.execute('DELETE FROM chat_revive WHERE guild_id = ? AND channel_id = ?', (ctx.guild.id, channel.id))
+        client['ChatRevive'].delete_one({'GuildID': ctx.guild.id, 'ChannelID': channel.id})
 
         # Set new one
-        cur.execute(
-            'INSERT INTO chat_revive (guild_id, channel_id, role_id, revival_time, last_message, revived) VALUES (?, ?, ?, ?, ?, ?)',
-            (ctx.guild.id, channel.id, revival_role.id, revival_minutes * 60, time.time(), False))
-
-        # Save database
-        cur.close()
-        db.commit()
+        client['ChatRevive'].insert_one({'GuildID': ctx.guild.id, 'ChannelID': channel.id, 'RoleID': revival_role.id,
+                                         'RevivalTime': revival_minutes * 60, 'LastMessage': time.time(),
+                                         'Revived': False})
 
         # Embed for logs
         logging_embed = discord.Embed(title=trl(ctx.user.id, ctx.guild.id, "chat_revive_log_set_title"))
@@ -123,15 +104,7 @@ class ChatRevive(discord.Cog):
     @commands_ext.has_permissions(manage_guild=True)
     @analytics("chatrevive remove")
     async def remove_revive_settings(self, ctx: discord.ApplicationContext, channel: discord.TextChannel):
-        # Connect to database
-        cur = db.cursor()
-
-        # Delete record
-        cur.execute('DELETE FROM chat_revive WHERE guild_id = ? AND channel_id = ?', (ctx.guild.id, channel.id))
-
-        # Save
-        cur.close()
-        db.commit()
+        client['ChatRevive'].delete_one({'GuildID': ctx.guild.id, 'ChannelID': channel.id})
 
         # Create embed
         logging_embed = discord.Embed(title=trl(ctx.user.id, ctx.guild.id, "chat_revive_remove_log_title"))
@@ -153,22 +126,18 @@ class ChatRevive(discord.Cog):
     @commands_ext.has_permissions(manage_guild=True)
     @analytics("chatrevive list")
     async def list_revive_settings(self, ctx: discord.ApplicationContext, channel: discord.TextChannel):
-        cur = db.cursor()
-        cur.execute('SELECT role_id, revival_time FROM chat_revive WHERE guild_id = ? AND channel_id = ?',
-                    (ctx.guild.id, channel.id))
-        result = cur.fetchone()
+        result = client['ChatRevive'].find_one({'GuildID': ctx.guild.id, 'ChannelID': channel.id})
 
         if not result:
             await ctx.respond(trl(ctx.user.id, ctx.guild.id, "chat_revive_list_empty").format(channel=channel.mention),
                               ephemeral=True)
             return
 
-        role_id, revival_time = result
-        role = ctx.guild.get_role(role_id)
+        role = ctx.guild.get_role(result['RoleID'])
 
         embed = discord.Embed(title=trl(ctx.user.id, ctx.guild.id, "chat_revive_list_title").format(name=channel.name),
                               color=discord.Color.blurple())
         embed.add_field(name=trl(ctx.user.id, ctx.guild.id, "chat_revive_list_role"), value=role.mention)
-        embed.add_field(name=trl(ctx.user.id, ctx.guild.id, "chat_revive_list_time"), value=revival_time)
+        embed.add_field(name=trl(ctx.user.id, ctx.guild.id, "chat_revive_list_time"), value=str(result['RevivalTime']))
 
         await ctx.respond(embed=embed, ephemeral=True)
