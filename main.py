@@ -6,7 +6,7 @@ from discord.ext import commands as discord_commands_ext
 from sentry_sdk.integrations.logging import LoggingIntegration
 
 from features import welcoming, leveling, antiraid, chat_streaks, chat_revive, chat_summary, reaction_roles, \
-    logging_mod, admin_cmds, giveaways, feedback_cmd, moderation, cleanup_task, verification, velky_stompies, \
+    logging_mod, admin_cmds, giveaways, feedback_cmd, moderation, verification, velky_stompies, \
     roles_on_join, heartbeat, automod_actions, power_outage_announcement, per_user_settings, server_settings, \
     bot_help, announcement_channels, tickets, debug_commands, birthday_announcements, send_server_count, \
     suggestions, temporary_vc, rp
@@ -79,8 +79,6 @@ async def on_application_command_error(ctx: discord.ApplicationContext, error):
     raise error
 
 
-if get_key("Feature_DatabaseCleanupTask", "true") == "true":
-    bot.add_cog(cleanup_task.DbCleanupTask())
 if get_key("Feature_WelcomeGoodbye", "true") == "true":
     bot.add_cog(welcoming.Welcoming(bot))
 if get_key("Feature_Leveling", "true") == "true":
