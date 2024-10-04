@@ -2,10 +2,11 @@ import datetime
 import random
 
 import discord
+from bson import ObjectId
 from discord.ext import commands as commands_ext
 from discord.ext import tasks
 
-from database import conn
+from database import client
 from utils.analytics import analytics
 from utils.generic import pretty_time_delta
 from utils.languages import get_translation_for_key_localized as trl, get_language
@@ -19,14 +20,6 @@ class Giveaways(discord.Cog):
 
     def __init__(self, bot: discord.Bot):
         self.bot = bot
-        cur = conn.cursor()
-        cur.execute(
-            "create table if not exists giveaways(id integer primary key, channel_id int, message_id int, item text, end_date text, winner_count int)"
-        )
-        cur.execute(
-            "create table if not exists giveaway_participants(id integer primary key, giveaway_id integer, user_id text)"
-        )
-
         self.giveaway_mng.start()
 
     @giveaways_group.command(name="new", description="Create a new giveaway")
@@ -58,16 +51,14 @@ class Giveaways(discord.Cog):
         msg1 = await ctx.channel.send(trl(0, ctx.guild.id, "giveaways_giveaway_text").format(item=item))
         await msg1.add_reaction("🎉")
 
-        # Register giveaway
-        cur = conn.cursor()
-        cur.execute("insert into giveaways(channel_id, message_id, item, end_date, winner_count) values(?, ?, ?, ?, ?)",
-                    (ctx.channel.id, msg1.id, item, end_date.isoformat(), winners))
-
-        conn.commit()
+        res = client['Giveaways'].insert_one(
+            {'ChannelID': ctx.channel.id, 'MessageID': msg1.id, 'Item': item, 'EndDate': end_date.isoformat(),
+             'Winners': winners})
 
         # Send success message
-        await ctx.respond(trl(ctx.user.id, ctx.guild.id, "giveaways_new_success", append_tip=True).format(id=cur.lastrowid),
-                          ephemeral=True)
+        await ctx.respond(
+            trl(ctx.user.id, ctx.guild.id, "giveaways_new_success", append_tip=True).format(id=str(res.inserted_id)),
+            ephemeral=True)
 
     @giveaways_group.command(name="end", description="End a giveaway IRREVERSIBLY")
     @discord.default_permissions(manage_guild=True)
@@ -76,19 +67,20 @@ class Giveaways(discord.Cog):
     @commands_ext.guild_only()
     @discord.option("giveaway_id", "The ID of the giveaway to end. Given when creating a giveaway.")
     @analytics("giveaway end")
-    async def giveaway_end(self, ctx: discord.ApplicationContext, giveaway_id: int):
-        cur = conn.cursor()
+    async def giveaway_end(self, ctx: discord.ApplicationContext, giveaway_id: str):
+        if not ObjectId.is_valid(giveaway_id):
+            await ctx.respond(trl(ctx.user.id, ctx.guild.id, "giveaways_error_not_found"), ephemeral=True)
+            return
 
-        # Verify if the giveaway exists
-        cur.execute("select * from giveaways where id=?", (giveaway_id,))
-        res = cur.fetchone()
-        if res is None:
+        res = client['Giveaways'].count_documents({'_id': ObjectId(giveaway_id)})
+        if res == 0:
             await ctx.respond(trl(ctx.user.id, ctx.guild.id, "giveaways_error_not_found"), ephemeral=True)
             return
 
         await self.process_send_giveaway(giveaway_id)
 
-        await ctx.respond(trl(ctx.user.id, ctx.guild.id, "giveaways_giveaway_end_success", append_tip=True), ephemeral=True)
+        await ctx.respond(trl(ctx.user.id, ctx.guild.id, "giveaways_giveaway_end_success", append_tip=True),
+                          ephemeral=True)
 
     @giveaways_group.command(name='list', description='List all giveaways')
     @discord.default_permissions(manage_guild=True)
@@ -96,19 +88,15 @@ class Giveaways(discord.Cog):
     @commands_ext.guild_only()
     @analytics("giveaway list")
     async def giveaway_list(self, ctx: discord.ApplicationContext):
-        cur = conn.cursor()
-
-        # Get all giveaways
-        cur.execute("select * from giveaways")
-        res = cur.fetchall()
+        res = client['Giveaways'].find({}).to_list()
 
         message = trl(ctx.user.id, ctx.guild.id, "giveaways_list_title")
 
         for i in res:
-            id = i[0]
-            item = i[3]
-            winners = i[5]
-            time_remaining = datetime.datetime.fromisoformat(i[4]) - get_now_for_server(ctx.guild.id)
+            id = str(i['_id'])
+            item = i['Item']
+            winners = i['Winners']
+            time_remaining = datetime.datetime.fromisoformat(i['EndDate']) - get_now_for_server(ctx.guild.id)
             time_remaining = time_remaining.total_seconds()
             time_remaining = pretty_time_delta(time_remaining, user_id=ctx.user.id, server_id=ctx.guild.id)
 
@@ -129,52 +117,29 @@ class Giveaways(discord.Cog):
         if user.bot:
             return
 
-        cur = conn.cursor()
+        client['Giveaways'].update_one({'MessageID': reaction.message.id}, {'$push': {'Participants': user.id}})
 
-        # Verify if it's a valid message
-        cur.execute("select * from giveaways where message_id=?", (reaction.message.id,))
-        res = cur.fetchone()
-        if res is None:
-            return
-
-        # Add user to participants of giveaway
-        cur.execute("insert into giveaway_participants(giveaway_id, user_id) values(?, ?)", (res[0], str(user.id)))
-
-        conn.commit()
 
     @discord.Cog.listener()
     async def on_reaction_remove(self, reaction: discord.Reaction, user: discord.User):
         if user.bot:
             return
 
-        cur = conn.cursor()
+        client['Giveaways'].update_one({'MessageID': reaction.message.id}, {'$pull': {'Participants': user.id}})
 
-        # Verify if it's a valid message
-        cur.execute("select * from giveaways where message_id=?", (reaction.message.id,))
-        res = cur.fetchone()
-        if res is None:
-            return
-
-        # Remove user from participants of giveaway
-        cur.execute("delete from giveaway_participants where giveaway_id=? and user_id=?", (res[0], str(user.id)))
-
-        conn.commit()
-
-    async def process_send_giveaway(self, giveaway_id: int):
-        cur = conn.cursor()
-
-        cur.execute("select * from giveaways where id=?", (giveaway_id,))
-        res = cur.fetchone()
-        if res is None:
+    async def process_send_giveaway(self, giveaway_id: str):
+        res = client['Giveaways'].find_one({'_id': ObjectId(giveaway_id)})
+        if not res:
             return
 
         # Fetch the channel and message
-        chan = await self.bot.fetch_channel(res[1])
-        msg = await chan.fetch_message(res[2])
+        chan = await self.bot.fetch_channel(res['ChannelID'])
+        msg = await chan.fetch_message(res['MessageID'])
 
         # List people that joined the giveaway
-        cur.execute("select * from giveaway_participants where giveaway_id=?", (giveaway_id,))
-        users = [j[2] for j in cur.fetchall()]
+        # cur.execute("select * from giveaway_participants where giveaway_id=?", (giveaway_id,))
+        # users = [j[2] for j in cur.fetchall()]
+        users = res['Participants']
 
         # Check if there are enough members to select winners
         if len(users) < res[5]:
