@@ -136,9 +136,6 @@ class Giveaways(discord.Cog):
         chan = await self.bot.fetch_channel(res['ChannelID'])
         msg = await chan.fetch_message(res['MessageID'])
 
-        # List people that joined the giveaway
-        # cur.execute("select * from giveaway_participants where giveaway_id=?", (giveaway_id,))
-        # users = [j[2] for j in cur.fetchall()]
         users = res['Participants']
 
         # Check if there are enough members to select winners
@@ -163,24 +160,19 @@ class Giveaways(discord.Cog):
                                                                      last_mention=last_mention)
             await chan.send(msg2)
 
-        # Delete giveaway from database
-        cur.execute("delete from giveaways where id=?", (giveaway_id,))
-        # Remove all giveaway participants from the database
-        cur.execute("delete from giveaway_participants where giveaway_id=?", (giveaway_id,))
+        client['Giveaways'].delete_one({'_id': ObjectId(giveaway_id)})
 
     @tasks.loop(minutes=1)
     async def giveaway_mng(self):
-        cur = conn.cursor()
-
-        cur.execute("select * from giveaways")
-        for i in cur.fetchall():
-            channel_id = i[1]
+        res = client['Giveaways'].find({}).to_list()
+        for i in res:
+            channel_id = i['ChannelID']
             channel = await self.bot.fetch_channel(channel_id)
 
             time = datetime.datetime.now(datetime.UTC)
             if channel is not None:
                 time = get_now_for_server(channel.guild.id)
             # Check if the giveaway ended
-            end_date = datetime.datetime.fromisoformat(i[4])
+            end_date = datetime.datetime.fromisoformat(i['EndTime'])
             if time > end_date:
-                await self.process_send_giveaway(i[0])
+                await self.process_send_giveaway(str(i['_id']))
