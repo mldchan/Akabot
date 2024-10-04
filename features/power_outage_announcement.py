@@ -1,11 +1,10 @@
-import datetime
 import os.path
 import time
 
 import discord
+from discord.ext import tasks
 
 from utils.config import get_key
-from discord.ext import tasks
 from utils.generic import pretty_time_delta, pretty_time
 
 

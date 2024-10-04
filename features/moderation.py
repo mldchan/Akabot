@@ -328,7 +328,7 @@ class Moderation(discord.Cog):
         warning_id = await add_warning(user, ctx.guild, reason)
         ephemerality = get_setting(ctx.guild.id, "moderation_ephemeral", "true")
         await ctx.respond(
-            trl(ctx.user.id, ctx.guild.id, "warn_add_response", append_tip=True).format(mention=user.mention, reason=reason, id=warning_id),
+            trl(ctx.user.id, ctx.guild.id, "warn_add_response", append_tip=True).format(mention=user.mention, reason=reason, id=str(warning_id)),
             ephemeral=ephemerality == "true")
         
         log_embed = discord.Embed(title="Warning Added", description=f"{user.mention} has been warned by {ctx.user.mention} for {reason}")
@@ -343,9 +343,9 @@ class Moderation(discord.Cog):
     @commands_ext.guild_only()
     @discord.default_permissions(manage_messages=True)
     @discord.option(name='user', description='The user to remove the warning from', type=discord.Member)
-    @discord.option(name='id', description='The ID of the warning', type=int)
+    @discord.option(name='id', description='The ID of the warning', type=str)
     @analytics("warn remove")
-    async def remove_warning(self, ctx: discord.ApplicationContext, user: discord.Member, warning_id: int):
+    async def remove_warning(self, ctx: discord.ApplicationContext, user: discord.Member, warning_id: str):
         if not is_a_moderator(ctx):
             await ctx.respond(trl(ctx.user.id, ctx.guild.id, "moderation_not_moderator"), ephemeral=True)
             return
@@ -497,9 +497,9 @@ class Moderation(discord.Cog):
                                    description='Remove an action to be taken on a user with a certain number of '
                                                'warnings')
     @commands_ext.guild_only()
-    @discord.option(name='id', description='The ID of the action', type=int)
+    @discord.option(name='id', description='The ID of the action', type=str)
     @analytics("warn_actions remove")
-    async def remove_warning_action(self, ctx: discord.ApplicationContext, warning_action_id: int):
+    async def remove_warning_action(self, ctx: discord.ApplicationContext, warning_action_id: str):
         if not is_a_moderator(ctx):
             await ctx.respond(trl(ctx.user.id, ctx.guild.id, "moderation_no_moderator_role"),
                               ephemeral=True)

@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 
-from database import conn
+from database import client
 from utils.languages import get_translation_for_key_localized as trl
 from utils.settings import get_setting, set_setting
 
@@ -10,19 +10,12 @@ class Suggestions(discord.Cog):
     def __init__(self, bot: discord.Bot):
         self.bot = bot
 
-        cur = conn.cursor()
-        cur.execute('create table if not exists suggestion_channels(id integer primary key, channel_id text)')
-        cur.close()
-        conn.commit()
-
     @discord.Cog.listener()
     async def on_message(self, message: discord.Message):
         if message.author.bot:
             return
 
-        cur = conn.cursor()
-        cur.execute('select * from suggestion_channels where channel_id = ?', (message.channel.id,))
-        if cur.fetchone():
+        if client['SuggestionChannels'].count_documents({'ChannelID': message.guild.id}) != 0:
             emojis = get_setting(message.guild.id, 'suggestion_emoji', '👍👎')
             if emojis == '👍👎':
                 await message.add_reaction('👍')
@@ -31,11 +24,10 @@ class Suggestions(discord.Cog):
                 await message.add_reaction('✅')
                 await message.add_reaction('❌')
 
-        cur.close()
-        if get_setting(message.guild.id, "suggestion_reminder_enabled", "false") == "true":
-            to_send = get_setting(message.guild.id, "suggestion_reminder_message", "")
-            sent = await message.reply(to_send)
-            await sent.delete(delay=5)
+            if get_setting(message.guild.id, "suggestion_reminder_enabled", "false") == "true":
+                to_send = get_setting(message.guild.id, "suggestion_reminder_message", "")
+                sent = await message.reply(to_send)
+                await sent.delete(delay=5)
 
     suggestions_group = discord.SlashCommandGroup(name='suggestions', description='Suggestion commands')
 
@@ -44,37 +36,22 @@ class Suggestions(discord.Cog):
     @commands.guild_only()
     @commands.has_permissions(manage_guild=True)
     async def cmd_add_channel(self, ctx: discord.ApplicationContext, channel: discord.TextChannel):
-        cur = conn.cursor()
-
-        cur.execute('select * from suggestion_channels where id = ?', (channel.id,))
-        if cur.fetchone():
+        if client['SuggestionChannels'].count_documents({'ChannelID': ctx.guild.id}) == 0:
+            client['SuggestionChannels'].insert_one({'GuildID': ctx.guild.id, 'ChannelID': channel.id})
+            await ctx.respond(trl(ctx.user.id, ctx.guild.id, 'suggestions_channel_added', append_tip=True).format(channel=channel.mention), ephemeral=True)
+        else:
             await ctx.respond(trl(ctx.user.id, ctx.guild.id, 'suggestions_channel_already_exists'), ephemeral=True)
-            cur.close()
-            return
-
-        cur.execute('insert into suggestion_channels(channel_id) values (?)', (channel.id,))
-        cur.close()
-        conn.commit()
-
-        await ctx.respond(trl(ctx.user.id, ctx.guild.id, 'suggestions_channel_added', append_tip=True).format(channel=channel.mention), ephemeral=True)
 
     @suggestions_group.command(name='remove_channel', description='Remove a suggestion channel')
     @discord.default_permissions(manage_guild=True)
     @commands.guild_only()
     @commands.has_permissions(manage_guild=True)
     async def cmd_remove_channel(self, ctx: discord.ApplicationContext, channel: discord.TextChannel):
-        cur = conn.cursor()
-        cur.execute('select * from suggestion_channels where id = ?', (channel.id,))
-        if not cur.fetchone():
+        if client['SuggestionChannels'].count_documents({'ChannelID': ctx.guild.id}) == 0:
             await ctx.respond(trl(ctx.user.id, ctx.guild.id, "suggestions_channel_not_found"), ephemeral=True)
-            cur.close()
-            return
-
-        cur.execute('delete from suggestion_channels where id = ?', (channel.id,))
-        cur.close()
-        conn.commit()
-
-        await ctx.respond(trl(ctx.user.id, ctx.guild.id, "suggestions_channel_removed", append_tip=True).format(channel=channel.mention), ephemeral=True)
+        else:
+            client['SuggestionChannels'].delete_one({'ChannelID': ctx.guild.id})
+            await ctx.respond(trl(ctx.user.id, ctx.guild.id, "suggestions_channel_removed", append_tip=True).format(channel=channel.mention), ephemeral=True)
 
     @suggestions_group.command(name='emoji', description='Choose emoji')
     @discord.default_permissions(manage_guild=True)

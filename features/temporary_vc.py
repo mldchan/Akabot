@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 
-from database import conn
+from database import client
 from utils.languages import get_translation_for_key_localized as trl
 from utils.settings import get_setting, set_setting
 
@@ -9,10 +9,6 @@ from utils.settings import get_setting, set_setting
 class TemporaryVC(discord.Cog):
     def __init__(self, bot: discord.Bot):
         self.bot = bot
-
-        cur = conn.cursor()
-        cur.execute('create table if not exists temporary_vc_creator_channels (id integer primary key autoincrement, channel_id bigint, guild_id bigint)')
-        cur.execute('create table if not exists temporary_vcs (id integer primary key autoincrement, channel_id bigint, guild_id bigint, creator_id bigint)')
 
     temporary_vc_commands = discord.SlashCommandGroup(name='temporary_voice_channels', description='Temporary VC channels commands')
 
@@ -30,12 +26,10 @@ class TemporaryVC(discord.Cog):
         else:
             new_ch = await category.create_voice_channel(name=new_ch_name, reason=trl(0, for_user.guild.id, 'temporary_vc_mod_reason'), bitrate=from_ch.bitrate, user_limit=from_ch.user_limit)
 
-        cur = conn.cursor()
-        cur.execute('insert into temporary_vcs (channel_id, guild_id, creator_id) values (?, ?, ?)', (new_ch.id, new_ch.guild.id, for_user.id))
-        conn.commit()
+        res = client['TemporaryVC'].insert_one({'ChannelID': new_ch.id, 'GuildID': new_ch.guild.id, 'CreatorID': for_user.id})
 
         if '{id}' in new_ch_name:
-            id = cur.lastrowid
+            id = str(res.inserted_id)
             new_ch_name = new_ch_name.replace('{id}', str(id))
             await new_ch.edit(name=new_ch_name)
 
@@ -45,9 +39,9 @@ class TemporaryVC(discord.Cog):
     async def on_voice_state_update(self, member: discord.Member, before: discord.VoiceState, after: discord.VoiceState):
         # First let's check joining for temporary voice channel creation
         if after.channel:
-            cur = conn.cursor()
-            cur.execute('select * from temporary_vc_creator_channels where channel_id = ? and guild_id = ?', (after.channel.id, after.channel.guild.id))
-            if cur.fetchone():
+            # cur = conn.cursor()
+            # cur.execute('select * from temporary_vc_creator_channels where channel_id = ? and guild_id = ?', (after.channel.id, after.channel.guild.id))
+            if client['TemporaryVCCreators'].count_documents({'ChannelID': after.channel.id, 'GuildID': after.channel.guild.id}) > 0:
                 vc = await self.new_temporary_channel(after.channel, member)
                 await member.move_to(vc, reason=trl(0, member.guild.id, 'temporary_vc_mod_reason'))
 
@@ -57,36 +51,29 @@ class TemporaryVC(discord.Cog):
             if len(before.channel.voice_states) > 0:
                 return
 
-            cur = conn.cursor()
-            cur.execute('select * from temporary_vcs where channel_id = ? and guild_id = ?', (before.channel.id, before.channel.guild.id))
-            if cur.fetchone():
+            if client['TemporaryVC'].count_documents({'ChannelID': before.channel.guild.id, 'GuildID': after.channel.guild.id}) > 0:
                 await before.channel.delete(reason=trl(0, member.guild.id, 'temporary_vc_mod_reason'))
 
-            cur.execute('delete from temporary_vcs where channel_id = ? and guild_id = ?', (before.channel.id, before.channel.guild.id))
-            conn.commit()
+            client['TemporaryVC'].delete_one({'ChannelID': before.channel.id, 'GuildID': before.channel.guild.id})
 
     @temporary_vc_commands.command(name='add_creator_channel', description='Add a channel to create temporary voice channels')
     @discord.default_permissions(manage_guild=True)
     @commands.has_permissions(manage_guild=True)
     async def add_creator_channel(self, ctx: discord.ApplicationContext, channel: discord.VoiceChannel):
-        cur = conn.cursor()
-        cur.execute('insert into temporary_vc_creator_channels (id, channel_id, guild_id) values (?, ?, ?)', (ctx.author.id, channel.id, ctx.guild.id))
-        conn.commit()
+        # cur = conn.cursor()
+        # cur.execute('insert into temporary_vc_creator_channels (id, channel_id, guild_id) values (?, ?, ?)', (ctx.author.id, channel.id, ctx.guild.id))
+        # conn.commit()
+        client['TemporaryVCCreators'].insert_one({'ChannelID': channel.id, 'GuildID': channel.guild.id})
         await ctx.respond(trl(ctx.user.id, ctx.guild.id, 'temporary_vc_creator_channel_add').format(channel=channel.mention), ephemeral=True)
 
     @temporary_vc_commands.command(name='remove_creator_channel', description='Remove a channel to create temporary voice channels')
     @discord.default_permissions(manage_guild=True)
     @commands.has_permissions(manage_guild=True)
     async def remove_creator_channel(self, ctx: discord.ApplicationContext, channel: discord.VoiceChannel):
-        cur = conn.cursor()
-        cur.execute('select * from temporary_vc_creator_channels where channel_id = ? and guild_id = ?', (channel.id, ctx.guild.id))
-        if not cur.fetchone():
+        if client['TemporaryVCCreators'].delete_one({'ChannelID': channel.id, 'GuildID': channel.guild.id}).deleted_count > 0:
+            await ctx.respond(trl(ctx.user.id, ctx.guild.id, 'temporary_vc_creator_channel_remove').format(channel=channel.mention), ephemeral=True)
+        else:
             await ctx.respond(trl(ctx.user.id, ctx.guild.id, 'temporary_vc_error_channel_not_in_creator').format(channel=channel.mention), ephemeral=True)
-            return
-
-        cur.execute('delete from temporary_vc_creator_channels where channel_id = ? and guild_id = ?', (channel.id, ctx.guild.id))
-        conn.commit()
-        await ctx.respond(trl(ctx.user.id, ctx.guild.id, 'temporary_vc_creator_channel_remove').format(channel=channel.mention), ephemeral=True)
 
     @temporary_vc_commands.command(name='change_name', description='Change the name of a temporary voice channel')
     async def change_name(self, ctx: discord.ApplicationContext, name: str):
@@ -98,9 +85,7 @@ class TemporaryVC(discord.Cog):
             await ctx.respond(trl(ctx.user.id, ctx.guild.id, 'temporary_vc_error_name_too_short'), ephemeral=True)
             return
 
-        cur = conn.cursor()
-        cur.execute('select * from temporary_vcs where channel_id = ? and guild_id = ? and creator_id = ?', (ctx.channel.id, ctx.guild.id, ctx.user.id))
-        if not cur.fetchone():
+        if client['TemporaryVC'].count_documents({'ChannelID': ctx.guild.id, 'GuildID': ctx.guild.id, 'CreatorID': ctx.user.id}) == 0:
             await ctx.respond(trl(ctx.user.id, ctx.guild.id, 'temporary_vc_error_not_a_temporary_channel').format(channel=ctx.channel.mention), ephemeral=True)
             return
 
@@ -117,9 +102,7 @@ class TemporaryVC(discord.Cog):
             await ctx.respond(trl(ctx.user.id, ctx.guild.id, 'temporary_vc_error_max_users'), ephemeral=True)
             return
 
-        cur = conn.cursor()
-        cur.execute('select * from temporary_vcs where channel_id = ? and guild_id = ? and creator_id = ?', (ctx.channel.id, ctx.guild.id, ctx.user.id))
-        if not cur.fetchone():
+        if client['TemporaryVC'].count_documents({'ChannelID': ctx.guild.id, 'GuildID': ctx.guild.id, 'CreatorID': ctx.user.id}) == 0:
             await ctx.respond(trl(ctx.user.id, ctx.guild.id, 'temporary_vc_error_not_a_temporary_channel').format(channel=ctx.channel.mention), ephemeral=True)
             return
 
@@ -138,9 +121,7 @@ class TemporaryVC(discord.Cog):
 
         bitrate = bitrate * 1000
 
-        cur = conn.cursor()
-        cur.execute('select * from temporary_vcs where channel_id = ? and guild_id = ? and creator_id = ?', (ctx.channel.id, ctx.guild.id, ctx.user.id))
-        if not cur.fetchone():
+        if client['TemporaryVC'].count_documents({'ChannelID': ctx.guild.id, 'GuildID': ctx.guild.id, 'CreatorID': ctx.user.id}) == 0:
             await ctx.respond(trl(ctx.user.id, ctx.guild.id, 'temporary_vc_error_not_a_temporary_channel').format(channel=ctx.channel.mention), ephemeral=True)
             return
 

@@ -134,7 +134,6 @@ class Giveaways(discord.Cog):
 
         # Fetch the channel and message
         chan = await self.bot.fetch_channel(res['ChannelID'])
-        msg = await chan.fetch_message(res['MessageID'])
 
         users = res['Participants']
 
