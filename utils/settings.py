@@ -3,7 +3,7 @@ from database import client
 
 def get_setting(server_id: int, key: str, default: str) -> str:
     res = client['ServerSettings'].find_one({'ServerID': server_id})
-    return res[key] or default
+    return res[key] if res and key in res else default
 
 
 def set_setting(server_id: int, key: str, value: str) -> None:

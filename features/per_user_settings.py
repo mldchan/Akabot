@@ -66,7 +66,7 @@ class PerUserSettings(discord.Cog):
             await ctx.respond(trl(ctx.user.id, ctx.guild.id, 'birthday_invalid_day'), ephemeral=True)
             return
 
-        client['UserBirthday'].update_one({'UserID': ctx.author.id}, {'$set': {'Birth.Year': year, 'Birth.Month': month, 'Birth.Day': day, 'AnnounceInServers': []}}, upsert=True)
+        client['UserBirthday'].update_one({'UserID': ctx.author.id}, {'$set': {'Birth.Year': year, 'Birth.Month': month, 'Birth.Day': day}}, upsert=True)
         await ctx.respond(trl(ctx.user.id, ctx.guild.id, 'birthday_set'), ephemeral=True)
 
     @user_settings_group.command(name="birthday_settings", description="Personalize your birthday settings")

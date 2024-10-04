@@ -30,16 +30,16 @@ class ChatSummary(discord.Cog):
         if message.author.bot:
             return
 
-        res = client['ChatSummary'].find_one({'GuildID': message.guild.id, 'ChannelID': message.channel.id})
+        res = client['ChatSummary'].find_one({'GuildID': str(message.guild.id), 'ChannelID': str(message.channel.id)})
         if not res:
             client['ChatSummary'].insert_one(
-                {'GuildID': message.guild.id, 'ChannelID': message.channel.id, 'Enabled': False, 'MessageCount': 0,
+                {'GuildID': str(message.guild.id), 'ChannelID': str(message.channel.id), 'Enabled': False, 'MessageCount': 0,
                  'Messages': {}})
         else:
-            client['ChatSummary'].update_one({'GuildID': message.guild.id, 'ChannelID': message.channel.id,
+            client['ChatSummary'].update_one({'GuildID': str(message.guild.id), 'ChannelID': str(message.channel.id),
                                               f'Messages.{message.author.id}': {'$exists': False}},
                                              {'$set': {f'Messages.{message.author.id}': 0}})
-            client['ChatSummary'].update_one({'GuildID': message.guild.id, 'ChannelID': message.channel.id},
+            client['ChatSummary'].update_one({'GuildID': str(message.guild.id), 'ChannelID': str(message.channel.id)},
                                              {'$inc': {'MessageCount': 1, f'Messages.{message.author.id}': 1}})
 
     @discord.Cog.listener()
@@ -54,35 +54,34 @@ class ChatSummary(discord.Cog):
         if countedits == "False":
             return
 
-        res = client['ChatSummary'].find_one({'GuildID': new_message.guild.id, 'ChannelID': new_message.channel.id})
+        res = client['ChatSummary'].find_one({'GuildID': str(new_message.guild.id), 'ChannelID': str(new_message.channel.id)})
         if not res:
             client['ChatSummary'].insert_one(
-                {'GuildID': new_message.guild.id, 'ChannelID': new_message.channel.id, 'Enabled': False,
+                {'GuildID': str(new_message.guild.id), 'ChannelID': str(new_message.channel.id), 'Enabled': False,
                  'MessageCount': 0,
                  'Messages': {}})
         else:
-            client['ChatSummary'].update_one({'GuildID': new_message.guild.id, 'ChannelID': new_message.channel.id,
+            client['ChatSummary'].update_one({'GuildID': str(new_message.guild.id), 'ChannelID': str(new_message.channel.id),
                                               f'Messages.{new_message.author.id}': {'$exists': False}},
                                              {'$set': {f'Messages.{new_message.author.id}': 0}})
-            client['ChatSummary'].update_one({'GuildID': new_message.guild.id, 'ChannelID': new_message.channel.id},
+            client['ChatSummary'].update_one({'GuildID': str(new_message.guild.id), 'ChannelID': str(new_message.channel.id)},
                                              {'$inc': {'MessageCount': 1, f'Messages.{new_message.author.id}': 1}})
 
     @tasks.loop(minutes=1)
     async def summarize(self):
-        # cur = db.cursor()
-        # cur.execute('SELECT guild_id, channel_id, messages FROM chat_summary WHERE enabled = 1')
         res = client['ChatSummary'].find({'Enabled': True}).to_list()
+        print('Result:', res)
         for i in res:
             yesterday = get_now_for_server(i['GuildID'])
 
             if yesterday.hour != 0 or yesterday.minute != 0:
                 continue
 
-            guild = self.bot.get_guild(i['GuildID'])
+            guild = self.bot.get_guild(int(i['GuildID']))
             if guild is None:
                 continue
 
-            channel = guild.get_channel(i['ChannelID'])
+            channel = guild.get_channel(int(i['ChannelID']))
             if channel is None:
                 continue
 
@@ -142,11 +141,7 @@ class ChatSummary(discord.Cog):
             except Exception as e:
                 sentry_sdk.capture_exception(e)
 
-            # cur.execute('UPDATE chat_summary SET messages = 0 WHERE guild_id = ? AND channel_id = ?', (i[0], i[1]))
-            # cur.execute(
-            #     'DELETE FROM chat_summary_members WHERE guild_id = ? AND channel_id = ?', (i[0], i[1]))
-
-            client['ChatSummary'].update_one({'GuildID': guild.id, 'ChannelID': channel.id},
+            client['ChatSummary'].update_one({'GuildID': str(guild.id), 'ChannelID': str(channel.id)},
                                              {'$set': {'Messages': {}, 'MessageCount': 0}})
 
     chat_summary_subcommand = discord.SlashCommandGroup(
@@ -159,7 +154,7 @@ class ChatSummary(discord.Cog):
     @commands_ext.bot_has_permissions(send_messages=True)
     @analytics("chatsummary add")
     async def command_add(self, ctx: discord.ApplicationContext, channel: discord.TextChannel):
-        res = client['ChatSummary'].update_one({'GuildID': ctx.guild.id, 'ChannelID': channel.id},
+        res = client['ChatSummary'].update_one({'GuildID': str(ctx.guild.id), 'ChannelID': str(channel.id)},
                                                {'$set': {'Enabled': True}})
         if res.modified_count == 0:
             await ctx.respond(trl(ctx.user.id, ctx.guild.id, "chat_summary_add_already_added"), ephemeral=True)
@@ -182,7 +177,7 @@ class ChatSummary(discord.Cog):
     @commands_ext.has_permissions(manage_guild=True)
     @analytics("chatsummary remove")
     async def command_remove(self, ctx: discord.ApplicationContext, channel: discord.TextChannel):
-        res = client['ChatSummary'].update_one({'GuildID': ctx.guild.id, 'ChannelID': channel.id},
+        res = client['ChatSummary'].update_one({'GuildID': str(ctx.guild.id), 'ChannelID': str(channel.id)},
                                                {'$set': {'Enabled': False}})
         if res.modified_count == 0:
             await ctx.respond(trl(ctx.user.id, ctx.guild.id, 'chat_summary_remove_already_removed'), ephemeral=True)
