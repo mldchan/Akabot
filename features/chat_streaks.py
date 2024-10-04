@@ -3,7 +3,7 @@ import datetime
 import discord
 from discord.ext import commands as commands_ext
 
-from database import conn as db
+from database import client
 from utils.analytics import analytics
 from utils.languages import get_translation_for_key_localized as trl, get_language
 from utils.logging_util import log_into_logs
@@ -19,19 +19,7 @@ class ChatStreakStorage:
     """
 
     def __init__(self) -> None:
-        cur = db.cursor()
-        cur.execute(
-            'CREATE TABLE IF NOT EXISTS chat_streaks (guild_id INTEGER, member_id INTEGER, last_message DATETIME, start_time DATETIME)')
-        cur.execute(
-            'CREATE UNIQUE INDEX IF NOT EXISTS chat_streaks_index ON chat_streaks (guild_id, member_id)')
-
-        cur.execute("SELECT * FROM chat_streaks WHERE typeof(last_message) != 'text' OR typeof(start_time) != 'text'")
-        invalid_rows = cur.fetchall()
-        for row in invalid_rows:
-            cur.execute("DELETE FROM chat_streaks WHERE guild_id = ? AND member_id = ?", (row[0], row[1]))
-
-        cur.close()
-        db.commit()
+        super().__init__()
 
     def set_streak(self, guild_id: int, member_id: int) -> tuple[str, int, int]:
         """Set streak
@@ -44,47 +32,43 @@ class ChatStreakStorage:
             str: The state of the streak
         """
 
-        cur = db.cursor()
+        res = client['ChatStreaks'].find({'GuildID': guild_id, 'MemberID': member_id})
 
-        # Check and start if not existant
-        cur.execute(
-            'SELECT * FROM chat_streaks WHERE guild_id = ? AND member_id = ?', (guild_id, member_id))
-        if cur.fetchone() is None:
+        if len(res) == 0:
             start_time = get_server_midnight_time(guild_id)
-            cur.execute('INSERT INTO chat_streaks (guild_id, member_id, last_message, start_time) VALUES (?, ?, ?, ?)',
-                        (guild_id, member_id, start_time, start_time))
-            cur.close()
-            db.commit()
+            client['ChatStreaks'].insert_one({
+                'GuildID': guild_id,
+                'MemberID': member_id,
+                'LastMessage': start_time,
+                'StartTime': start_time
+            })
+
             return "started", 0, 0
 
-        cur.execute('SELECT last_message, start_time FROM chat_streaks WHERE guild_id = ? AND member_id = ?',
-                    (guild_id, member_id))
-        result = cur.fetchone()
-        last_message = datetime.datetime.fromisoformat(result[0])
-        start_time = datetime.datetime.fromisoformat(result[1])
+        res = client['ChatStreaks'].find({'GuildID': guild_id, 'MemberID': member_id})
+        last_message = res['LastMessage']
+        start_time = res['StartTime']
 
         # Check for streak expiry
         if get_server_midnight_time(guild_id) - last_message > datetime.timedelta(days=1, hours=1):
             streak = max((last_message - start_time).days, 0)
-            cur.execute(
-                'UPDATE chat_streaks SET last_message = ?, start_time = ? WHERE guild_id = ? AND member_id = ?',
-                (get_server_midnight_time(guild_id), get_server_midnight_time(guild_id), guild_id, member_id))
-            cur.close()
-            db.commit()
+            client['ChatStreaks'].update_one({'GuildID': guild_id, 'MemberID': member_id},
+                                             {'$set': {'LastMessage': get_server_midnight_time(guild_id),
+                                                       'StartTime': get_server_midnight_time(guild_id)}})
             return "expired", streak, 0
 
         before_update = (last_message - start_time).days
-        cur.execute('UPDATE chat_streaks SET last_message = ? WHERE guild_id = ? AND member_id = ?',
-                    (get_server_midnight_time(guild_id), guild_id, member_id))
-        after_update = (get_server_midnight_time(guild_id) - start_time).days
 
-        cur.close()
-        db.commit()
+        client['ChatStreaks'].update_one({'GuildID': guild_id, 'MemberID': member_id},
+                                         {'$set': {'LastMessage': get_server_midnight_time(guild_id)}})
+
+        after_update = (last_message - get_server_midnight_time(guild_id)).days
 
         if before_update != after_update:
             return "updated", before_update, after_update
 
         return "stayed", after_update, 0
+
 
     def reset_streak(self, guild_id: int, member_id: int) -> None:
         """Reset streak
@@ -94,21 +78,14 @@ class ChatStreakStorage:
             member_id (int): Member ID
         """
 
-        cur = db.cursor()
-        cur.execute(
-            'SELECT * FROM chat_streaks WHERE guild_id = ? AND member_id = ?', (guild_id, member_id))
-        if not cur.fetchone():
-            start_time = get_server_midnight_time(guild_id)
-            cur.execute('INSERT INTO chat_streaks (guild_id, member_id, last_message, start_time) VALUES (?, ?, ?, ?)',
-                        (guild_id, member_id, start_time, start_time))
-            cur.close()
-            db.commit()
-            return
-
-        cur.execute('UPDATE chat_streaks SET last_message = ?, start_time = ? WHERE guild_id = ? AND member_id = ?',
-                    (get_server_midnight_time(guild_id), get_server_midnight_time(guild_id), guild_id, member_id))
-        cur.close()
-        db.commit()
+        if client['ChatStreaks'].find_one({'GuildID': guild_id, 'MemberID': member_id}) is None:
+            client['ChatStreaks'].insert_one(
+                {'GuildID': guild_id, 'MemberID': member_id, 'LastMessage': get_server_midnight_time(guild_id),
+                 'StartTime': get_server_midnight_time(guild_id)})
+        else:
+            client['ChatStreaks'].update_one({'GuildID': guild_id, 'MemberID': member_id},
+                                             {'$set': {'LastMessage': get_server_midnight_time(guild_id),
+                                                       'StartTime': get_server_midnight_time(guild_id)}})
 
 
 class ChatStreaks(discord.Cog):
@@ -165,8 +142,9 @@ class ChatStreaks(discord.Cog):
         await log_into_logs(ctx.guild, logging_embed)
 
         # Respond
-        await ctx.respond(trl(ctx.user.id, ctx.guild.id, "chat_streaks_reset_success", append_tip=True).format(user=user.mention),
-                          ephemeral=True)
+        await ctx.respond(
+            trl(ctx.user.id, ctx.guild.id, "chat_streaks_reset_success", append_tip=True).format(user=user.mention),
+            ephemeral=True)
 
     @streaks_subcommand.command(name="streak", description="Get someone's streak, to get yours, /streak.")
     @commands_ext.guild_only()
@@ -177,14 +155,16 @@ class ChatStreaks(discord.Cog):
     async def get_user_streak(self, ctx: discord.ApplicationContext, user: discord.Member):
         (_, streak, _) = self.streak_storage.set_streak(ctx.guild.id, user.id)
         await ctx.respond(
-            trl(ctx.user.id, ctx.guild.id, "chat_streaks_streak_admin", append_tip=True).format(user=user.mention, streak=str(streak)),
+            trl(ctx.user.id, ctx.guild.id, "chat_streaks_streak_admin", append_tip=True).format(user=user.mention,
+                                                                                                streak=str(streak)),
             ephemeral=True)
 
     @discord.slash_command(name='streak', description='Get your current streak')
     @analytics("streak")
     async def get_streak_command(self, ctx: discord.ApplicationContext):
         (_, streak, _) = self.streak_storage.set_streak(ctx.guild.id, ctx.user.id)
-        await ctx.respond(trl(ctx.user.id, ctx.guild.id, "chat_streaks_streak", append_tip=True).format(streak=streak), ephemeral=True)
+        await ctx.respond(trl(ctx.user.id, ctx.guild.id, "chat_streaks_streak", append_tip=True).format(streak=streak),
+                          ephemeral=True)
 
     # Leaderboard
 
@@ -192,16 +172,23 @@ class ChatStreaks(discord.Cog):
     @commands_ext.guild_only()
     @analytics("streaks leaderboard")
     async def streaks_lb(self, ctx: discord.ApplicationContext):
-        cur = db.cursor()
-        cur.execute(
-            'SELECT member_id, MAX(julianday(last_message) - julianday(start_time)) '
-            'FROM chat_streaks '
-            'WHERE guild_id = ? '
-            'GROUP BY member_id '
-            'ORDER BY MAX(julianday(last_message) - julianday(start_time)) DESC LIMIT 10',
-            (ctx.guild.id,))
-        rows = cur.fetchall()
-        cur.close()
+        rows = client['ChatStreaks'].aggregate([
+            {
+                "$match": {"GuildID": ctx.guild.id}
+            },
+            {
+                "$group": {
+                    "_id": "$MemberID",
+                    "MaxStreak": {"$max": {"$subtract": ["$LastMessage", "$StartTime"]}}
+                }
+            },
+            {
+                "$sort": {"max_streak": -1}
+            },
+            {
+                "$limit": 10
+            }
+        ])
 
         message = trl(ctx.user.id, ctx.guild.id, "chat_streak_leaderboard_title")
 
@@ -210,7 +197,7 @@ class ChatStreaks(discord.Cog):
             if member is None:
                 continue
 
-            days = int(row[1])
+            days = int(row['MaxStreak'])
 
             message += trl(ctx.user.id, ctx.guild.id, "chat_streak_leaderboard_line").format(position=i + 1,
                                                                                              user=member.mention,
