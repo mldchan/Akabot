@@ -6,7 +6,7 @@ import emoji
 import sentry_sdk
 from discord.ext import commands as commands_ext
 
-from database import conn as db
+from database import client
 from utils.analytics import analytics
 from utils.languages import get_translation_for_key_localized as trl, get_language
 from utils.logging_util import log_into_logs
@@ -14,14 +14,6 @@ from utils.per_user_settings import get_per_user_setting, set_per_user_setting
 from utils.settings import get_setting, set_setting
 from utils.tips import append_tip_to_message
 from utils.tzutil import get_now_for_server
-
-
-def db_init():
-    cur = db.cursor()
-    cur.execute("create table if not exists leveling (guild_id int, user_id int, xp int)")
-    cur.execute("create table if not exists leveling_multiplier (guild_id int, name text, multiplier int, start_date text, end_date text)")
-    cur.close()
-    db.commit()
 
 
 def db_calculate_multiplier(guild_id: int):
@@ -46,27 +38,29 @@ def db_calculate_multiplier(guild_id: int):
 
 
 def db_get_user_xp(guild_id: int, user_id: int):
-    db_init()
-    cur = db.cursor()
-    cur.execute('SELECT xp FROM leveling WHERE guild_id = ? AND user_id = ?', (guild_id, user_id))
-    data = cur.fetchone()
-    cur.close()
-    return data[0] if data else 1
+    # db_init()
+    # cur = db.cursor()
+    # cur.execute('SELECT xp FROM leveling WHERE guild_id = ? AND user_id = ?', (guild_id, user_id))
+    data = client['Leveling'].find_one({'GuildID': guild_id, 'UserID': user_id})
+    # cur.close()
+    return data['XP'] if data else 1
 
 
 def db_add_user_xp(guild_id: int, user_id: int, xp: int):
-    db_init()
-    cur = db.cursor()
-    cur.execute("SELECT xp FROM leveling WHERE guild_id = ? AND user_id = ?", (guild_id, user_id))
-    data = cur.fetchone()
+    # db_init()
+    # cur = db.cursor()
+    # cur.execute("SELECT xp FROM leveling WHERE guild_id = ? AND user_id = ?", (guild_id, user_id))
+    data = client['Leveling'].find_one({'GuildID': guild_id, 'UserID': user_id})
     if data:
-        current_xp = data[0]
+        current_xp = data['XP']
         multiplier = db_calculate_multiplier(guild_id)
-        cur.execute("UPDATE leveling SET xp = ? WHERE guild_id = ? AND user_id = ?", (current_xp + (xp * int(multiplier)), guild_id, user_id))
+        # cur.execute("UPDATE leveling SET xp = ? WHERE guild_id = ? AND user_id = ?", (current_xp + (xp * int(multiplier)), guild_id, user_id))
+        client['Leveling'].update_one({'GuildID': guild_id, 'UserID': user_id}, {'$inc': {'XP': xp}}, upsert=True)
     else:
-        cur.execute("INSERT INTO leveling (guild_id, user_id, xp) VALUES (?, ?, ?)", (guild_id, user_id, xp))
-    cur.close()
-    db.commit()
+        # cur.execute("INSERT INTO leveling (guild_id, user_id, xp) VALUES (?, ?, ?)", (guild_id, user_id, xp))
+        client['Leveling'].insert_one({'GuildID': guild_id, 'UserID': user_id, 'XP': xp})
+    # cur.close()
+    # db.commit()
 
 
 def get_level_for_xp(guild_id: int, xp: int):
@@ -91,78 +85,85 @@ def get_xp_for_level(guild_id: int, level: int):
 
 
 def db_multiplier_add(guild_id: int, name: str, multiplier: int, start_date_month: int, start_date_day: int, end_date_month: int, end_date_day: int):
-    db_init()
-    cur = db.cursor()
-    cur.execute("INSERT INTO leveling_multiplier (guild_id, name, multiplier, start_date, end_date) VALUES (?, ?, ?, ?, ?)",
-        (guild_id, name, multiplier, '{:02d}-{:02d}'.format(start_date_month, start_date_day), '{:02d}-{:02d}'.format(end_date_month, end_date_day)))
-    cur.close()
-    db.commit()
+    # db_init()
+    # cur = db.cursor()
+    # cur.execute("INSERT INTO leveling_multiplier (guild_id, name, multiplier, start_date, end_date) VALUES (?, ?, ?, ?, ?)",
+    #     (guild_id, name, multiplier, '{:02d}-{:02d}'.format(start_date_month, start_date_day), '{:02d}-{:02d}'.format(end_date_month, end_date_day)))
+    # cur.close()
+    # db.commit()
+    client['LevelingMultiplier'].insert_one({'GuildID': guild_id, 'Name': name, 'Multiplier': multiplier, 'StartDate': '{:02d}-{:02d}'.format(start_date_month, start_date_day),
+                                             'EndDate': '{:02d}-{:02d}'.format(end_date_month, end_date_day)})
 
 
 def db_multiplier_exists(guild_id: int, name: str):
-    db_init()
-    cur = db.cursor()
-    cur.execute("SELECT * FROM leveling_multiplier WHERE guild_id = ? AND name = ?", (guild_id, name))
-    data = cur.fetchone()
-    cur.close()
-    return data is not None
+    # db_init()
+    # cur = db.cursor()
+    # cur.execute("SELECT * FROM leveling_multiplier WHERE guild_id = ? AND name = ?", (guild_id, name))
+    data = client['LevelingMultiplier'].count_documents({'GuildID': guild_id, 'Name': name})
+    # cur.close()
+    return data > 0
 
 
 def db_multiplier_change_name(guild_id: int, old_name: str, new_name: str):
-    db_init()
-    cur = db.cursor()
-    cur.execute("UPDATE leveling_multiplier SET name = ? WHERE guild_id = ? AND name = ?", (new_name, guild_id, old_name))
-    cur.close()
-    db.commit()
+    # db_init()
+    # cur = db.cursor()
+    # cur.execute("UPDATE leveling_multiplier SET name = ? WHERE guild_id = ? AND name = ?", (new_name, guild_id, old_name))
+    # cur.close()
+    # db.commit()
+    client['LevelingMultiplier'].update_one({'GuildID': guild_id, 'Name': old_name}, {'$set': {'Name': new_name}})
 
 
 def db_multiplier_change_multiplier(guild_id: int, name: str, multiplier: int):
-    db_init()
-    cur = db.cursor()
-    cur.execute("UPDATE leveling_multiplier SET multiplier = ? WHERE guild_id = ? AND name = ?", (multiplier, guild_id, name))
-    cur.close()
-    db.commit()
+    # db_init()
+    # cur = db.cursor()
+    # cur.execute("UPDATE leveling_multiplier SET multiplier = ? WHERE guild_id = ? AND name = ?", (multiplier, guild_id, name))
+    # cur.close()
+    # db.commit()
+    client['LevelingMultiplier'].update_one({'GuildID': guild_id, 'Name': name}, {'$set': {'Multiplier': multiplier}})
 
 
 def db_multiplier_change_start_date(guild_id: int, name: str, start_date: datetime.datetime):
-    db_init()
-    cur = db.cursor()
-    cur.execute("UPDATE leveling_multiplier SET start_date = ? WHERE guild_id = ? AND name = ?", (start_date, guild_id, name))
-    cur.close()
-    db.commit()
+    # db_init()
+    # cur = db.cursor()
+    # cur.execute("UPDATE leveling_multiplier SET start_date = ? WHERE guild_id = ? AND name = ?", (start_date, guild_id, name))
+    # cur.close()
+    # db.commit()
+    client['LevelingMultiplier'].update_one({'GuildID': guild_id, 'Name': name}, {'$set': {'StartDate': start_date}})
 
 
 def db_multiplier_change_end_date(guild_id: int, name: str, end_date: datetime.datetime):
-    db_init()
-    cur = db.cursor()
-    cur.execute("UPDATE leveling_multiplier SET end_date = ? WHERE guild_id = ? AND name = ?", (end_date, guild_id, name))
-    cur.close()
-    db.commit()
+    # db_init()
+    # cur = db.cursor()
+    # cur.execute("UPDATE leveling_multiplier SET end_date = ? WHERE guild_id = ? AND name = ?", (end_date, guild_id, name))
+    # cur.close()
+    # db.commit()
+    client['LevelingMultiplier'].update_one({'GuildID': guild_id, 'Name': name}, {'$set': {'EndDate': end_date}})
 
 
 def db_multiplier_remove(guild_id: int, name: str):
-    db_init()
-    cur = db.cursor()
-    cur.execute("DELETE FROM leveling_multiplier WHERE guild_id = ? AND name = ?", (guild_id, name))
-    cur.close()
-    db.commit()
+    # db_init()
+    # cur = db.cursor()
+    # cur.execute("DELETE FROM leveling_multiplier WHERE guild_id = ? AND name = ?", (guild_id, name))
+    # cur.close()
+    # db.commit()
+    client['LevelingMultiplier'].delete_one({'GuildID': guild_id, 'Name': name})
 
 
 def db_multiplier_getall(guild_id: int):
-    db_init()
-    cur = db.cursor()
-    cur.execute("SELECT * FROM leveling_multiplier WHERE guild_id = ?", (guild_id,))
-    data = cur.fetchall()
-    cur.close()
+    # db_init()
+    # cur = db.cursor()
+    # cur.execute("SELECT * FROM leveling_multiplier WHERE guild_id = ?", (guild_id,))
+    data = client['LevelingMultiplier'].find({'GuildID': guild_id})
+    # cur.close()
     return data
 
 
 def db_multiplier_get(guild_id: int, name: str):
-    db_init()
-    cur = db.cursor()
-    cur.execute("SELECT * FROM leveling_multiplier WHERE guild_id = ? AND name = ?", (guild_id, name))
-    data = cur.fetchone()
-    cur.close()
+    # db_init()
+    # cur = db.cursor()
+    # cur.execute("SELECT * FROM leveling_multiplier WHERE guild_id = ? AND name = ?", (guild_id, name))
+    data = client['LevelingMultiplier'].find_one({'GuildID': guild_id, 'Name': name})
+    # cur.close()
     return data
 
 
@@ -290,7 +291,8 @@ class Leveling(discord.Cog):
 
         if user == ctx.user:
             icon = get_per_user_setting(ctx.user.id, 'leveling_icon', '')
-            response = trl(ctx.user.id, ctx.guild.id, "leveling_level_info_self").format(icon=icon, level=level, level_xp=level_xp, next_level_xp=next_level_xp, next_level=level + 1, multiplier=multiplier)
+            response = trl(ctx.user.id, ctx.guild.id, "leveling_level_info_self").format(icon=icon, level=level, level_xp=level_xp, next_level_xp=next_level_xp, next_level=level + 1,
+                                                                                         multiplier=multiplier)
 
             if len(msg) > 0:
                 response += trl(ctx.user.id, ctx.guild.id, "leveling_level_multiplier_title")
@@ -299,7 +301,8 @@ class Leveling(discord.Cog):
             await ctx.respond(response, ephemeral=True)
         else:
             icon = get_per_user_setting(user.id, 'leveling_icon', '')
-            response = trl(ctx.user.id, ctx.guild.id, "leveling_level_info_another").format(icon=icon, user=user.mention, level=level, level_xp=level_xp, next_level_xp=next_level_xp, next_level=level + 1,
+            response = trl(ctx.user.id, ctx.guild.id, "leveling_level_info_another").format(icon=icon, user=user.mention, level=level, level_xp=level_xp, next_level_xp=next_level_xp,
+                                                                                            next_level=level + 1,
                                                                                             multiplier=multiplier)
 
             if len(msg) > 0:
@@ -641,7 +644,7 @@ class Leveling(discord.Cog):
         else:
             logging_embed.add_field(name=trl(0, ctx.guild.id, "logging_role"),
                                     value=trl(0, ctx.guild.id, "leveling_set_reward_log_role_changed").format(old_reward=old_role.mention if old_role is not None else old_role_id,
-                                        new_reward=role.mention))
+                                                                                                              new_reward=role.mention))
 
         # Send into logs
         await log_into_logs(ctx.guild, logging_embed)

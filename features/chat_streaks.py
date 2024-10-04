@@ -32,9 +32,9 @@ class ChatStreakStorage:
             str: The state of the streak
         """
 
-        res = client['ChatStreaks'].find({'GuildID': guild_id, 'MemberID': member_id})
+        res = client['ChatStreaks'].find_one({'GuildID': guild_id, 'MemberID': member_id})
 
-        if len(res) == 0:
+        if not res:
             start_time = get_server_midnight_time(guild_id)
             client['ChatStreaks'].insert_one({
                 'GuildID': guild_id,
@@ -45,7 +45,6 @@ class ChatStreakStorage:
 
             return "started", 0, 0
 
-        res = client['ChatStreaks'].find({'GuildID': guild_id, 'MemberID': member_id})
         last_message = res['LastMessage']
         start_time = res['StartTime']
 

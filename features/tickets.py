@@ -3,69 +3,47 @@ import datetime
 import discord
 from discord.ext import commands, tasks
 
-from database import conn
+from database import client
 from utils.settings import set_setting, get_setting
 from utils.tzutil import get_now_for_server
 from utils.logging_util import log_into_logs
 
-
-def db_init():
-    """
-    Initialize the database for the tickets feature.
-    id is the primary key and autoincrements.
-    guild_id is the Guild ID.
-    ticket_channel_id is the Ticket Channel ID.
-    user_id is the User ID of the ticket creator.
-    mtime is the last modification time of the ticket. This includes messages and reactions.
-    atime is the time the ticket was archived. Used for letting the user see the ticket for a certain amount of time.
-    atime is set to "None" (string) if the ticket is not archived.
-    """
-    cur = conn.cursor()
-    cur.execute(
-        "create table if not exists tickets (id integer primary key autoincrement, guild_id bigint, ticket_channel_id "
-        "bigint, user_id bigint, mtime text, atime text)")
-    cur.close()
-    conn.commit()
-
-
 def db_add_ticket_channel(guild_id: int, ticket_category: int, user_id: int):
-    cur = conn.cursor()
-    cur.execute("insert into tickets(guild_id, ticket_channel_id, user_id, mtime, atime) values (?, ?, ?, ?, ?)",
-                (guild_id, ticket_category, user_id, get_now_for_server(guild_id).isoformat(), "None"))
-    cur.close()
-    conn.commit()
+    client['TicketChannels'].insert_one({'GuildID': guild_id, 'TicketChannelID': ticket_category, 'UserID': user_id, 'MTime': get_now_for_server(guild_id), 'ATime': 'None'})
 
 
 def db_is_ticket_channel(guild_id: int, ticket_channel_id: int):
-    cur = conn.cursor()
-    cur.execute("select * from tickets where guild_id = ? and ticket_channel_id = ?", (guild_id, ticket_channel_id))
-    ticket = cur.fetchone()
-    cur.close()
-    return ticket is not None
+    # cur = conn.cursor()
+    # cur.execute("select * from tickets where guild_id = ? and ticket_channel_id = ?", (guild_id, ticket_channel_id))
+    count = client['TicketChannels'].count_documents({'GuildID': guild_id, 'TicketChannelID': ticket_channel_id})
+    # cur.close()
+    return count > 0
 
 
 def db_get_ticket_creator(guild_id: int, ticket_channel_id: int):
-    cur = conn.cursor()
-    cur.execute("select user_id from tickets where guild_id = ? and ticket_channel_id = ?",
-                (guild_id, ticket_channel_id))
-    user_id = cur.fetchone()
-    cur.close()
-    return user_id[0] if user_id is not None else None
+    # cur = conn.cursor()
+    # cur.execute("select user_id from tickets where guild_id = ? and ticket_channel_id = ?",
+    #             (guild_id, ticket_channel_id))
+    user_id = client['TicketChannels'].find_one({'GuildID': guild_id, 'TicketChannelID': ticket_channel_id})['UserID']
+    # cur.close()
+    return user_id
 
 
 def db_remove_ticket_channel(guild_id: int, ticket_channel_id: int):
-    cur = conn.cursor()
-    cur.execute("delete from tickets where guild_id = ? and ticket_channel_id = ?", (guild_id, ticket_channel_id))
-    cur.close()
-    conn.commit()
+    # cur = conn.cursor()
+    # cur.execute("delete from tickets where guild_id = ? and ticket_channel_id = ?", (guild_id, ticket_channel_id))
+    # cur.close()
+    # conn.commit()
+    client['TicketChannels'].delete_one({'GuildID': guild_id, 'TicketChannelID': ticket_channel_id})
 
 
 def db_update_mtime(guild_id: int, ticket_channel_id: int):
-    cur = conn.cursor()
-    cur.execute("update tickets set mtime = ? where guild_id = ? and ticket_channel_id = ?",
-                (get_now_for_server(guild_id).isoformat(), guild_id, ticket_channel_id))
-    cur.close()
-    conn.commit()
+    # cur = conn.cursor()
+    # cur.execute("update tickets set mtime = ? where guild_id = ? and ticket_channel_id = ?",
+    #             (get_now_for_server(guild_id).isoformat(), guild_id, ticket_channel_id))
+    # cur.close()
+    # conn.commit()
+    client['TicketChannels'].update_one({'GuildID': guild_id, 'TicketChannelID': ticket_channel_id}, {'$set': {'MTime': get_now_for_server(guild_id)}})
 
 
 def check_ticket_archive_time(guild_id: int, ticket_channel_id: int) -> bool:
@@ -73,15 +51,14 @@ def check_ticket_archive_time(guild_id: int, ticket_channel_id: int) -> bool:
     if archive_time == "0":
         return False
 
-    cur = conn.cursor()
-    cur.execute("select mtime from tickets where guild_id = ? and ticket_channel_id = ?", (guild_id, ticket_channel_id))
-    mtime = cur.fetchone()
-    cur.close()
+    # cur = conn.cursor()
+    # cur.execute("select mtime from tickets where guild_id = ? and ticket_channel_id = ?", (guild_id, ticket_channel_id))
+    mtime = client['TicketChannels'].find_one({'GuildID': guild_id, 'TicketChannelID': ticket_channel_id})['MTime']
+    # cur.close()
 
     if mtime is None:
         return False
 
-    mtime = datetime.datetime.fromisoformat(mtime[0])
     if (get_now_for_server(guild_id) - mtime).total_seconds() / 3600 >= int(archive_time):
         return True
 
@@ -89,12 +66,12 @@ def check_ticket_archive_time(guild_id: int, ticket_channel_id: int) -> bool:
 
 
 def db_is_archived(guild_id: int, ticket_channel_id: int) -> bool:
-    cur = conn.cursor()
-    cur.execute("select atime from tickets where guild_id = ? and ticket_channel_id = ?", (guild_id, ticket_channel_id))
-    atime = cur.fetchone()
-    cur.close()
+    # cur = conn.cursor()
+    # cur.execute("select atime from tickets where guild_id = ? and ticket_channel_id = ?", (guild_id, ticket_channel_id))
+    atime = client['TicketChannels'].find_one({'GuildID': guild_id, 'TicketChannelID': ticket_channel_id})['ATime']
+    # cur.close()
 
-    return atime[0] != "None" if atime is not None else False
+    return atime[0] != "None"
 
 
 def check_ticket_hide_time(guild_id: int, ticket_channel_id: int) -> bool:
@@ -105,15 +82,14 @@ def check_ticket_hide_time(guild_id: int, ticket_channel_id: int) -> bool:
     if hide_time == "0":
         return False
 
-    cur = conn.cursor()
-    cur.execute("select atime from tickets where guild_id = ? and ticket_channel_id = ?", (guild_id, ticket_channel_id))
-    atime = cur.fetchone()
-    cur.close()
+    # cur = conn.cursor()
+    # cur.execute("select atime from tickets where guild_id = ? and ticket_channel_id = ?", (guild_id, ticket_channel_id))
+    atime = client['TicketChannels'].find_one({'GuildID': guild_id, 'TicketChannelID': ticket_channel_id})['ATime']
+    # cur.close()
 
     if atime is None:
         return False
 
-    atime = datetime.datetime.fromisoformat(atime[0])
     if (get_now_for_server(guild_id) - atime).total_seconds() / 3600 >= int(hide_time):
         return True
 
@@ -121,11 +97,12 @@ def check_ticket_hide_time(guild_id: int, ticket_channel_id: int) -> bool:
 
 
 def db_archive_ticket(guild_id: int, ticket_channel_id: int):
-    cur = conn.cursor()
-    cur.execute("update tickets set atime = ? where guild_id = ? and ticket_channel_id = ?",
-                (get_now_for_server(guild_id).isoformat(), guild_id, ticket_channel_id))
-    cur.close()
-    conn.commit()
+    # cur = conn.cursor()
+    # cur.execute("update tickets set atime = ? where guild_id = ? and ticket_channel_id = ?",
+    #             (get_now_for_server(guild_id).isoformat(), guild_id, ticket_channel_id))
+    # cur.close()
+    # conn.commit()
+    client['TicketChannels'].update_one({'GuildID': guild_id, 'TicketChannelID': ticket_channel_id}, {'$set': {'ATime': get_now_for_server(guild_id)}})
 
 
 def db_list_archived_tickets():
@@ -133,10 +110,10 @@ def db_list_archived_tickets():
     Get all archived tickets.
     :return: List of tuples with guild_id and ticket_channel_id.
     """
-    cur = conn.cursor()
-    cur.execute("select guild_id, ticket_channel_id from tickets where atime != 'None'")
-    tickets = cur.fetchall()
-    cur.close()
+    # cur = conn.cursor()
+    # cur.execute("select guild_id, ticket_channel_id from tickets where atime != 'None'")
+    tickets = client['TicketChannels'].find({'ATime': {'$not': {'$eq': 'None'}}})
+    # cur.close()
     return tickets
 
 
@@ -145,10 +122,11 @@ def db_list_not_archived_tickets():
     Get all not archived tickets.
     :return: List of tuples with guild_id and ticket_channel_id.
     """
-    cur = conn.cursor()
-    cur.execute("select guild_id, ticket_channel_id from tickets where atime = 'None'")
-    tickets = cur.fetchall()
-    cur.close()
+    # cur = conn.cursor()
+    # cur.execute("select guild_id, ticket_channel_id from tickets where atime = 'None'")
+    # tickets = cur.fetchall()
+    tickets = client['TicketChannels'].find({'ATime': 'None'})
+    # cur.close()
     return tickets
 
 
@@ -179,8 +157,7 @@ class TicketMessageView(discord.ui.View):
             db_remove_ticket_channel(interaction.guild.id, interaction.channel.id)
         else:
             member = interaction.guild.get_member(db_get_ticket_creator(interaction.guild.id, interaction.channel.id))
-            await interaction.channel.set_permissions(member, view_channel=False, read_messages=True,
-                                                      send_messages=False)
+            await interaction.channel.set_permissions(member, send_messages=False)
             db_archive_ticket(interaction.guild.id, interaction.channel.id)
 
         # Send closed message
@@ -222,7 +199,7 @@ class TicketCreateView(discord.ui.View):
         db_add_ticket_channel(interaction.guild.id, channel.id, interaction.user.id)
 
         await interaction.response.send_message("Ticket created! " + channel.mention, ephemeral=True)
-        
+
         log_embed = discord.Embed(title="Ticket Created", description=f"Ticket created by {interaction.user.mention} in {channel.mention}")
         log_embed.add_field(name="Ticket ID", value=channel.id)
         log_embed.add_field(name="Ticket Creator", value=interaction.user.mention)
@@ -230,14 +207,13 @@ class TicketCreateView(discord.ui.View):
         log_embed.add_field(name="Ticket Category", value=category.name)
         log_embed.add_field(name="Ticket Creation Time", value=get_now_for_server(interaction.guild.id).isoformat())
         log_embed.add_field(name="Ticket Message", value=interaction.message.jump_url)
-        
+
         await log_into_logs(interaction.guild, log_embed)
 
 
 class Tickets(discord.Cog):
     def __init__(self, bot: discord.Bot):
         self.bot = bot
-        db_init()
 
     tickets_commands = discord.SlashCommandGroup(name="tickets", description="Manage tickets")
 
@@ -303,14 +279,14 @@ class Tickets(discord.Cog):
 
         await ctx.channel.send(message, view=TicketCreateView(button_label))
         await ctx.respond("Message sent!", ephemeral=True)
-        
+
         log_embed = discord.Embed(title="Ticket Message Sent", description=f"Ticket message sent by {ctx.user.mention} in {ctx.channel.mention}")
         log_embed.add_field(name="Ticket Message", value=message)
         log_embed.add_field(name="Ticket Message Button Label", value=button_label)
         log_embed.add_field(name="Ticket Message Channel", value=ctx.channel.mention)
         log_embed.add_field(name="Ticket Message Time", value=get_now_for_server(ctx.guild.id).isoformat())
         log_embed.add_field(name="Ticket Message Message", value=ctx.message.jump_url)
-        
+
         await log_into_logs(ctx.guild, log_embed)
 
     @tickets_commands.command(name="set_category",
@@ -321,13 +297,13 @@ class Tickets(discord.Cog):
     async def set_category(self, ctx: discord.ApplicationContext, category: discord.CategoryChannel):
         set_setting(ctx.guild.id, "ticket_category", str(category.id))
         await ctx.respond("Category set!", ephemeral=True)
-        
+
         log_embed = discord.Embed(title="Ticket Category Set", description=f"Ticket category set by {ctx.user.mention} to {category.name}")
         log_embed.add_field(name="Ticket Category", value=category.name)
         log_embed.add_field(name="Ticket Category ID", value=category.id)
         log_embed.add_field(name="Ticket Category Time", value=get_now_for_server(ctx.guild.id).isoformat())
         log_embed.add_field(name="Ticket Category Message", value=ctx.message.jump_url)
-        
+
         await log_into_logs(ctx.guild, log_embed)
 
     @tickets_commands.command(name="set_hide_time",
@@ -338,12 +314,12 @@ class Tickets(discord.Cog):
     async def set_hide_time(self, ctx: discord.ApplicationContext, hours: int):
         set_setting(ctx.guild.id, "ticket_hide_time", str(hours))
         await ctx.respond("Hide time set!", ephemeral=True)
-        
+
         log_embed = discord.Embed(title="Ticket Hide Time Set", description=f"Ticket hide time set by {ctx.user.mention} to {hours} hours")
         log_embed.add_field(name="Ticket Hide Time", value=hours)
         log_embed.add_field(name="Ticket Hide Time Time", value=get_now_for_server(ctx.guild.id).isoformat())
         log_embed.add_field(name="Ticket Hide Time Message", value=ctx.message.jump_url)
-        
+
         await log_into_logs(ctx.guild, log_embed)
 
     @tickets_commands.command(name="set_archive_time",
@@ -353,40 +329,40 @@ class Tickets(discord.Cog):
     async def set_auto_archive_time(self, ctx: discord.ApplicationContext, hours: int):
         set_setting(ctx.guild.id, "ticket_archive_time", str(hours))
         await ctx.respond("Auto archive time set!", ephemeral=True)
-        
+
         log_embed = discord.Embed(title="Ticket Archive Time Set", description=f"Ticket archive time set by {ctx.user.mention} to {hours} hours")
         log_embed.add_field(name="Ticket Archive Time", value=hours)
         log_embed.add_field(name="Ticket Archive Time Time", value=get_now_for_server(ctx.guild.id).isoformat())
         log_embed.add_field(name="Ticket Archive Time Message", value=ctx.message.jump_url)
-        
+
         await log_into_logs(ctx.guild, log_embed)
 
     @tasks.loop(seconds=60)
     async def handle_hiding(self):
         for i in db_list_archived_tickets():
-            guild = self.bot.get_guild(i[0])
-            channel = guild.get_channel(i[1])
+            guild = self.bot.get_guild(i['GuildID'])
+            channel = guild.get_channel(i['TicketChannelID'])
 
-            if check_ticket_hide_time(i[0], i[1]):
-                member = guild.get_member(db_get_ticket_creator(i[0], i[1]))
+            if check_ticket_hide_time(i['GuildID'], i['TicketChannelID']):
+                member = guild.get_member(db_get_ticket_creator(i['GuildID'], i['TicketChannelID']))
                 await channel.set_permissions(member, read_messages=False, send_messages=False)
-                db_remove_ticket_channel(i[0], i[1])
-                
+                db_remove_ticket_channel(i['GuildID'], i['TicketChannelID'])
+
                 log_embed = discord.Embed(title="Ticket Hidden", description=f"Ticket hidden by the system in {channel.mention} because the hide time is up.")
                 log_embed.add_field(name="Ticket Hidden Time", value=get_now_for_server(guild.id).isoformat())
                 log_embed.add_field(name="Ticket Hidden Message", value=channel.jump_url)
-                
+
                 await log_into_logs(guild, log_embed)
 
     @tasks.loop(seconds=60)
     async def handle_auto_archive(self):
         # Ticket archiving after certain time of no changes
         for i in db_list_not_archived_tickets():
-            if check_ticket_archive_time(i[0], i[1]):
-                db_archive_ticket(i[0], i[1])
+            if check_ticket_archive_time(i['GuildID'], i['TicketChannelID']):
+                db_archive_ticket(i['GuildID'], i['TicketChannelID'])
 
-                guild = self.bot.get_guild(i[0])
-                channel = guild.get_channel(i[1])
+                guild = self.bot.get_guild(i['GuildID'])
+                channel = guild.get_channel(i['TicketChannelID'])
 
                 # Remove permissions from the ticket creator appropriately
                 atime = get_setting(guild.id, "ticket_hide_time", "0")
@@ -406,9 +382,9 @@ class Tickets(discord.Cog):
                 # Send closed message
                 await channel.send(
                     "Ticket closed automatically because there was no activity for a certain amount of time.")
-                
+
                 log_embed = discord.Embed(title="Ticket Closed Automatically", description=f"Ticket closed automatically by the system in {channel.mention} because there was no activity for a certain amount of time.")
                 log_embed.add_field(name="Ticket Closed Automatically Time", value=get_now_for_server(guild.id).isoformat())
                 log_embed.add_field(name="Ticket Closed Automatically Message", value=channel.jump_url)
-                
+
                 await log_into_logs(guild, log_embed)

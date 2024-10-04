@@ -447,7 +447,6 @@
   "per_user_birthday_send_dm_enabled": "The bot will now send DM's on your birthday. Please make sure you have DM's allowed.",
   "per_user_birthday_send_dm_disabled": "The bot will no longer send DM's on your birthday.",
   "birthday_dm": "Happy birthday! 🎉",
-  "birthday_dm_age": "Happy {age} birthday! 🎉",
   "per_user_birthday_cleared": "All data about your birthday has been cleared from the database.",
   "birthday_announcement_set": "Birthday announcement message set to `{message}`.",
   "leveling_set_icon_success": "The icon of your leveling card was set successfully.",

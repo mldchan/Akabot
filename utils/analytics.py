@@ -4,9 +4,9 @@ from database import client
 
 
 def db_add_analytics(command: str):
-    data = client['Analytics'].find_one({'Command': {'$eq': command}})
+    data = client['Analytics'].find_one({'Command': command})
     if data:
-        client['Analytics'].update_one({'Command': {'$eq': command}}, {'RunCount': {'$inc': 1}})
+        client['Analytics'].update_one({'Command': command}, {'$inc': {'RunCount': 1}})
     else:
         client['Analytics'].insert_one({'Command': command, 'RunCount': 1})
 
