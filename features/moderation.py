@@ -4,7 +4,7 @@ import discord
 import sentry_sdk
 from discord.ext import commands as commands_ext
 
-from database import conn
+from database import client
 from utils.analytics import analytics
 from utils.config import get_key
 from utils.generic import pretty_time_delta
@@ -18,27 +18,10 @@ from utils.warning import add_warning, db_get_warning_actions, db_add_warning_ac
     db_remove_warning_action, db_remove_warning
 
 
-def db_init():
-    cur = conn.cursor()
-    cur.execute(
-        'create table if not exists warnings (id integer primary key autoincrement, guild_id int, user_id int, reason text, timestamp str)'
-    )
-    cur.execute(
-        'create table if not exists warnings_actions (id integer primary key autoincrement, guild_id int, warnings int, action text)'
-    )
-    cur.execute(
-        'create table if not exists moderator_roles (id integer primary key autoincrement, guild_id int, role_id int)'
-    )
-    cur.close()
-    conn.commit()
-
-
 def is_a_moderator(ctx: discord.ApplicationContext):
-    cur = conn.cursor()
-    cur.execute('SELECT * FROM moderator_roles WHERE guild_id = ?', (ctx.guild.id,))
-    roles = cur.fetchall()
+    roles = client['ModeratorRoles'].find({'GuildID': ctx.guild.id})
     for role in roles:
-        if role[2] in [role.id for role in ctx.user.roles]:
+        if role['RoleID'] in [role.id for role in ctx.user.roles]:
             return True
     return False
 
@@ -46,8 +29,6 @@ def is_a_moderator(ctx: discord.ApplicationContext):
 class Moderation(discord.Cog):
     def __init__(self, bot: discord.Bot):
         self.bot = bot
-
-        db_init()
 
     moderation_subcommand = discord.SlashCommandGroup(name='moderation', description='Moderation commands')
 
@@ -57,9 +38,8 @@ class Moderation(discord.Cog):
     @commands_ext.bot_has_permissions(kick_members=True)
     @discord.option(name='user', description='The user to kick', type=discord.Member)
     @discord.option(name='reason', description='The reason for kicking', type=str)
-    @discord.option(name='send_dm', description='Send a DM to the user', type=bool, required=False, default=True)
     @analytics("kick")
-    async def kick_user(self, ctx: discord.ApplicationContext, user: discord.Member, reason: str, send_dm: bool = True):
+    async def kick_user(self, ctx: discord.ApplicationContext, user: discord.Member, reason: str):
         if not is_a_moderator(ctx):
             await ctx.respond(trl(ctx.user.id, ctx.guild.id, "moderation_not_moderator"), ephemeral=True)
             return
@@ -567,15 +547,11 @@ class Moderation(discord.Cog):
     @commands_ext.guild_only()
     @discord.default_permissions(manage_guild=True)
     async def add_moderator_role(self, ctx: discord.ApplicationContext, role: discord.Role):
-        cur = conn.cursor()
-        cur.execute('SELECT * FROM moderator_roles WHERE guild_id = ? AND role_id = ?', (ctx.guild.id, role.id))
-        if cur.fetchone():
+        if client['ModeratorRoles'].count_documents({'GuildID': ctx.guild.id, 'RoleID': role.id}) > 0:
             await ctx.respond(trl(ctx.user.id, ctx.guild.id, "moderation_moderator_role_already_exists").format(role=role.mention), ephemeral=True)
             return
 
-        cur.execute('INSERT INTO moderator_roles (guild_id, role_id) VALUES (?, ?)', (ctx.guild.id, role.id))
-        conn.commit()
-        cur.close()
+        client['ModeratorRoles'].insert_one({'GuildID': ctx.guild.id, 'RoleID': role.id})
 
         await ctx.respond(trl(ctx.user.id, ctx.guild.id, "moderation_add_moderator_role_response").format(role=role.mention), ephemeral=True)
         
@@ -589,17 +565,10 @@ class Moderation(discord.Cog):
     @commands_ext.guild_only()
     @discord.default_permissions(manage_guild=True)
     async def remove_moderator_role(self, ctx: discord.ApplicationContext, role: discord.Role):
-        cur = conn.cursor()
-        cur.execute('SELECT * FROM moderator_roles WHERE guild_id = ? AND role_id = ?', (ctx.guild.id, role.id))
-        if not cur.fetchone():
+        if client['ModeratorRoles'].delete_one({'GuildID': ctx.guild.id, 'RoleID': role.id}).deleted_count > 0:
+            await ctx.respond(trl(ctx.user.id, ctx.guild.id, "moderation_remove_moderator_role_response").format(role=role.mention), ephemeral=True)
+        else:
             await ctx.respond(trl(ctx.user.id, ctx.guild.id, "moderation_moderator_role_doesnt_exist").format(role=role.mention), ephemeral=True)
-            return
-
-        cur.execute('DELETE FROM moderator_roles WHERE guild_id = ? AND role_id = ?', (ctx.guild.id, role.id))
-        conn.commit()
-        cur.close()
-
-        await ctx.respond(trl(ctx.user.id, ctx.guild.id, "moderation_remove_moderator_role_response").format(role=role.mention), ephemeral=True)
         
         log_embed = discord.Embed(title="Moderator Role Removed", description=f"{ctx.user.mention} has removed the moderator role {role.mention}")
         log_embed.add_field(name="Moderator Role", value=role.mention)
@@ -611,10 +580,7 @@ class Moderation(discord.Cog):
     @commands_ext.guild_only()
     @discord.default_permissions(manage_guild=True)
     async def list_moderator_roles(self, ctx: discord.ApplicationContext):
-        cur = conn.cursor()
-        cur.execute('SELECT * FROM moderator_roles WHERE guild_id = ?', (ctx.guild.id,))
-        roles = cur.fetchall()
-        cur.close()
+        roles = client['ModeratorRoles'].find({'GuildID': ctx.guild.id})
 
         if not roles:
             await ctx.respond(trl(ctx.user.id, ctx.guild.id, "moderation_no_moderator_roles"), ephemeral=True)
@@ -622,6 +588,6 @@ class Moderation(discord.Cog):
 
         message = trl(ctx.user.id, ctx.guild.id, "moderation_moderator_roles_title")
 
-        role_mentions = [trl(ctx.user.id, ctx.guild.id, "moderation_moderator_roles_line").format(role=ctx.guild.get_role(role[2]).mention) for role in roles]
+        role_mentions = [trl(ctx.user.id, ctx.guild.id, "moderation_moderator_roles_line").format(role=ctx.guild.get_role(role['RoleID']).mention) for role in roles]
         message += "\n".join(role_mentions)
         await ctx.respond(message, ephemeral=True)
