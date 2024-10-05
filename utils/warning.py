@@ -84,12 +84,12 @@ async def add_warning(user: discord.Member, guild: discord.Guild, reason: str) -
 
 
 def db_add_warning(guild_id: int, user_id: int, reason: str) -> ObjectId:
-    res = client['Warnings'].insert_one({'GuildID': guild_id, 'UserID': user_id, 'Reason': reason, 'Timestamp': get_date_time_str(guild_id)})
+    res = client['Warnings'].insert_one({'GuildID': str(guild_id), 'UserID': str(user_id), 'Reason': reason, 'Timestamp': get_date_time_str(guild_id)})
     return res.inserted_id
 
 
 def db_get_warnings(guild_id: int, user_id: int) -> list[dict]:
-    res = client['Warnings'].find({'GuildID': guild_id, 'UserID': user_id}).to_list()
+    res = client['Warnings'].find({'GuildID': str(guild_id), 'UserID': str(user_id)}).to_list()
     return res
 
 
@@ -97,15 +97,15 @@ def db_remove_warning(guild_id: int, warning_id: str):
     if not ObjectId.is_valid(warning_id):
         return
 
-    client['Warnings'].delete_one({'GuildID': guild_id, '_id': ObjectId(warning_id)})
+    client['Warnings'].delete_one({'GuildID': str(guild_id), '_id': ObjectId(warning_id)})
 
 
 def db_add_warning_action(guild_id: int, action: str, warnings: int):
-    client['WarningActions'].insert_one({'GuildID': guild_id, 'Action': action, 'Warnings': warnings})
+    client['WarningActions'].insert_one({'GuildID': str(guild_id), 'Action': action, 'Warnings': warnings})
 
 
 def db_get_warning_actions(guild_id: int) -> list[dict]:
-    res = client['WarningActions'].find({'GuildID': guild_id}).to_list()
+    res = client['WarningActions'].find({'GuildID': str(guild_id)}).to_list()
     return res
 
 

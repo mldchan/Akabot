@@ -26,7 +26,7 @@ class TemporaryVC(discord.Cog):
         else:
             new_ch = await category.create_voice_channel(name=new_ch_name, reason=trl(0, for_user.guild.id, 'temporary_vc_mod_reason'), bitrate=from_ch.bitrate, user_limit=from_ch.user_limit)
 
-        res = client['TemporaryVC'].insert_one({'ChannelID': new_ch.id, 'GuildID': new_ch.guild.id, 'CreatorID': for_user.id})
+        res = client['TemporaryVC'].insert_one({'ChannelID': str(new_ch.id), 'GuildID': str(new_ch.guild.id), 'CreatorID': str(for_user.id)})
 
         if '{id}' in new_ch_name:
             id = str(res.inserted_id)
@@ -38,39 +38,36 @@ class TemporaryVC(discord.Cog):
     @discord.Cog.listener()
     async def on_voice_state_update(self, member: discord.Member, before: discord.VoiceState, after: discord.VoiceState):
         # First let's check joining for temporary voice channel creation
-        if after.channel:
+        if after.channel and not before.channel:
             # cur = conn.cursor()
             # cur.execute('select * from temporary_vc_creator_channels where channel_id = ? and guild_id = ?', (after.channel.id, after.channel.guild.id))
-            if client['TemporaryVCCreators'].count_documents({'ChannelID': after.channel.id, 'GuildID': after.channel.guild.id}) > 0:
+            if client['TemporaryVCCreators'].count_documents({'ChannelID': str(after.channel.id), 'GuildID': str(after.channel.guild.id)}) > 0:
                 vc = await self.new_temporary_channel(after.channel, member)
                 await member.move_to(vc, reason=trl(0, member.guild.id, 'temporary_vc_mod_reason'))
 
         # Now let's check leaving for temporary voice channel deletion
 
-        if before.channel:
+        if before.channel and not after.channel:
             if len(before.channel.voice_states) > 0:
                 return
 
-            if client['TemporaryVC'].count_documents({'ChannelID': before.channel.guild.id, 'GuildID': after.channel.guild.id}) > 0:
+            if client['TemporaryVC'].count_documents({'ChannelID': str(before.channel.id), 'GuildID': str(before.channel.guild.id)}) > 0:
                 await before.channel.delete(reason=trl(0, member.guild.id, 'temporary_vc_mod_reason'))
 
-            client['TemporaryVC'].delete_one({'ChannelID': before.channel.id, 'GuildID': before.channel.guild.id})
+            client['TemporaryVC'].delete_one({'ChannelID': str(before.channel.id), 'GuildID': str(before.channel.guild.id)})
 
     @temporary_vc_commands.command(name='add_creator_channel', description='Add a channel to create temporary voice channels')
     @discord.default_permissions(manage_guild=True)
     @commands.has_permissions(manage_guild=True)
     async def add_creator_channel(self, ctx: discord.ApplicationContext, channel: discord.VoiceChannel):
-        # cur = conn.cursor()
-        # cur.execute('insert into temporary_vc_creator_channels (id, channel_id, guild_id) values (?, ?, ?)', (ctx.author.id, channel.id, ctx.guild.id))
-        # conn.commit()
-        client['TemporaryVCCreators'].insert_one({'ChannelID': channel.id, 'GuildID': channel.guild.id})
+        client['TemporaryVCCreators'].insert_one({'ChannelID': str(channel.id), 'GuildID': str(channel.guild.id)})
         await ctx.respond(trl(ctx.user.id, ctx.guild.id, 'temporary_vc_creator_channel_add').format(channel=channel.mention), ephemeral=True)
 
     @temporary_vc_commands.command(name='remove_creator_channel', description='Remove a channel to create temporary voice channels')
     @discord.default_permissions(manage_guild=True)
     @commands.has_permissions(manage_guild=True)
     async def remove_creator_channel(self, ctx: discord.ApplicationContext, channel: discord.VoiceChannel):
-        if client['TemporaryVCCreators'].delete_one({'ChannelID': channel.id, 'GuildID': channel.guild.id}).deleted_count > 0:
+        if client['TemporaryVCCreators'].delete_one({'ChannelID': str(channel.id), 'GuildID': str(channel.guild.id)}).deleted_count > 0:
             await ctx.respond(trl(ctx.user.id, ctx.guild.id, 'temporary_vc_creator_channel_remove').format(channel=channel.mention), ephemeral=True)
         else:
             await ctx.respond(trl(ctx.user.id, ctx.guild.id, 'temporary_vc_error_channel_not_in_creator').format(channel=channel.mention), ephemeral=True)
@@ -85,7 +82,7 @@ class TemporaryVC(discord.Cog):
             await ctx.respond(trl(ctx.user.id, ctx.guild.id, 'temporary_vc_error_name_too_short'), ephemeral=True)
             return
 
-        if client['TemporaryVC'].count_documents({'ChannelID': ctx.guild.id, 'GuildID': ctx.guild.id, 'CreatorID': ctx.user.id}) == 0:
+        if client['TemporaryVC'].count_documents({'ChannelID': str(ctx.guild.id), 'GuildID': str(ctx.guild.id), 'CreatorID': str(ctx.user.id)}) == 0:
             await ctx.respond(trl(ctx.user.id, ctx.guild.id, 'temporary_vc_error_not_a_temporary_channel').format(channel=ctx.channel.mention), ephemeral=True)
             return
 
@@ -102,7 +99,7 @@ class TemporaryVC(discord.Cog):
             await ctx.respond(trl(ctx.user.id, ctx.guild.id, 'temporary_vc_error_max_users'), ephemeral=True)
             return
 
-        if client['TemporaryVC'].count_documents({'ChannelID': ctx.guild.id, 'GuildID': ctx.guild.id, 'CreatorID': ctx.user.id}) == 0:
+        if client['TemporaryVC'].count_documents({'ChannelID': str(ctx.guild.id), 'GuildID': str(ctx.guild.id), 'CreatorID': str(ctx.user.id)}) == 0:
             await ctx.respond(trl(ctx.user.id, ctx.guild.id, 'temporary_vc_error_not_a_temporary_channel').format(channel=ctx.channel.mention), ephemeral=True)
             return
 
@@ -121,7 +118,7 @@ class TemporaryVC(discord.Cog):
 
         bitrate = bitrate * 1000
 
-        if client['TemporaryVC'].count_documents({'ChannelID': ctx.guild.id, 'GuildID': ctx.guild.id, 'CreatorID': ctx.user.id}) == 0:
+        if client['TemporaryVC'].count_documents({'ChannelID': str(ctx.guild.id), 'GuildID': str(ctx.guild.id), 'CreatorID': str(ctx.user.id)}) == 0:
             await ctx.respond(trl(ctx.user.id, ctx.guild.id, 'temporary_vc_error_not_a_temporary_channel').format(channel=ctx.channel.mention), ephemeral=True)
             return
 

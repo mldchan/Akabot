@@ -19,9 +19,9 @@ from utils.warning import add_warning, db_get_warning_actions, db_add_warning_ac
 
 
 def is_a_moderator(ctx: discord.ApplicationContext):
-    roles = client['ModeratorRoles'].find({'GuildID': ctx.guild.id})
+    roles = client['ModeratorRoles'].find({'GuildID': str(ctx.guild.id)})
     for role in roles:
-        if role['RoleID'] in [role.id for role in ctx.user.roles]:
+        if int(role['RoleID']) in [role.id for role in ctx.user.roles]:
             return True
     return False
 
@@ -356,7 +356,7 @@ class Moderation(discord.Cog):
             await ctx.respond(trl(ctx.user.id, ctx.guild.id, "warn_list_no_warnings"), ephemeral=True)
             return
 
-        if warning_id not in [warning[0] for warning in warnings]:
+        if warning_id not in [str(warning['_id']) for warning in warnings]:
             await ctx.respond(trl(ctx.user.id, ctx.guild.id, "warn_remove_error_warning_not_found").format(id=warning_id),
                               ephemeral=True)
             return
@@ -391,8 +391,8 @@ class Moderation(discord.Cog):
 
         warning_str = trl(ctx.user.id, ctx.guild.id, "warn_list_title").format(user=user.mention)
         for warning in warnings:
-            warning_str += trl(ctx.user.id, ctx.guild.id, "warn_list_line").format(id=warning[0], reason=warning[1],
-                                                                                   date=warning[2])
+            warning_str += trl(ctx.user.id, ctx.guild.id, "warn_list_line").format(id=str(warning['_id']), reason=warning['Reason'],
+                                                                                   date=warning['Timestamp'])
 
         if get_per_user_setting(ctx.user.id, 'tips_enabled', 'true') == 'true':
             language = get_language(ctx.guild.id, ctx.user.id)
@@ -547,11 +547,11 @@ class Moderation(discord.Cog):
     @commands_ext.guild_only()
     @discord.default_permissions(manage_guild=True)
     async def add_moderator_role(self, ctx: discord.ApplicationContext, role: discord.Role):
-        if client['ModeratorRoles'].count_documents({'GuildID': ctx.guild.id, 'RoleID': role.id}) > 0:
+        if client['ModeratorRoles'].count_documents({'GuildID': str(ctx.guild.id), 'RoleID': str(role.id)}) > 0:
             await ctx.respond(trl(ctx.user.id, ctx.guild.id, "moderation_moderator_role_already_exists").format(role=role.mention), ephemeral=True)
             return
 
-        client['ModeratorRoles'].insert_one({'GuildID': ctx.guild.id, 'RoleID': role.id})
+        client['ModeratorRoles'].insert_one({'GuildID': str(ctx.guild.id), 'RoleID': str(role.id)})
 
         await ctx.respond(trl(ctx.user.id, ctx.guild.id, "moderation_add_moderator_role_response").format(role=role.mention), ephemeral=True)
         
@@ -565,7 +565,7 @@ class Moderation(discord.Cog):
     @commands_ext.guild_only()
     @discord.default_permissions(manage_guild=True)
     async def remove_moderator_role(self, ctx: discord.ApplicationContext, role: discord.Role):
-        if client['ModeratorRoles'].delete_one({'GuildID': ctx.guild.id, 'RoleID': role.id}).deleted_count > 0:
+        if client['ModeratorRoles'].delete_one({'GuildID': str(ctx.guild.id), 'RoleID': str(role.id)}).deleted_count > 0:
             await ctx.respond(trl(ctx.user.id, ctx.guild.id, "moderation_remove_moderator_role_response").format(role=role.mention), ephemeral=True)
         else:
             await ctx.respond(trl(ctx.user.id, ctx.guild.id, "moderation_moderator_role_doesnt_exist").format(role=role.mention), ephemeral=True)
@@ -580,7 +580,7 @@ class Moderation(discord.Cog):
     @commands_ext.guild_only()
     @discord.default_permissions(manage_guild=True)
     async def list_moderator_roles(self, ctx: discord.ApplicationContext):
-        roles = client['ModeratorRoles'].find({'GuildID': ctx.guild.id})
+        roles = client['ModeratorRoles'].find({'GuildID': str(ctx.guild.id)})
 
         if not roles:
             await ctx.respond(trl(ctx.user.id, ctx.guild.id, "moderation_no_moderator_roles"), ephemeral=True)
@@ -588,6 +588,6 @@ class Moderation(discord.Cog):
 
         message = trl(ctx.user.id, ctx.guild.id, "moderation_moderator_roles_title")
 
-        role_mentions = [trl(ctx.user.id, ctx.guild.id, "moderation_moderator_roles_line").format(role=ctx.guild.get_role(role['RoleID']).mention) for role in roles]
+        role_mentions = [trl(ctx.user.id, ctx.guild.id, "moderation_moderator_roles_line").format(role=ctx.guild.get_role(int(role['RoleID'])).mention) for role in roles]
         message += "\n".join(role_mentions)
         await ctx.respond(message, ephemeral=True)

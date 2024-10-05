@@ -32,13 +32,13 @@ class ChatStreakStorage:
             str: The state of the streak
         """
 
-        res = client['ChatStreaks'].find_one({'GuildID': guild_id, 'MemberID': member_id})
+        res = client['ChatStreaks'].find_one({'GuildID': str(guild_id), 'MemberID': str(member_id)})
 
         if not res:
             start_time = get_server_midnight_time(guild_id)
             client['ChatStreaks'].insert_one({
-                'GuildID': guild_id,
-                'MemberID': member_id,
+                'GuildID': str(guild_id),
+                'MemberID': str(member_id),
                 'LastMessage': start_time,
                 'StartTime': start_time
             })
@@ -51,17 +51,17 @@ class ChatStreakStorage:
         # Check for streak expiry
         if get_server_midnight_time(guild_id) - last_message > datetime.timedelta(days=1, hours=1):
             streak = max((last_message - start_time).days, 0)
-            client['ChatStreaks'].update_one({'GuildID': guild_id, 'MemberID': member_id},
+            client['ChatStreaks'].update_one({'GuildID': str(guild_id), 'MemberID': str(member_id)},
                                              {'$set': {'LastMessage': get_server_midnight_time(guild_id),
                                                        'StartTime': get_server_midnight_time(guild_id)}})
             return "expired", streak, 0
 
         before_update = (last_message - start_time).days
 
-        client['ChatStreaks'].update_one({'GuildID': guild_id, 'MemberID': member_id},
+        client['ChatStreaks'].update_one({'GuildID': str(guild_id), 'MemberID': str(member_id)},
                                          {'$set': {'LastMessage': get_server_midnight_time(guild_id)}})
 
-        after_update = (last_message - get_server_midnight_time(guild_id)).days
+        after_update = (get_server_midnight_time(guild_id) - start_time).days
 
         if before_update != after_update:
             return "updated", before_update, after_update
@@ -77,12 +77,12 @@ class ChatStreakStorage:
             member_id (int): Member ID
         """
 
-        if client['ChatStreaks'].find_one({'GuildID': guild_id, 'MemberID': member_id}) is None:
+        if client['ChatStreaks'].find_one({'GuildID': str(guild_id), 'MemberID': str(member_id)}) is None:
             client['ChatStreaks'].insert_one(
-                {'GuildID': guild_id, 'MemberID': member_id, 'LastMessage': get_server_midnight_time(guild_id),
+                {'GuildID': str(guild_id), 'MemberID': str(member_id), 'LastMessage': get_server_midnight_time(guild_id),
                  'StartTime': get_server_midnight_time(guild_id)})
         else:
-            client['ChatStreaks'].update_one({'GuildID': guild_id, 'MemberID': member_id},
+            client['ChatStreaks'].update_one({'GuildID': str(guild_id), 'MemberID': str(member_id)},
                                              {'$set': {'LastMessage': get_server_midnight_time(guild_id),
                                                        'StartTime': get_server_midnight_time(guild_id)}})
 
@@ -100,6 +100,8 @@ class ChatStreaks(discord.Cog):
 
         (state, old_streak, new_streak) = self.streak_storage.set_streak(
             message.guild.id, message.author.id)
+
+        print('[Chat Streaks] Info', state, old_streak, new_streak)
 
         if state == "expired":
             if old_streak == 0:
@@ -173,12 +175,11 @@ class ChatStreaks(discord.Cog):
     async def streaks_lb(self, ctx: discord.ApplicationContext):
         rows = client['ChatStreaks'].aggregate([
             {
-                "$match": {"GuildID": ctx.guild.id}
+                "$match": {"GuildID": str(ctx.guild.id)}
             },
             {
-                "$group": {
-                    "_id": "$MemberID",
-                    "MaxStreak": {"$max": {"$subtract": ["$LastMessage", "$StartTime"]}}
+                "$addFields": {
+                    "MaxStreak": {"$max": {'$divide': [{"$subtract": ["$LastMessage", "$StartTime"]}, 86400000]}}
                 }
             },
             {
@@ -187,12 +188,12 @@ class ChatStreaks(discord.Cog):
             {
                 "$limit": 10
             }
-        ])
+        ]).to_list()
 
         message = trl(ctx.user.id, ctx.guild.id, "chat_streak_leaderboard_title")
 
         for i, row in enumerate(rows):
-            member = ctx.guild.get_member(row[0])
+            member = ctx.guild.get_member(int(row['MemberID']))
             if member is None:
                 continue
 
