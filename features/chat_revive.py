@@ -23,23 +23,23 @@ class ChatRevive(discord.Cog):
         if message.author.bot:
             return
 
-        client['ChatRevive'].update_one({'GuildID': message.guild.id, 'ChannelID': message.channel.id},
+        client['ChatRevive'].update_one({'GuildID': str(message.guild.id), 'ChannelID': str(message.channel.id)},
                                         {'$set': {'LastMessage': time.time(), 'Revived': False}})
 
     @tasks.loop(minutes=1)
     async def revive_channels(self):
         for guild in self.bot.guilds:
-            data = client['ChatRevive'].find({'GuildID': guild.id}).to_list()
+            data = client['ChatRevive'].find({'GuildID': str(guild.id)}).to_list()
             for revive_channel in data:
                 if revive_channel['Revived']:
                     continue
 
                 if time.time() - revive_channel['LastMessage'] > revive_channel['RevivalTime']:
-                    role = guild.get_role(revive_channel[2])
+                    role = guild.get_role(int(revive_channel['RoleID']))
                     if role is None:
                         continue
 
-                    channel = guild.get_channel(revive_channel[1])
+                    channel = guild.get_channel(int(revive_channel['ChannelID']))
                     if channel is None:
                         continue
 
@@ -47,7 +47,7 @@ class ChatRevive(discord.Cog):
                         continue
 
                     await channel.send(f'{role.mention}, this channel has been inactive for a while.')
-                    client['ChatRevive'].update_one({'GuildID': guild.id, 'ChannelID': revive_channel[channel.id]},
+                    client['ChatRevive'].update_one({'GuildID': str(guild.id), 'ChannelID': str(channel.id)},
                                                     {'$set': {'Revived': True}})
 
     chat_revive_subcommand = discord.SlashCommandGroup(name='chatrevive', description='Revive channels')
@@ -71,10 +71,10 @@ class ChatRevive(discord.Cog):
         # Database access
 
         # Delete existing record
-        client['ChatRevive'].delete_one({'GuildID': ctx.guild.id, 'ChannelID': channel.id})
+        client['ChatRevive'].delete_one({'GuildID': str(ctx.guild.id), 'ChannelID': str(channel.id)})
 
         # Set new one
-        client['ChatRevive'].insert_one({'GuildID': ctx.guild.id, 'ChannelID': channel.id, 'RoleID': revival_role.id,
+        client['ChatRevive'].insert_one({'GuildID': str(ctx.guild.id), 'ChannelID': str(channel.id), 'RoleID': str(revival_role.id),
                                          'RevivalTime': revival_minutes * 60, 'LastMessage': time.time(),
                                          'Revived': False})
 
@@ -104,7 +104,7 @@ class ChatRevive(discord.Cog):
     @commands_ext.has_permissions(manage_guild=True)
     @analytics("chatrevive remove")
     async def remove_revive_settings(self, ctx: discord.ApplicationContext, channel: discord.TextChannel):
-        client['ChatRevive'].delete_one({'GuildID': ctx.guild.id, 'ChannelID': channel.id})
+        client['ChatRevive'].delete_one({'GuildID': str(ctx.guild.id), 'ChannelID': str(channel.id)})
 
         # Create embed
         logging_embed = discord.Embed(title=trl(ctx.user.id, ctx.guild.id, "chat_revive_remove_log_title"))
@@ -126,14 +126,14 @@ class ChatRevive(discord.Cog):
     @commands_ext.has_permissions(manage_guild=True)
     @analytics("chatrevive list")
     async def list_revive_settings(self, ctx: discord.ApplicationContext, channel: discord.TextChannel):
-        result = client['ChatRevive'].find_one({'GuildID': ctx.guild.id, 'ChannelID': channel.id})
+        result = client['ChatRevive'].find_one({'GuildID': str(ctx.guild.id), 'ChannelID': str(channel.id)})
 
         if not result:
             await ctx.respond(trl(ctx.user.id, ctx.guild.id, "chat_revive_list_empty").format(channel=channel.mention),
                               ephemeral=True)
             return
 
-        role = ctx.guild.get_role(result['RoleID'])
+        role = ctx.guild.get_role(int(result['RoleID']))
 
         embed = discord.Embed(title=trl(ctx.user.id, ctx.guild.id, "chat_revive_list_title").format(name=channel.name),
                               color=discord.Color.blurple())

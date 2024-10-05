@@ -21,7 +21,7 @@ class AutoResponse(discord.Cog):
     @discord_commands_ext.bot_has_permissions(read_message_history=True, add_reactions=True)
     @discord.default_permissions(manage_messages=True)
     async def add_auto_response(self, ctx: discord.ApplicationContext, trigger: str, reply: str):
-        client['AutoResponse'].insert_one({'GuildID': ctx.guild.id, 'TriggerText': trigger, 'ReplyText': reply})
+        client['AutoResponse'].insert_one({'GuildID': str(ctx.guild.id), 'TriggerText': trigger, 'ReplyText': reply})
 
         # Respond
         await ctx.respond(
@@ -40,7 +40,7 @@ class AutoResponse(discord.Cog):
 
         # List
 
-        all_settings = client['AutoResponse'].find({'GuildID': ctx.guild.id}).to_list()
+        all_settings = client['AutoResponse'].find({'GuildID': str(ctx.guild.id)}).to_list()
         if len(all_settings) == 0:
             await ctx.respond(trl(ctx.user.id, ctx.guild.id, "auto_response_list_empty"), ephemeral=True)
             return
@@ -76,7 +76,7 @@ class AutoResponse(discord.Cog):
                               ephemeral=True)
             return
 
-        result = client['AutoReact'].update_one({'_id': ObjectId(id), 'GuildID': ctx.guild.id},
+        result = client['AutoResponse'].update_one({'_id': ObjectId(id), 'GuildID': str(ctx.guild.id)},
                                                 {'$set': {'TriggerText': new_trigger}})
 
         if result.matched_count == 0:
@@ -97,7 +97,7 @@ class AutoResponse(discord.Cog):
                               ephemeral=True)
             return
 
-        result = client['AutoResponse'].delete_one({'_id': ObjectId(id), 'GuildID': ctx.guild.id})
+        result = client['AutoResponse'].delete_one({'_id': ObjectId(id), 'GuildID': str(ctx.guild.id)})
 
         if result.deleted_count == 0:
             await ctx.respond(trl(ctx.user.id, ctx.guild.id, "auto_response_setting_not_found"),
@@ -117,7 +117,7 @@ class AutoResponse(discord.Cog):
                               ephemeral=True)
             return
 
-        result = client['AutoReact'].update_one({'_id': ObjectId(id), 'GuildID': ctx.guild.id},
+        result = client['AutoResponse'].update_one({'_id': ObjectId(id), 'GuildID': str(ctx.guild.id)},
                                                 {'$set': {'ReplyText': new_response}})
 
         if result.matched_count == 0:
@@ -135,9 +135,9 @@ class AutoResponse(discord.Cog):
             return
 
         # Find all created settings
-        data = client['AutoResponse'].find({'GuildID': msg.guild.id})
+        data = client['AutoResponse'].find({'GuildID': str(msg.guild.id)})
         for i in data:
             # If it contains the message
             if i['TriggerText'] in msg.content:
                 # Reply to it
-                await msg.reply(i[3])
+                await msg.reply(i['ReplyText'])

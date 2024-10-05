@@ -6,7 +6,7 @@ from database import client
 from utils.analytics import analytics
 from utils.languages import get_language_names, language_name_to_code, get_language_name
 from utils.languages import get_translation_for_key_localized as trl
-from utils.per_user_settings import set_per_user_setting, get_per_user_setting, unset_per_user_setting
+from utils.per_user_settings import set_per_user_setting, get_per_user_setting
 
 
 def days_in_month(month: int, year: int):
@@ -66,7 +66,7 @@ class PerUserSettings(discord.Cog):
             await ctx.respond(trl(ctx.user.id, ctx.guild.id, 'birthday_invalid_day'), ephemeral=True)
             return
 
-        client['UserBirthday'].update_one({'UserID': ctx.author.id}, {'$set': {'Birth.Year': year, 'Birth.Month': month, 'Birth.Day': day}}, upsert=True)
+        client['UserBirthday'].update_one({'UserID': str(ctx.author.id)}, {'$set': {'Birth.Year': year, 'Birth.Month': month, 'Birth.Day': day}}, upsert=True)
         await ctx.respond(trl(ctx.user.id, ctx.guild.id, 'birthday_set'), ephemeral=True)
 
     @user_settings_group.command(name="birthday_settings", description="Personalize your birthday settings")
@@ -97,9 +97,9 @@ class PerUserSettings(discord.Cog):
     @user_settings_group.command(name='clear_birthday', description='Clear all data about your birthday from the bot')
     @analytics("user_settings clear_birthday")
     async def clear_birthday(self, ctx: discord.ApplicationContext):
-        unset_per_user_setting(ctx.user.id, 'birthday_date')
-        unset_per_user_setting(ctx.user.id, 'birthday_year')
-        unset_per_user_setting(ctx.user.id, 'birthday_send_dm')
+        set_per_user_setting(ctx.user.id, 'birthday_date', None)
+        set_per_user_setting(ctx.user.id, 'birthday_year', None)
+        set_per_user_setting(ctx.user.id, 'birthday_send_dm', None)
         await ctx.respond(trl(ctx.user.id, ctx.guild.id, "per_user_birthday_cleared", append_tip=True), ephemeral=True)
 
     @user_settings_group.command(name='tips', description='Enable or disable tips')

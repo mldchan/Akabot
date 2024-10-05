@@ -13,7 +13,7 @@ from utils.warning import add_warning
 
 def db_add_automod_action(guild_id: int, rule_id: int, rule_name: str, action: str, additional) -> ObjectId:
     insert_result = client['AutomodActions'].insert_one(
-        {'GuildID': guild_id, 'RuleID': rule_id, 'RuleName': rule_name, 'Action': action, 'Additional': additional})
+        {'GuildID': str(guild_id), 'RuleID': str(rule_id), 'RuleName': rule_name, 'Action': action, 'Additional': additional})
 
     return insert_result.inserted_id
 
@@ -22,10 +22,9 @@ def db_remove_automod_action(action_id: ObjectId):
     client['AutomodActions'].delete_one({'_id': action_id})
 
 
-
 def db_get_automod_actions(guild_id: int):
-    result = client['AutomodActions'].find({'GuildID': guild_id}).to_list()
-    return [(i['_id'], i['RuleID'], i['RuleName'], i['Action'], i['Additional']) for i in result]
+    result = client['AutomodActions'].find({'GuildID': str(guild_id)}).to_list()
+    return [(str(i['_id']), i['RuleID'], i['RuleName'], i['Action'], i['Additional']) for i in result]
 
 
 class AutomodActionsStorage:
@@ -65,9 +64,9 @@ class AutomodActions(discord.Cog):
         self.storage_1.add_event(payload.rule_id, payload.message_id)
         automod_actions = db_get_automod_actions(payload.guild_id)
         for automod_action in automod_actions:
-            if automod_action[1] == payload.rule_id:
+            if int(automod_action[1]) == payload.rule_id:
 
-                extra = str(automod_action[4])  # Autocompletion
+                extra = str(automod_action[4])
 
                 extra = extra.replace("{keyword}", payload.matched_keyword)
                 extra = extra.replace("{name}", payload.member.display_name)

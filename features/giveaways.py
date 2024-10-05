@@ -52,7 +52,7 @@ class Giveaways(discord.Cog):
         await msg1.add_reaction("🎉")
 
         res = client['Giveaways'].insert_one(
-            {'ChannelID': ctx.channel.id, 'MessageID': msg1.id, 'Item': item, 'EndDate': end_date.isoformat(),
+            {'ChannelID': str(ctx.channel.id), 'MessageID': str(msg1.id), 'Item': item, 'EndDate': end_date.isoformat(),
              'Winners': winners})
 
         # Send success message
@@ -117,7 +117,7 @@ class Giveaways(discord.Cog):
         if user.bot:
             return
 
-        client['Giveaways'].update_one({'MessageID': reaction.message.id}, {'$push': {'Participants': user.id}})
+        client['Giveaways'].update_one({'MessageID': str(reaction.message.id)}, {'$push': {'Participants': str(user.id)}})
 
 
     @discord.Cog.listener()
@@ -125,7 +125,7 @@ class Giveaways(discord.Cog):
         if user.bot:
             return
 
-        client['Giveaways'].update_one({'MessageID': reaction.message.id}, {'$pull': {'Participants': user.id}})
+        client['Giveaways'].update_one({'MessageID': str(reaction.message.id)}, {'$pull': {'Participants': str(user.id)}})
 
     async def process_send_giveaway(self, giveaway_id: str):
         res = client['Giveaways'].find_one({'_id': ObjectId(giveaway_id)})
@@ -135,26 +135,26 @@ class Giveaways(discord.Cog):
         # Fetch the channel and message
         chan = await self.bot.fetch_channel(res['ChannelID'])
 
-        users = res['Participants']
+        users = res['Participants'] if 'Participants' in res else []
 
         # Check if there are enough members to select winners
-        if len(users) < res[5]:
+        if len(users) < res['Winners']:
             await chan.send(trl(0, chan.guild.id, "giveaways_warning_not_enough_participants"))
             winners = users
         else:
             # Determine winners
-            winners = random.sample(users, res[5])
+            winners = random.sample(users, res['Winners'])
 
         # Get channel and send message
         if len(winners) == 1:
-            msg2 = trl(0, chan.guild.id, "giveaways_winner").format(item=res[3], mention=f"<@{winners[0]}>")
+            msg2 = trl(0, chan.guild.id, "giveaways_winner").format(item=res['Item'], mention=f"<@{winners[0]}>")
             await chan.send(msg2)
         else:
             mentions = ", ".join([f"<@{j}>" for j in winners])
             last_mention = mentions.rfind(", ")
             last_mention = mentions[last_mention + 2:]
             mentions = mentions[:last_mention]
-            msg2 = trl(0, chan.guild.id, "giveaways_winners").format(item=res[3],
+            msg2 = trl(0, chan.guild.id, "giveaways_winners").format(item=res['Item'],
                                                                      mentions=mentions,
                                                                      last_mention=last_mention)
             await chan.send(msg2)
@@ -172,6 +172,6 @@ class Giveaways(discord.Cog):
             if channel is not None:
                 time = get_now_for_server(channel.guild.id)
             # Check if the giveaway ended
-            end_date = datetime.datetime.fromisoformat(i['EndTime'])
+            end_date = datetime.datetime.fromisoformat(i['EndDate'])
             if time > end_date:
                 await self.process_send_giveaway(str(i['_id']))

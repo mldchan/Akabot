@@ -70,7 +70,6 @@ class ChatSummary(discord.Cog):
     @tasks.loop(minutes=1)
     async def summarize(self):
         res = client['ChatSummary'].find({'Enabled': True}).to_list()
-        print('Result:', res)
         for i in res:
             yesterday = get_now_for_server(i['GuildID'])
 

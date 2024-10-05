@@ -1,5 +1,6 @@
 import discord
 import emoji as emoji_package
+from bson import ObjectId
 from discord.ext import commands as discord_commands_ext
 from discord.ext import pages as dc_pages
 
@@ -40,8 +41,7 @@ class AutoReact(discord.Cog):
                 await ctx.respond(trl(ctx.user.id, ctx.guild.id, "auto_react_emoji_invalid"), ephemeral=True)
                 return
 
-        id = client['AutoReact'].count_documents({'GuildID': {'$eq': ctx.guild.id}}) + 1
-        client['AutoReact'].insert_one({'ID': id, 'GuildID': ctx.guild.id, 'TriggerText': trigger, 'Emoji': str(emoji)})
+        client['AutoReact'].insert_one({'GuildID': str(ctx.guild.id), 'TriggerText': trigger, 'Emoji': str(emoji)})
 
         # Respond
         await ctx.respond(
@@ -59,7 +59,7 @@ class AutoReact(discord.Cog):
         current_group_msg = ""
 
         # List
-        all_settings = client['AutoReact'].find({'GuildID': {'$eq': ctx.guild.id}}).to_list()
+        all_settings = client['AutoReact'].find({'GuildID': {'$eq': str(ctx.guild.id)}}).to_list()
         if len(all_settings) == 0:
             await ctx.respond(trl(ctx.user.id, ctx.guild.id, "auto_react_list_empty"), ephemeral=True)
             return
@@ -68,7 +68,7 @@ class AutoReact(discord.Cog):
             # Format: **{id}**: {trigger} -> {reply}
 
             # current_group_msg += f"**ID: `{i[0]}`**: Trigger: `{i[2]}` -> Will react with `{i[3]}`\n"
-            current_group_msg += trl(ctx.user.id, ctx.guild.id, "auto_react_list_row").format(id=str(i['ID']), trigger=i['TriggerText'],
+            current_group_msg += trl(ctx.user.id, ctx.guild.id, "auto_react_list_row").format(id=str(i['_id']), trigger=i['TriggerText'],
                                                                                               emoji=i['Emoji'])
             current_group += 1
 
@@ -90,10 +90,15 @@ class AutoReact(discord.Cog):
     @discord_commands_ext.has_permissions(manage_messages=True)
     @discord_commands_ext.bot_has_permissions(read_message_history=True, add_reactions=True)
     @discord.default_permissions(manage_messages=True)
-    async def edit_trigger_auto_react(self, ctx: discord.ApplicationContext, id: int, new_trigger: str):
-        edited = client['AutoReact'].update_one({'ID': {'$eq': id}, 'GuildID': {'$eq': ctx.guild.id}}, {'$set': {'TriggerText': new_trigger}})
+    async def edit_trigger_auto_react(self, ctx: discord.ApplicationContext, id: str, new_trigger: str):
+        if not ObjectId.is_valid(id):
+            await ctx.respond(trl(ctx.user.id, ctx.guild.id, "auto_react_setting_not_found"),
+                              ephemeral=True)
+            return
 
-        if edited.modified_count == 0:
+        edited = client['AutoReact'].update_one({'_id': ObjectId(id), 'GuildID': str(ctx.guild.id)}, {'$set': {'TriggerText': new_trigger}})
+
+        if edited.matched_count == 0:
             await ctx.respond(trl(ctx.user.id, ctx.guild.id, "auto_react_setting_not_found"),
                               ephemeral=True)
             return
@@ -105,7 +110,7 @@ class AutoReact(discord.Cog):
     @discord_commands_ext.bot_has_permissions(read_message_history=True, add_reactions=True)
     @discord.default_permissions(manage_messages=True)
     async def delete_auto_react(self, ctx: discord.ApplicationContext, id: int):
-        delete = client['AutoReact'].delete_one({'ID': {'$eq': id}, 'GuildID': {'$eq': ctx.guild.id}})
+        delete = client['AutoReact'].delete_one({'ID': id, 'GuildID': str(ctx.guild.id)})
 
         if delete.deleted_count == 0:
             await ctx.respond(trl(ctx.user.id, ctx.guild.id, "auto_react_setting_not_found"),
@@ -119,7 +124,7 @@ class AutoReact(discord.Cog):
     @discord_commands_ext.has_permissions(manage_messages=True)
     @discord_commands_ext.bot_has_permissions(read_message_history=True, add_reactions=True)
     @discord.default_permissions(manage_messages=True)
-    async def edit_response_auto_react(self, ctx: discord.ApplicationContext, id: int, new_emoji: str):
+    async def edit_response_auto_react(self, ctx: discord.ApplicationContext, id: str, new_emoji: str):
         # Parse le emoji
         emoji = discord.PartialEmoji.from_str(new_emoji.strip())
         if emoji.is_custom_emoji():
@@ -128,8 +133,10 @@ class AutoReact(discord.Cog):
                 await ctx.respond(trl(ctx.user.id, ctx.guild.id, "auto_react_emoji_invalid"), ephemeral=True)
                 return
 
-            emoji_s = await ctx.guild.fetch_emoji(emoji.id)
-            if emoji_s is None:
+            for i in ctx.guild.emojis:
+                if i.id == emoji.id:
+                    break
+            else:
                 await ctx.respond(trl(ctx.user.id, ctx.guild.id, "auto_react_emoji_invalid"), ephemeral=True)
                 return
         else:
@@ -137,9 +144,15 @@ class AutoReact(discord.Cog):
                 await ctx.respond(trl(ctx.user.id, ctx.guild.id, "auto_react_emoji_invalid"), ephemeral=True)
                 return
 
-        updated = client['AutoReact'].update_one({'ID': {'$eq': id}, 'GuildID': {'$eq': ctx.guild.id}})
+        if not ObjectId.is_valid(id):
+            await ctx.respond(trl(ctx.user.id, ctx.guild.id, "auto_react_setting_not_found"),
+                              ephemeral=True)
+            return
 
-        if updated.modified_count == 0:
+        updated = client['AutoReact'].update_one({'_id': ObjectId(id), 'GuildID': str(ctx.guild.id)},
+                                                 {'$set': {'Emoji': str(emoji)}})
+
+        if updated.matched_count == 0:
             await ctx.respond(trl(ctx.user.id, ctx.guild.id, "auto_react_setting_not_found"),
                 ephemeral=True)
             return
@@ -154,11 +167,11 @@ class AutoReact(discord.Cog):
             return
 
         # Find all created settings
-        data = client['AutoReact'].find({'GuildID': msg.guild.id}).to_list()
+        data = client['AutoReact'].find({'GuildID': str(msg.guild.id)}).to_list()
         for i in data:
             # If it contains the message
             if i['TriggerText'] in msg.content:
                 # Parse the emoji
-                emoji = discord.PartialEmoji.from_str(i[3])
+                emoji = discord.PartialEmoji.from_str(i['Emoji'])
                 # Add le reaction to it
                 await msg.add_reaction(emoji)
