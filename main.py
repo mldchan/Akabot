@@ -11,6 +11,7 @@ from features import welcoming, leveling, antiraid, chat_streaks, chat_revive, c
     auto_react, auto_response, bot_help, announcement_channels, tickets, debug_commands, birthday_announcements, \
     send_server_count, suggestions, temporary_vc, rp, media_downloader
 from utils.config import get_key
+from utils.db_converter import update
 from utils.languages import get_translation_for_key_localized as trl
 
 logging.basicConfig(
@@ -30,6 +31,8 @@ if get_key("Sentry_Enabled", "false") == "true":
 intents = discord.Intents.default()
 intents.message_content = True
 intents.members = True
+
+update()
 
 bot = discord.Bot(intents=intents)
 

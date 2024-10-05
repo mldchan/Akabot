@@ -15,7 +15,7 @@ class Suggestions(discord.Cog):
         if message.author.bot:
             return
 
-        if client['SuggestionChannels'].count_documents({'ChannelID': str(message.guild.id)}) != 0:
+        if client['SuggestionChannels'].count_documents({'ChannelID': str(message.channel.id)}) > 0:
             emojis = get_setting(message.guild.id, 'suggestion_emoji', '👍👎')
             if emojis == '👍👎':
                 await message.add_reaction('👍')
@@ -37,7 +37,7 @@ class Suggestions(discord.Cog):
     @commands.has_permissions(manage_guild=True)
     async def cmd_add_channel(self, ctx: discord.ApplicationContext, channel: discord.TextChannel):
         if client['SuggestionChannels'].count_documents({'ChannelID': str(ctx.guild.id)}) == 0:
-            client['SuggestionChannels'].insert_one({'GuildID': str(ctx.guild.id), 'ChannelID': channel.id})
+            client['SuggestionChannels'].insert_one({'GuildID': str(ctx.guild.id), 'ChannelID': str(channel.id)})
             await ctx.respond(trl(ctx.user.id, ctx.guild.id, 'suggestions_channel_added', append_tip=True).format(channel=channel.mention), ephemeral=True)
         else:
             await ctx.respond(trl(ctx.user.id, ctx.guild.id, 'suggestions_channel_already_exists'), ephemeral=True)
