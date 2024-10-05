@@ -8,6 +8,7 @@ from utils.settings import set_setting, get_setting
 from utils.tzutil import get_now_for_server
 from utils.logging_util import log_into_logs
 
+
 def db_add_ticket_channel(guild_id: int, ticket_category: int, user_id: int):
     client['TicketChannels'].insert_one({'GuildID': str(guild_id), 'TicketChannelID': str(ticket_category), 'UserID': str(user_id), 'MTime': get_now_for_server(guild_id), 'ATime': 'None'})
 
@@ -303,8 +304,10 @@ class Tickets(discord.Cog):
             guild = self.bot.get_guild(int(i['GuildID']))
             channel = guild.get_channel(int(i['TicketChannelID']))
 
+            if guild is None or channel is None:
+                return  # Skip if the guild or channel is not found
+
             if check_ticket_hide_time(i['GuildID'], i['TicketChannelID']):
-                print('[Tickets] Hiding channel', channel.name)
                 member = guild.get_member(db_get_ticket_creator(i['GuildID'], i['TicketChannelID']))
                 await channel.set_permissions(member, read_messages=False, send_messages=False)
                 db_remove_ticket_channel(i['GuildID'], i['TicketChannelID'])
@@ -344,7 +347,8 @@ class Tickets(discord.Cog):
                 await channel.send(
                     "Ticket closed automatically because there was no activity for a certain amount of time.")
 
-                log_embed = discord.Embed(title="Ticket Closed Automatically", description=f"Ticket closed automatically by the system in {channel.mention} because there was no activity for a certain amount of time.")
+                log_embed = discord.Embed(title="Ticket Closed Automatically",
+                                          description=f"Ticket closed automatically by the system in {channel.mention} because there was no activity for a certain amount of time.")
                 log_embed.add_field(name="Ticket Closed Automatically Time", value=get_now_for_server(guild.id).isoformat())
                 log_embed.add_field(name="Ticket Closed Automatically Message", value=channel.jump_url)
 
