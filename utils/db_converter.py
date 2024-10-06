@@ -39,15 +39,19 @@ def update():
         cur.execute('select guild_id, channel_id, member_id, messages from chat_summary_members where guild_id = ? and channel_id = ?', (i[0], i[1]))
         members = cur.fetchall()
 
+        final_dict = {
+            'Enabled': i[2],
+            'MessageCount': i[3]
+        }
+
+        for i in members:
+            final_dict[f'Messages.{str(i[2])}'] = i[3]
+
         client['ChatSummary'].update_one({
             'GuildID': str(i[0]),
             'ChannelID': str(i[1])
         }, {
-            '$set': {
-                'Enabled': i[2],
-                'MessageCount': i[3],
-                'Messages': [{str(j[2]): j[3]} for j in members]
-            }
+            '$set': final_dict
         }, upsert=True)
 
     # Giveaways
