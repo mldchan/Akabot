@@ -44,8 +44,8 @@ def update():
             'MessageCount': i[3]
         }
 
-        for i in members:
-            final_dict[f'Messages.{str(i[2])}'] = i[3]
+        for j in members:
+            final_dict[f'Messages.{str(j[2])}'] = j[3]
 
         client['ChatSummary'].update_one({
             'GuildID': str(i[0]),
