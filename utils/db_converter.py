@@ -30,7 +30,7 @@ def update():
     cur.execute('select guild_id, channel_id, role_id, revival_time, last_message, revived from chat_revive')
     for i in cur.fetchall():
         client['ChatRevive'].update_one({'GuildID': str(i[0]), 'ChannelID': str(i[1])},
-                                        {'$set': {'RoleID': i[2], 'RevivalTime': i[3], 'LastMessage': datetime.datetime.now(datetime.UTC), 'Revived': True if i[5] == '1' else False}}, upsert=True)
+                                        {'$set': {'RoleID': i[2], 'RevivalTime': i[3], 'LastMessage': datetime.datetime.now(datetime.UTC), 'Revived': True if str(i[5]) == '1' else False}}, upsert=True)
 
     # Chat Summary
 
@@ -40,7 +40,7 @@ def update():
         members = cur.fetchall()
 
         final_dict = {
-            'Enabled': True if i[2] == '1' else False,
+            'Enabled': True if str(i[2]) == '1' else False,
             'MessageCount': i[3]
         }
 
