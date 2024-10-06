@@ -30,17 +30,8 @@ class ChatSummary(discord.Cog):
         if message.author.bot:
             return
 
-        res = client['ChatSummary'].find_one({'GuildID': str(message.guild.id), 'ChannelID': str(message.channel.id)})
-        if not res:
-            client['ChatSummary'].insert_one(
-                {'GuildID': str(message.guild.id), 'ChannelID': str(message.channel.id), 'Enabled': False, 'MessageCount': 0,
-                 'Messages': {}})
-        else:
-            client['ChatSummary'].update_one({'GuildID': str(message.guild.id), 'ChannelID': str(message.channel.id),
-                                              f'Messages.{message.author.id}': {'$exists': False}},
-                                             {'$set': {f'Messages.{message.author.id}': 0}})
-            client['ChatSummary'].update_one({'GuildID': str(message.guild.id), 'ChannelID': str(message.channel.id)},
-                                             {'$inc': {'MessageCount': 1, f'Messages.{message.author.id}': 1}})
+        client['ChatSummary'].update_one({'GuildID': str(message.guild.id), 'ChannelID': str(message.channel.id), 'Enabled': True},
+                                         {'$inc': {f'Messages.{message.author.id}': 1, 'MessageCount': 1}}, upsert=True)
 
     @discord.Cog.listener()
     async def on_message_edit(self, old_message: discord.Message, new_message: discord.Message):
