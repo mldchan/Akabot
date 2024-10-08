@@ -40,7 +40,7 @@ class ChatSummary(discord.Cog):
             })
 
         client['ChatSummary'].update_one({'GuildID': str(message.guild.id), 'ChannelID': str(message.channel.id)},
-                                         {'$inc': {f'Messages.{message.author.id}': 1, 'MessageCount': 1}}, upsert=True)
+                                         {'$inc': {f'Messages.{message.author.id}': 1, 'MessageCount': 1}})
 
     @discord.Cog.listener()
     async def on_message_edit(self, old_message: discord.Message, new_message: discord.Message):
@@ -65,7 +65,7 @@ class ChatSummary(discord.Cog):
 
         client['ChatSummary'].update_one(
             {'GuildID': str(new_message.guild.id), 'ChannelID': str(new_message.channel.id)},
-            {'$inc': {f'Messages.{new_message.author.id}': 1, 'MessageCount': 1}}, upsert=True)
+            {'$inc': {f'Messages.{new_message.author.id}': 1, 'MessageCount': 1}})
 
     @tasks.loop(minutes=1)
     async def summarize(self):
