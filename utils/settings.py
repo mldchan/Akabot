@@ -1,7 +1,7 @@
 from database import client
 
 
-def get_setting(server_id: int, key: str, default: str) -> str:
+def get_setting(server_id: int, key: str, default):
     res = client['ServerSettings'].find_one({'ServerID': str(server_id)})
     return res[key] if res and key in res else default
 
