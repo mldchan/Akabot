@@ -120,7 +120,7 @@ class ChatSummary(discord.Cog):
             chat_summary_message += '\n'
             chat_summary_message += trl(0, guild.id, "chat_summary_messages").format(messages=str(i['MessageCount']))
 
-            top_members = {k: v for k, v in sorted(i['Messages'].items(), key=lambda item: item[1])}
+            top_members = {k: v for k, v in sorted(i['Messages'].items(), key=lambda item: item[1], reverse=True)}
 
             j = 0  # idk
             for k, v in top_members.items():
