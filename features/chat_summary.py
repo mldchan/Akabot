@@ -39,7 +39,7 @@ class ChatSummary(discord.Cog):
                 'MessageCount': 0
             })
 
-        client['ChatSummary'].update_one({'GuildID': str(message.guild.id), 'ChannelID': str(message.channel.id), 'Enabled': True},
+        client['ChatSummary'].update_one({'GuildID': str(message.guild.id), 'ChannelID': str(message.channel.id)},
                                          {'$inc': {f'Messages.{message.author.id}': 1, 'MessageCount': 1}}, upsert=True)
 
     @discord.Cog.listener()
