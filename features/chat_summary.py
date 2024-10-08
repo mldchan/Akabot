@@ -64,7 +64,7 @@ class ChatSummary(discord.Cog):
             })
 
         client['ChatSummary'].update_one(
-            {'GuildID': str(new_message.guild.id), 'ChannelID': str(new_message.channel.id), 'Enabled': True},
+            {'GuildID': str(new_message.guild.id), 'ChannelID': str(new_message.channel.id)},
             {'$inc': {f'Messages.{new_message.author.id}': 1, 'MessageCount': 1}}, upsert=True)
 
     @tasks.loop(minutes=1)
