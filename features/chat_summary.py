@@ -54,18 +54,18 @@ class ChatSummary(discord.Cog):
         if countedits == "False":
             return
 
-        res = client['ChatSummary'].find_one({'GuildID': str(new_message.guild.id), 'ChannelID': str(new_message.channel.id)})
-        if not res:
-            client['ChatSummary'].insert_one(
-                {'GuildID': str(new_message.guild.id), 'ChannelID': str(new_message.channel.id), 'Enabled': False,
-                 'MessageCount': 0,
-                 'Messages': {}})
-        else:
-            client['ChatSummary'].update_one({'GuildID': str(new_message.guild.id), 'ChannelID': str(new_message.channel.id),
-                                              f'Messages.{new_message.author.id}': {'$exists': False}},
-                                             {'$set': {f'Messages.{new_message.author.id}': 0}})
-            client['ChatSummary'].update_one({'GuildID': str(new_message.guild.id), 'ChannelID': str(new_message.channel.id)},
-                                             {'$inc': {'MessageCount': 1, f'Messages.{new_message.author.id}': 1}})
+        if client['ChatSummary'].count_documents(
+                {'GuildID': str(new_message.guild.id), 'ChannelID': str(new_message.channel.id)}) == 0:
+            client['ChatSummary'].insert_one({
+                'GuildID': str(new_message.guild.id),
+                'ChannelID': str(new_message.channel.id),
+                'Enabled': False,
+                'MessageCount': 0
+            })
+
+        client['ChatSummary'].update_one(
+            {'GuildID': str(new_message.guild.id), 'ChannelID': str(new_message.channel.id), 'Enabled': True},
+            {'$inc': {f'Messages.{new_message.author.id}': 1, 'MessageCount': 1}}, upsert=True)
 
     @tasks.loop(minutes=1)
     async def summarize(self):
