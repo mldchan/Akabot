@@ -135,6 +135,9 @@ class ChatSummary(discord.Cog):
                                                                                                       id=k,
                                                                                                       messages=v)
 
+                if j > int(get_setting(guild.id, "chatsummary_top_count", 5)):
+                    break
+
             try:
                 await channel.send(chat_summary_message)
             except Exception as e:
