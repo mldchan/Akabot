@@ -30,6 +30,15 @@ class ChatSummary(discord.Cog):
         if message.author.bot:
             return
 
+        if client['ChatSummary'].count_documents(
+                {'GuildID': str(message.guild.id), 'ChannelID': str(message.channel.id)}) == 0:
+            client['ChatSummary'].insert_one({
+                'GuildID': str(message.guild.id),
+                'ChannelID': str(message.channel.id),
+                'Enabled': False,
+                'MessageCount': 0
+            })
+
         client['ChatSummary'].update_one({'GuildID': str(message.guild.id), 'ChannelID': str(message.channel.id), 'Enabled': True},
                                          {'$inc': {f'Messages.{message.author.id}': 1, 'MessageCount': 1}}, upsert=True)
 
