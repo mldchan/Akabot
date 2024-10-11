@@ -3,7 +3,7 @@ from database import client
 
 def get_setting(server_id: int, key: str, default):
     res = client['ServerSettings'].find_one({'GuildID': str(server_id)})
-    if not res[key]:
+    if key not in res:
         client['ServerSettings'].update_one({'GuildID': str(server_id)}, {'$set': {key: default}})
 
     return res[key] if res and key in res else default
