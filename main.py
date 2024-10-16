@@ -14,13 +14,17 @@ from utils.config import get_key
 from utils.db_converter import update
 from utils.languages import get_translation_for_key_localized as trl
 
+level = logging.INFO
+if get_key("Debug", "false") == "true":
+    level = logging.DEBUG
+
 logging.basicConfig(
-    level=logging.INFO,
+    level=level,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logging.captureWarnings(True)
 
-BOT_VERSION = get_key("Bot_Version", "3.2")
+BOT_VERSION = get_key("Bot_Version", "3.5")
 
 if get_key("Sentry_Enabled", "false") == "true":
     sentry_sdk.init(get_key("Sentry_DSN"),

@@ -47,6 +47,8 @@
   "chat_summary_messages": "**Messages**: {messages}\n",
   "chat_summary_line": "{position}. {name} at {messages} messages\n",
   "chat_summary_line_unknown_user": "{position}. User({id}) at {messages} messages\n",
+  "chat_summary_keywords_title": "## Keywords\n",
+  "chat_summary_keywords_line": "- **{keyword}** was used **{count}** times\n",
   "chat_summary_add_already_added": "This channel is already being counted.",
   "chat_summary_add_added": "Added channel to counting.",
   "chat_summary_add_log_title": "Chat Summary channel added",
