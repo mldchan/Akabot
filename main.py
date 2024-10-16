@@ -84,7 +84,7 @@ async def on_application_command_error(ctx: discord.ApplicationContext, error):
         # respond
         await ctx.respond(trl(ctx.user.id, ctx.guild.id, "command_error_generic"), ephemeral=True)
     except Exception:
-        print("Failed to respond")
+        logging.error("Failed to respond to message")
     raise error
 
 
