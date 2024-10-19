@@ -27,7 +27,11 @@ def init(msg: discord.Message):
 
 
 def inc(msg: discord.Message):
-    kwds = client['ChatSummary'].find_one({'GuildID': str(msg.guild.id), 'ChannelID': str(msg.channel.id)})['Keywords']
+    kwds = client['ChatSummary'].find_one({'GuildID': str(msg.guild.id), 'ChannelID': str(msg.channel.id)})
+    if kwds is not None and 'Keywords' in kwds:
+        kwds = kwds['Keywords']
+    else:
+        kwds = []
 
     upd = {
         '$inc': {f'Messages.{msg.author.id}': 1, 'MessageCount': 1}
